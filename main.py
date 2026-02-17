@@ -1,0 +1,272 @@
+import os
+import uuid
+from datetime import datetime, timedelta
+from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate
+from functools import wraps
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'target-saas-secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///target.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Role required decorator
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('login'))
+            if current_user.role != role:
+                flash('Acesso negado: você não tem permissão para acessar esta página.', 'danger')
+                return redirect(url_for('dashboard'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+# --- Basic Routes ---
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.role == 'admin':
+        return redirect(url_for('admin_dashboard'))
+    elif current_user.role == 'teacher':
+        return redirect(url_for('teacher_dashboard'))
+    return redirect(url_for('student_dashboard'))
+
+# --- Admin Routes ---
+
+@app.route('/admin')
+@role_required('admin')
+def admin_dashboard():
+    users = User.query.all()
+    total_hours = db.session.query(db.func.sum(StudySession.duration_minutes)).scalar() or 0
+    total_hours = round(total_hours / 60, 1)
+    licenses = License.query.all()
+    return render_template('admin/dashboard.html', users=users, total_hours=total_hours, licenses=licenses)
+
+@app.route('/admin/approve/<int:user_id>')
+@role_required('admin')
+def approve_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_active = True
+    db.session.commit()
+    flash(f'Usuário {user.name} aprovado com sucesso!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/reset-password/<int:user_id>', methods=['POST'])
+@role_required('admin')
+def admin_reset_password(user_id):
+    user = User.query.get_or_404(user_id)
+    new_password = request.form.get('new_password')
+    if new_password:
+        user.set_password(new_password)
+        db.session.commit()
+        flash(f'Senha de {user.name} resetada com sucesso!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/license/create', methods=['POST'])
+@role_required('admin')
+def create_license():
+    key = str(uuid.uuid4())[:8].upper()
+    limit = int(request.form.get('limit', 10))
+    # For simplicity, license valid for 1 year
+    from datetime import timedelta
+    valid_until = datetime.utcnow() + timedelta(days=365)
+    
+    new_license = License(license_key=key, student_limit=limit, valid_until=valid_until)
+    db.session.add(new_license)
+    db.session.commit()
+    flash(f'Licença {key} criada com sucesso!', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+# --- Teacher Routes ---
+
+@app.route('/teacher')
+@role_required('teacher')
+def teacher_dashboard():
+    # Show students linked to this teacher via Mentorship
+    mentorships = Mentorship.query.filter_by(teacher_id=current_user.id, status='active').all()
+    students = [m.student for m in mentorships]
+    return render_template('teacher/dashboard.html', students=students)
+
+@app.route('/teacher/plan/create', methods=['POST'])
+@role_required('teacher')
+def create_study_plan():
+    student_id = request.form.get('student_id')
+    subject = request.form.get('subject')
+    hours = float(request.form.get('hours'))
+    
+    new_plan = StudyPlan(student_id=student_id, mentor_id=current_user.id, target_subject=subject, target_hours=hours)
+    db.session.add(new_plan)
+    db.session.commit()
+    flash('Plano de estudo criado com sucesso!', 'success')
+    return redirect(url_for('teacher_dashboard'))
+
+# --- Student Routes ---
+
+@app.route('/student')
+@role_required('student')
+def student_dashboard():
+    sessions = StudySession.query.filter_by(student_id=current_user.id).order_by(StudySession.start_time.desc()).all()
+    plans = StudyPlan.query.filter_by(student_id=current_user.id).all()
+    total_minutes = sum(s.duration_minutes for s in sessions if s.duration_minutes)
+    total_hours = round(total_minutes / 60, 1)
+    all_teachers = User.query.filter_by(role='teacher', is_active=True).all()
+    return render_template('student/dashboard.html', sessions=sessions, plans=plans, total_hours=total_hours, all_teachers=all_teachers)
+
+@app.route('/study/log', methods=['POST'])
+@role_required('student')
+def log_study():
+    subject = request.form.get('subject')
+    minutes = int(request.form.get('minutes'))
+    
+    # Simple manual log for now
+    new_session = StudySession(
+        student_id=current_user.id,
+        subject=subject,
+        start_time=datetime.utcnow(),
+        duration_minutes=minutes,
+        type='free',
+        is_validated=True # Manual for now
+    )
+    db.session.add(new_session)
+    db.session.commit()
+    flash('Hora de estudo registrada!', 'success')
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/certificate/generate')
+@role_required('student')
+def generate_cert():
+    sessions = StudySession.query.filter_by(student_id=current_user.id).all()
+    total_minutes = sum(s.duration_minutes for s in sessions if s.duration_minutes)
+    total_hours = round(total_minutes / 60, 1)
+    
+    if total_hours < 1:
+        flash('Você precisa de pelo menos 1 hora de estudo para gerar um certificado.', 'warning')
+        return redirect(url_for('student_dashboard'))
+    
+    from utils import generate_study_certificate
+    v_code = str(uuid.uuid4())
+    pdf_path = generate_study_certificate(current_user.name, total_hours, v_code, current_user.study_objective)
+    
+    cert = Certificate(student_id=current_user.id, verification_code=v_code, total_hours=total_hours, pdf_path=pdf_path)
+    db.session.add(cert)
+    db.session.commit()
+    
+    flash('Certificado gerado com sucesso!', 'success')
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/certificates/<filename>')
+@login_required
+def download_certificate(filename):
+    return send_from_directory('static/certificates', filename)
+
+@app.route('/mentorship/request', methods=['POST'])
+@role_required('student')
+def request_mentorship():
+    teacher_id = request.form.get('teacher_id')
+    # Check if already exists
+    exists = Mentorship.query.filter_by(student_id=current_user.id, teacher_id=teacher_id).first()
+    if exists:
+        flash('Solicitação de mentoria já enviada ou ativa.', 'info')
+    else:
+        new_mentorship = Mentorship(student_id=current_user.id, teacher_id=teacher_id, status='active') # Auto-active for simplicity here
+        db.session.add(new_mentorship)
+        db.session.commit()
+        flash('Mentor vinculado com sucesso!', 'success')
+    return redirect(url_for('student_dashboard'))
+
+# --- Public Route ---
+
+@app.route('/verify/<string:code>')
+def verify_certificate(code):
+    cert = Certificate.query.filter_by(verification_code=code).first()
+    return render_template('public/verify.html', cert=cert)
+
+@app.route('/waiting')
+@login_required
+def waiting():
+    if current_user.is_active:
+        return redirect(url_for('dashboard'))
+    return render_template('auth/waiting.html')
+
+@app.route('/study/validate/<int:session_id>', methods=['POST'])
+@role_required('student')
+def validate_focus(session_id):
+    session = StudySession.query.get_or_404(session_id)
+    if session.student_id != current_user.id:
+        return redirect(url_for('dashboard'))
+    
+    session.is_validated = True
+    db.session.commit()
+    return {"status": "success"}
+
+# Placeholder for auth (will be expanded)
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            if not user.is_active:
+                return redirect(url_for('waiting'))
+            return redirect(url_for('dashboard'))
+        flash('Email ou senha inválidos.', 'danger')
+    return render_template('auth/login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role = request.form.get('role', 'student') # Default to student
+        objective = request.form.get('objective')
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email já cadastrado.', 'danger')
+            return redirect(url_for('register'))
+            
+        new_user = User(name=name, email=email, role=role, study_objective=objective)
+        new_user.set_password(password)
+        
+        # Auto-activate first user as admin if needed, otherwise wait for approval
+        if User.query.count() == 0:
+            new_user.role = 'admin'
+            new_user.is_active = True
+        
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Cadastro realizado com sucesso! Aguarde a aprovação do administrador.', 'success')
+        return redirect(url_for('login'))
+    return render_template('auth/register.html')
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)

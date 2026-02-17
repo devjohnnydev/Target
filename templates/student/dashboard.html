@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Main Content -->
+    <div class="lg:col-span-2 space-y-8">
+        <div class="bg-indigo-900 text-white rounded-2xl p-8 shadow-lg relative overflow-hidden">
+            <div class="relative z-10">
+                <h1 class="text-3xl font-bold mb-2">Olá, {{ current_user.name }}!</h1>
+                <p class="text-indigo-200">Seu objetivo: <span class="text-emerald-400 font-bold">{{
+                        current_user.study_objective }}</span></p>
+                <div class="mt-6 flex items-end">
+                    <span class="text-5xl font-bold">{{ total_hours }}h</span>
+                    <span class="ml-2 text-indigo-300 mb-2">estudadas no total</span>
+                </div>
+            </div>
+            <!-- Progress Arc Decoration -->
+            <div
+                class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 border-8 border-indigo-800 rounded-full opacity-20">
+            </div>
+        </div>
+
+        <!-- Study Plan Progress -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h2 class="font-bold text-xl mb-6 text-slate-800">Meus Planos de Estudo</h2>
+            <div class="space-y-6">
+                {% for plan in plans %}
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <span class="font-bold text-slate-700">{{ plan.target_subject }}</span>
+                        <span class="text-slate-500 text-sm">{{ plan.completed_hours }} / {{ plan.target_hours
+                            }}h</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5">
+                        <div class="bg-emerald-500 h-2.5 rounded-full"
+                            style="width: {{ (plan.completed_hours / plan.target_hours * 100)|round(0) if plan.target_hours > 0 else 0 }}%">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not plans %}
+                <p class="text-slate-500 italic">Nenhum plano de estudo atribuído pelo seu mentor ainda.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Active Session / Timer -->
+        {% set active_session = sessions|selectattr("end_time", "none")|first %}
+        {% if active_session %}
+        <div
+            class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 flex justify-between items-center animate-pulse">
+            <div>
+                <h2 class="font-bold text-amber-900">Em estudo agora: {{ active_session.subject }}</h2>
+                <p class="text-amber-700 text-sm">Iniciado em: {{ active_session.start_time.strftime('%H:%M') }}</p>
+            </div>
+            <form action="{{ url_for('stop_session', session_id=active_session.id) }}" method="POST">
+                <button type="submit"
+                    class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-xl transition">Parar
+                    Cronômetro</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h2 class="font-bold text-lg mb-4 text-slate-800">Iniciar Sessão Agendada</h2>
+            <form action="{{ url_for('start_session') }}" method="POST" class="flex space-x-4">
+                <select name="subject" class="flex-grow border rounded-lg px-4 py-2">
+                    {% for plan in plans %}
+                    <option value="{{ plan.target_subject }}">{{ plan.target_subject }}</option>
+                    {% endfor %}
+                    <option value="Estudo Geral">Estudo Geral</option>
+                </select>
+                <button type="submit"
+                    class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 transition">Start</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Certificates List -->
+        {% set certs = current_user.certificates %}
+        {% if certs %}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h2 class="font-bold text-xl mb-6 text-slate-800">Meus Certificados</h2>
+            <div class="space-y-4">
+                {% for cert in certs %}
+                <div class="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div>
+                        <div class="font-bold text-slate-800">Certificado #{{ cert.verification_code[:8] }}</div>
+                        <div class="text-xs text-slate-400">Emitido em: {{ cert.issue_date.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <a href="{{ url_for('download_certificate', filename=cert.pdf_path.split('/')[-1]) }}"
+                        class="text-indigo-600 font-bold hover:underline">Download PDF</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- History -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100">
+                <h2 class="font-bold text-lg text-slate-800">Histórico Recente</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <tbody class="divide-y divide-slate-100">
+                        {% for session in sessions %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4">
+                                <span class="text-sm font-bold text-slate-500">{{ session.date.strftime('%d/%m/%Y')
+                                    }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="font-semibold text-slate-800">{{ session.subject }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-sm font-bold">{{
+                                    session.duration_minutes }} min</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-8">
+        <!-- Log Hours Form -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h2 class="font-bold text-lg mb-4 text-slate-800">Registrar Estudo (Livre)</h2>
+            <form action="{{ url_for('log_study') }}" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-1">Assunto/Matéria</label>
+                    <input type="text" name="subject" class="w-full border rounded-lg px-4 py-2" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-1">Duração (Minutos)</label>
+                    <input type="number" name="minutes" class="w-full border rounded-lg px-4 py-2" required>
+                </div>
+                <button type="submit"
+                    class="w-full bg-emerald-500 text-white font-bold py-2 rounded-lg hover:bg-emerald-600 transition">Salvar
+                    Sessão</button>
+            </form>
+        </div>
+
+        <!-- Mentorship -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h2 class="font-bold text-lg mb-4 text-slate-800">Meu Mentor</h2>
+            {% set mentors = current_user.mentorships_as_student %} {# Needs relationship fix in models #}
+            <form action="{{ url_for('request_mentorship') }}" method="POST" class="space-y-4">
+                <select name="teacher_id" class="w-full border rounded-lg px-4 py-2">
+                    <option value="">Selecionar Mentor</option>
+                    {% for teacher in all_teachers %}
+                    <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit"
+                    class="w-full bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700 transition">Vincular
+                    Mentor</button>
+            </form>
+        </div>
+
+        <!-- Certificate -->
+        <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200">
+            <h2 class="font-bold text-lg mb-2 text-amber-900">Gerar Certificado</h2>
+            <p class="text-amber-800 text-sm mb-4">Gere um PDF oficial com o total de suas horas validadas.</p>
+            <a href="{{ url_for('generate_cert') }}"
+                class="block w-full text-center bg-amber-600 text-white font-bold py-2 rounded-lg hover:bg-amber-700 transition">
+                Solicitar Certificado
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

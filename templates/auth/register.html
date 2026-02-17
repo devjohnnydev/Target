@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-lg mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+    <h2 class="text-3xl font-bold text-indigo-900 mb-6 text-center">Criar Sua Conta</h2>
+    <form method="POST">
+        <div class="mb-4">
+            <label class="block text-slate-700 font-semibold mb-2" for="name">Nome Completo</label>
+            <input class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                type="text" name="name" id="name" required>
+        </div>
+        <div class="mb-4">
+            <label class="block text-slate-700 font-semibold mb-2" for="email">Email</label>
+            <input class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                type="email" name="email" id="email" required>
+        </div>
+        <div class="mb-4">
+            <label class="block text-slate-700 font-semibold mb-2" for="password">Senha</label>
+            <input class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                type="password" name="password" id="password" minlength="6" required>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+                <label class="block text-slate-700 font-semibold mb-2" for="role">Eu sou:</label>
+                <select class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    name="role" id="role">
+                    <option value="student">Aluno</option>
+                    <option value="teacher">Professor/Mentor</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-slate-700 font-semibold mb-2" for="objective">Objetivo:</label>
+                <select class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    name="objective" id="objective">
+                    <option value="OAB">OAB</option>
+                    <option value="Concurso">Concurso Público</option>
+                    <option value="AWS">Certificação AWS</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+        </div>
+        <button class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition"
+            type="submit">
+            Cadastrar
+        </button>
+    </form>
+    <p class="mt-6 text-center text-slate-600">
+        Já tem uma conta? <a href="{{ url_for('login') }}" class="text-indigo-600 hover:underline">Entrar</a>
+    </p>
+</div>
+{% endblock %}

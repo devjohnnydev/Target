@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-indigo-900">Painel do Administrador</h1>
+        <div class="bg-indigo-100 px-6 py-3 rounded-xl border border-indigo-200">
+            <span class="text-indigo-600 font-semibold">Total de Horas na Plataforma:</span>
+            <span class="text-2xl font-bold text-indigo-900 ml-2">{{ total_hours }}h</span>
+        </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-100">
+            <h2 class="font-bold text-lg text-slate-800">Gerenciar Usuários</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-slate-500 uppercase text-xs font-bold border-b border-slate-100">
+                        <th class="px-6 py-4">Nome</th>
+                        <th class="px-6 py-4">Papel</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4">Ação</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for user in users %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-800">{{ user.name }}</div>
+                            <div class="text-slate-400 text-sm">{{ user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span
+                                class="px-2 py-1 rounded-md text-xs font-bold uppercase {% if user.role == 'admin' %}bg-purple-100 text-purple-700{% elif user.role == 'teacher' %}bg-blue-100 text-blue-700{% else %}bg-emerald-100 text-emerald-700{% endif %}">
+                                {{ user.role }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if user.is_active %}
+                            <span class="text-emerald-500 flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                Ativo
+                            </span>
+                            {% else %}
+                            <span class="text-amber-500 flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                Pendente
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-2">
+                                {% if not user.is_active %}
+                                <a href="{{ url_for('approve_user', user_id=user.id) }}"
+                                    class="text-emerald-600 hover:text-emerald-700 font-bold text-sm">Aprovar</a>
+                                {% endif %}
+                                <button
+                                    onclick="document.getElementById('reset-{{user.id}}').classList.toggle('hidden')"
+                                    class="text-indigo-600 hover:text-indigo-700 font-bold text-sm">Reset Senha</button>
+                            </div>
+                            <form id="reset-{{user.id}}" action="{{ url_for('admin_reset_password', user_id=user.id) }}"
+                                method="POST" class="hidden mt-2">
+                                <input type="password" name="new_password" placeholder="Nova senha"
+                                    class="border px-2 py-1 text-sm rounded">
+                                <button type="submit"
+                                    class="bg-indigo-600 text-white px-2 py-1 text-sm rounded">Salvar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- License Management -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h2 class="font-bold text-lg mb-4 text-slate-800">Criar Nova Licença</h2>
+            <form action="{{ url_for('create_license') }}" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-1">Limite de Alunos</label>
+                    <input type="number" name="limit" value="10" class="w-full border rounded-lg px-4 py-2">
+                </div>
+                <button type="submit"
+                    class="w-full bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700">Gerar Chave de
+                    Licença</button>
+            </form>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h2 class="font-bold text-lg mb-4 text-slate-800">Licenças Ativas</h2>
+            <div class="space-y-3">
+                {% for license in licenses %}
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <div>
+                        <code class="font-bold text-indigo-600">{{ license.license_key }}</code>
+                        <div class="text-xs text-slate-400">Limite: {{ license.student_limit }} alunos</div>
+                    </div>
+                    <div class="text-xs text-slate-500">Expira em: {{ license.valid_until.strftime('%d/%m/%Y') }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

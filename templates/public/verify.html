@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-12">
+    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+        <div class="bg-indigo-900 px-8 py-10 text-center text-white">
+            <div class="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold mb-2">Documento Verificado</h1>
+            <p class="text-indigo-200">Este certificado é autêntico e foi emitido pela plataforma Target.</p>
+        </div>
+
+        {% if cert %}
+        <div class="p-8 space-y-6">
+            <div class="grid grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Estudante</h3>
+                    <p class="text-xl font-bold text-slate-800">{{ cert.student.name }}</p>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Objetivo</h3>
+                    <p class="text-xl font-bold text-slate-800">{{ cert.student.study_objective }}</p>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total de Horas</h3>
+                    <p class="text-3xl font-bold text-emerald-600">{{ cert.total_hours }}h</p>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Data de Emissão</h3>
+                    <p class="text-lg font-semibold text-slate-700">{{ cert.issue_date.strftime('%d/%m/%Y') }}</p>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-slate-100 text-center">
+                <p class="text-sm text-slate-400 mb-2">Código de Autenticidade</p>
+                <code
+                    class="bg-slate-50 px-4 py-2 rounded-lg text-indigo-600 font-mono font-bold border border-slate-200">
+                    {{ cert.verification_code }}
+                </code>
+            </div>
+        </div>
+        {% else %}
+        <div class="p-12 text-center text-slate-500">
+            <p class="text-lg italic">Código de verificação inválido ou não encontrado.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-8 text-center">
+        <a href="{{ url_for('index') }}" class="text-indigo-600 font-bold hover:underline">← Voltar para Target SaaS</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto text-center py-20">
+    <div class="mb-8">
+        <svg class="w-24 h-24 text-indigo-200 mx-auto animate-pulse" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+    </div>
+    <h1 class="text-3xl font-bold text-indigo-900 mb-4">Quase Lá, {{ current_user.name }}!</h1>
+    <p class="text-slate-600 mb-8 leading-relaxed">
+        Sua conta foi criada com sucesso, mas precisa ser aprovada por um administrador ou professor antes de você
+        começar a registrar seus estudos.
+    </p>
+    <div class="p-6 bg-indigo-50 rounded-2xl border border-indigo-100 mb-8">
+        <p class="text-indigo-800 text-sm font-semibold">Status: <span class="text-amber-600">Aguardando
+                Aprovação</span></p>
+    </div>
+    <a href="{{ url_for('logout') }}" class="text-indigo-600 font-bold hover:underline">Sair por enquanto</a>
+</div>
+{% endblock %}

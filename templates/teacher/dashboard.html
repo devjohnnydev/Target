@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <h1 class="text-3xl font-bold text-indigo-900">Painel do Professor</h1>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <h2 class="font-bold text-lg mb-4 text-slate-800">Meus Alunos Mentorados</h2>
+        {% if students %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for student in students %}
+            <div class="border rounded-xl p-4 hover:shadow-md transition">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div
+                        class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">
+                        {{ student.name[0] }}
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-800">{{ student.name }}</div>
+                        <div class="text-sm text-slate-500">{{ student.study_objective }}</div>
+                    </div>
+                </div>
+
+                <h3 class="text-xs font-bold text-slate-400 uppercase mb-2">Criar Plano de Estudo</h3>
+                <form action="{{ url_for('create_study_plan') }}" method="POST" class="space-y-2">
+                    <input type="hidden" name="student_id" value="{{ student.id }}">
+                    <input type="text" name="subject" placeholder="Matéria/Meta"
+                        class="w-full text-sm border rounded px-3 py-1" required>
+                    <input type="number" name="hours" placeholder="Horas Meta"
+                        class="w-full text-sm border rounded px-3 py-1" required>
+                    <button type="submit"
+                        class="w-full bg-indigo-600 text-white text-sm font-bold py-1 rounded">Atribuir Meta</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-slate-500 italic">Você ainda não tem alunos vinculados.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
