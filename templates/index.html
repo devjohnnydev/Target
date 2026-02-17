@@ -18,35 +18,30 @@
 
     <div class="relative max-w-5xl mx-auto text-center py-32 px-6">
         <div
-            class="inline-flex items-center space-x-3 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full px-6 py-2.5 mb-10 shadow-2xl">
-            <span class="relative flex h-3 w-3">
+            class="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 mb-8">
+            <span class="relative flex h-2 w-2">
                 <span
                     class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span class="text-white text-[10px] font-futuristic tracking-[0.4em] uppercase">Evolução em Tempo
-                Real</span>
+            <span class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Protocolo de Elite
+                Ativado</span>
         </div>
-
-        <h1 class="text-6xl md:text-8xl font-futuristic text-white mb-8 tracking-tighter leading-none italic uppercase">
-            Domine Sua<br><span
-                class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-sky-400 drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]">Performance.</span>
+        <h1 class="text-7xl font-futuristic text-white mb-8 leading-[0.9] uppercase italic tracking-tighter">
+            Domine sua <span class="text-neon drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]">Performance</span>
         </h1>
-
-        <p
-            class="text-xl md:text-2xl text-slate-400 mb-12 leading-relaxed max-w-2xl mx-auto font-medium tracking-tight">
-            A plataforma de elite para quem busca aprovação estratégica em <span class="text-white font-bold">OAB,
-                Concursos e Certificações</span>.
+        <p class="text-xl text-slate-400 mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
+            A plataforma definitiva para estudantes de alta performance. Gerencie metas, acompanhe sua evolução e
+            conquiste resultados extraordinários com o método <span class="text-white">Target</span>.
         </p>
-
-        <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-8">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
             <a href="{{ url_for('register') }}"
-                class="w-full sm:w-auto bg-emerald-500 text-slate-950 font-futuristic py-5 px-16 rounded-full text-lg transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(16,185,129,0.3)] uppercase tracking-widest">
-                Começar agora
+                class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-12 py-5 rounded-2xl font-futuristic text-sm transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(16,185,129,0.3)] uppercase tracking-widest">
+                Iniciar Recrutamento
             </a>
             <a href="#features"
-                class="w-full sm:w-auto bg-white/5 backdrop-blur-md text-white hover:bg-white/10 font-bold py-5 px-16 rounded-full text-lg transition-all border border-white/10 uppercase tracking-widest">
-                Explorar
+                class="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white border border-white/10 px-12 py-5 rounded-2xl font-futuristic text-sm transition-all uppercase tracking-widest backdrop-blur-sm">
+                Explorar Sistema
             </a>
         </div>
     </div>
@@ -54,48 +49,61 @@
 
 <!-- Features Grid -->
 <div id="features" class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-32">
-    <!-- Feature 1 -->
+    <!-- Card 1 -->
     <div
-        class="bg-white/5 p-8 rounded-[3rem] border border-white/5 group hover:border-emerald-500/40 transition-all duration-500 relative overflow-hidden backdrop-blur-sm">
-        <div class="relative h-56 mb-8 rounded-[2rem] overflow-hidden shadow-2xl">
-            <img src="/static/img/A2.jpeg"
-                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80"
-                alt="Registro">
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+        class="bg-slate-900/40 rounded-[3rem] p-10 border border-white/5 hover:border-emerald-500/30 transition-all duration-500 group relative overflow-hidden">
+        <div class="text-emerald-500 mb-8 transform group-hover:scale-110 transition-transform">
+            <div class="relative w-16 h-16 mb-4">
+                <div class="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full"></div>
+                <svg class="relative w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
             <div
                 class="absolute bottom-6 left-6 text-emerald-400 font-futuristic text-[10px] tracking-[0.4em] uppercase">
-                Set 01 // Foco</div>
+                Set 01 // Focus</div>
         </div>
-        <h3 class="font-futuristic text-2xl mb-4 text-white uppercase tracking-tight italic">Cronometragem Pro</h3>
-        <p class="text-slate-500 leading-relaxed font-medium">Controle total do tempo com validação inteligente e
-            relatórios de produtividade.</p>
+        <h3 class="font-futuristic text-2xl mb-4 text-white uppercase tracking-tight italic">Foco Absoluto</h3>
+        <p class="text-slate-500 leading-relaxed font-medium">Cronômetro de precisão e gestão de sessões em tempo real
+            para maximizar sua produtividade.</p>
     </div>
 
-    <!-- Feature 2 -->
+    <!-- Card 2 -->
     <div
-        class="bg-white/5 p-8 rounded-[3rem] border border-white/5 group hover:border-emerald-500/40 transition-all duration-500 relative overflow-hidden backdrop-blur-sm">
-        <div class="relative h-56 mb-8 rounded-[2rem] overflow-hidden shadow-2xl">
-            <img src="/static/img/A3.jpeg"
-                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80"
-                alt="Plano">
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+        class="bg-slate-900/40 rounded-[3rem] p-10 border border-white/5 hover:border-emerald-500/30 transition-all duration-500 group relative overflow-hidden">
+        <div class="text-emerald-500 mb-8 transform group-hover:scale-110 transition-transform">
+            <div class="relative w-16 h-16 mb-4">
+                <div class="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full"></div>
+                <svg class="relative w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+            </div>
             <div
                 class="absolute bottom-6 left-6 text-emerald-400 font-futuristic text-[10px] tracking-[0.4em] uppercase">
-                Set 02 // Mentoria</div>
+                Set 02 // Analytics</div>
         </div>
-        <h3 class="font-futuristic text-2xl mb-4 text-white uppercase tracking-tight italic">Mentoria Expert</h3>
-        <p class="text-slate-500 leading-relaxed font-medium">Acompanhamento estratégico por mentores que guiam sua
-            jornada passo a passo.</p>
+        <h3 class="font-futuristic text-2xl mb-4 text-white uppercase tracking-tight italic">Inteligência Estratégica
+        </h3>
+        <p class="text-slate-500 leading-relaxed font-medium">Visualize sua evolução com dashboards de missões e
+            métricas
+            de desempenho detalhadas.</p>
     </div>
 
-    <!-- Feature 3 -->
+    <!-- Card 3 -->
     <div
-        class="bg-white/5 p-8 rounded-[3rem] border border-white/5 group hover:border-emerald-500/40 transition-all duration-500 relative overflow-hidden backdrop-blur-sm">
-        <div class="relative h-56 mb-8 rounded-[2rem] overflow-hidden shadow-2xl">
-            <img src="/static/img/A4.jpeg"
-                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80"
-                alt="Certificação">
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+        class="bg-slate-900/40 rounded-[3rem] p-10 border border-white/5 hover:border-emerald-500/30 transition-all duration-500 group relative overflow-hidden">
+        <div class="text-emerald-500 mb-8 transform group-hover:scale-110 transition-transform">
+            <div class="relative w-16 h-16 mb-4">
+                <div class="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full"></div>
+                <svg class="relative w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                    </path>
+                </svg>
+            </div>
             <div
                 class="absolute bottom-6 left-6 text-emerald-400 font-futuristic text-[10px] tracking-[0.4em] uppercase">
                 Set 03 // Prova</div>
@@ -123,7 +131,5 @@
             <div class="text-[10px] font-bold text-emerald-400 uppercase tracking-[0.5em]">Alcance Nacional</div>
         </div>
     </div>
-</div>
-{% endblock %}
 </div>
 {% endblock %}
