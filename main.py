@@ -49,6 +49,8 @@ def role_required(role):
             if current_user.role != role:
                 flash('Acesso negado: você não tem permissão para acessar esta página.', 'danger')
                 return redirect(url_for('dashboard'))
+            if not current_user.is_approved and request.endpoint != 'waiting':
+                return redirect(url_for('waiting'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -361,13 +363,19 @@ def register():
 from sqlalchemy import text
 
 with app.app_context():
-    # Simple auto-migration: try to rename is_active to is_approved if it exists
+    # Robust Migration: Ensure is_approved column exists
     try:
+        # 1. Try to rename is_active to is_approved (Common migration case)
         db.session.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
         db.session.commit()
-        print("Migração bem sucedida: is_active -> is_approved")
     except Exception:
         db.session.rollback()
+        try:
+            # 2. If rename failed, try to add it (New install or already renamed)
+            db.session.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
     
     db.create_all()
 
