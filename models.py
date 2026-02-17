@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False)  # admin, teacher, student
     photo_url = db.Column(db.String(255), nullable=True)
     study_objective = db.Column(db.String(100), nullable=True)  # e.g., OAB, AWS
-    is_approved = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
