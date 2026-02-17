@@ -363,32 +363,48 @@ def register():
         return redirect(url_for('login'))
     return render_template('auth/register.html')
 
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 
-with app.app_context():
-    # Robust Migration: Ensure columns exist
-    try:
-        # 1. Try to rename is_active to is_approved
-        db.session.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+def ensure_db_schema():
+    with app.app_context():
+        # First ensure tables exist
+        db.create_all()
         
-    try:
-        # 2. Add is_approved if not exists (checked via create_all normally, but explicit for safety)
-        db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE;"))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+        # Then check columns in 'users' table
+        inspector = inspect(db.engine)
+        if 'users' in inspector.get_table_names():
+            columns = [c['name'] for c in inspector.get_columns('users')]
+            
+            with db.engine.connect() as conn:
+                # 1. Handle is_approved (rename or add)
+                if 'is_approved' not in columns:
+                    if 'is_active' in columns:
+                        try:
+                            conn.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
+                            print("Coluna is_active renomeada para is_approved.")
+                        except Exception as e:
+                            print(f"Erro ao renomear: {e}")
+                    else:
+                        try:
+                            # Use BOOLEAN DEFAULT FALSE which works for both SQLite and Postgres
+                            conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
+                            print("Coluna is_approved adicionada.")
+                        except Exception as e:
+                            print(f"Erro ao adicionar is_approved: {e}")
+                    conn.commit()
 
-    try:
-        # 3. Add needs_password_change
-        db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS needs_password_change BOOLEAN DEFAULT FALSE;"))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-    
-    db.create_all()
+                # 2. Handle needs_password_change
+                # Re-inspect columns after potential rename
+                columns = [c['name'] for c in inspector.get_columns('users')]
+                if 'needs_password_change' not in columns:
+                    try:
+                        conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
+                        print("Coluna needs_password_change adicionada.")
+                    except Exception as e:
+                        print(f"Erro ao adicionar needs_password_change: {e}")
+                    conn.commit()
+
+ensure_db_schema()
 
 @app.route('/auth/change-password', methods=['GET', 'POST'])
 @login_required
