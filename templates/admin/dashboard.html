@@ -50,7 +50,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4">
-                            {% if user.is_active %}
+                            {% if user.is_approved %}
                             <span class="text-emerald-500 flex items-center">
                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
@@ -72,7 +72,7 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex space-x-2">
-                                {% if not user.is_active %}
+                                {% if not user.is_approved %}
                                 <a href="{{ url_for('approve_user', user_id=user.id) }}"
                                     class="text-emerald-600 hover:text-emerald-700 font-bold text-sm">Aprovar</a>
                                 {% endif %}

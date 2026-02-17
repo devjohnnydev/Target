@@ -4,7 +4,7 @@ from main import app, db, User, StudySession, StudyPlan, Mentorship
 def test_student_dashboard_logic():
     with app.app_context():
         # Create a test student
-        test_user = User(name="Test Student", email="test@student.com", role="student", is_active=True)
+        test_user = User(name="Test Student", email="test@student.com", role="student", is_approved=True)
         test_user.set_password("password")
         db.session.add(test_user)
         db.session.commit()
