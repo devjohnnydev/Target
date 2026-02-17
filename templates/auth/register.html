@@ -1,51 +1,103 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-lg mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-    <h2 class="text-3xl font-bold text-indigo-900 mb-6 text-center">Criar Sua Conta</h2>
-    <form method="POST">
-        <div class="mb-4">
-            <label class="block text-slate-700 font-semibold mb-2" for="name">Nome Completo</label>
-            <input class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                type="text" name="name" id="name" required>
+<div class="max-w-2xl mx-auto relative group">
+    <!-- Glow Effect -->
+    <div
+        class="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-sky-600 rounded-[2.5rem] blur opacity-10 group-hover:opacity-25 transition duration-1000">
+    </div>
+
+    <div
+        class="relative bg-slate-900/60 backdrop-blur-xl p-10 md:p-12 rounded-[2.5rem] border border-white/5 shadow-2xl">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-futuristic text-white uppercase italic tracking-tighter mb-2">Recrutamento <span
+                    class="text-neon">Target</span></h2>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.4em]">Inicie sua jornada de alta
+                performance</p>
         </div>
-        <div class="mb-4">
-            <label class="block text-slate-700 font-semibold mb-2" for="email">Email</label>
-            <input class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                type="email" name="email" id="email" required>
-        </div>
-        <div class="mb-4">
-            <label class="block text-slate-700 font-semibold mb-2" for="password">Senha</label>
-            <input class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                type="password" name="password" id="password" minlength="6" required>
-        </div>
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <div>
-                <label class="block text-slate-700 font-semibold mb-2" for="role">Eu sou:</label>
-                <select class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    name="role" id="role">
-                    <option value="student">Aluno</option>
-                    <option value="teacher">Professor/Mentor</option>
-                </select>
+
+        <form method="POST" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Name -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em] ml-1"
+                        for="name">Nome do Operador</label>
+                    <input
+                        class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-slate-700 focus:outline-none focus:border-emerald-500/50 transition-all font-medium"
+                        type="text" name="name" id="name" placeholder="Ex: John Doe" required>
+                </div>
+                <!-- Email -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em] ml-1"
+                        for="email">E-mail de Contato</label>
+                    <input
+                        class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-slate-700 focus:outline-none focus:border-emerald-500/50 transition-all font-medium"
+                        type="email" name="email" id="email" placeholder="john@exemplo.com" required>
+                </div>
+                <!-- Password -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em] ml-1"
+                        for="password">Chave de Acesso</label>
+                    <input
+                        class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-slate-700 focus:outline-none focus:border-emerald-500/50 transition-all font-medium"
+                        type="password" name="password" id="password" placeholder="Mínimo 6 digitos" minlength="6"
+                        required>
+                </div>
+                <!-- Role -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em] ml-1"
+                        for="role">Patente / Função</label>
+                    <div class="relative">
+                        <select
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white appearance-none focus:outline-none focus:border-emerald-500/50 transition-all font-medium cursor-pointer"
+                            name="role" id="role">
+                            <option value="student">Aluno / Agente</option>
+                            <option value="teacher">Mentor / Instrutor</option>
+                        </select>
+                        <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="block text-slate-700 font-semibold mb-2" for="objective">Objetivo:</label>
-                <select class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    name="objective" id="objective">
-                    <option value="OAB">OAB</option>
-                    <option value="Concurso">Concurso Público</option>
-                    <option value="AWS">Certificação AWS</option>
-                    <option value="Outros">Outros</option>
-                </select>
+
+            <div class="space-y-2">
+                <label class="block text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em] ml-1"
+                    for="objective">Objetivo Estratégico</label>
+                <div class="relative">
+                    <select
+                        class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white appearance-none focus:outline-none focus:border-emerald-500/50 transition-all font-medium cursor-pointer"
+                        name="objective" id="objective">
+                        <option value="OAB">OAB // Ordem dos Advogados</option>
+                        <option value="Concurso">Carreira Pública // Concursos</option>
+                        <option value="AWS">Cloud Specialist // AWS & Tech</option>
+                        <option value="Outros">Personalizado // Outros</option>
+                    </select>
+                    <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
             </div>
+
+            <button
+                class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-futuristic py-5 rounded-2xl transition-all transform hover:scale-[1.01] shadow-xl shadow-emerald-500/10 uppercase tracking-[0.2em] text-sm mt-4"
+                type="submit">
+                Finalizar Cadastro
+            </button>
+        </form>
+
+        <div class="mt-12 pt-8 border-t border-white/5 text-center">
+            <p class="text-slate-500 text-xs font-medium">
+                Já possui autorização? <a href="{{ url_for('login') }}"
+                    class="text-emerald-400 hover:text-white transition-colors font-bold">Autenticar agora</a>
+            </p>
         </div>
-        <button class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition"
-            type="submit">
-            Cadastrar
-        </button>
-    </form>
-    <p class="mt-6 text-center text-slate-600">
-        Já tem uma conta? <a href="{{ url_for('login') }}" class="text-indigo-600 hover:underline">Entrar</a>
-    </p>
+    </div>
 </div>
 {% endblock %}

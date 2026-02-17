@@ -1,26 +1,48 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-    <h2 class="text-3xl font-bold text-indigo-900 mb-6 text-center">Entrar no Target</h2>
-    <form method="POST">
-        <div class="mb-4">
-            <label class="block text-slate-700 font-semibold mb-2" for="email">Email</label>
-            <input class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                type="email" name="email" id="email" required>
+<div class="max-w-md mx-auto relative group">
+    <!-- Glow Effect -->
+    <div
+        class="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-sky-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000">
+    </div>
+
+    <div class="relative bg-slate-900/60 backdrop-blur-xl p-10 rounded-[2.5rem] border border-white/5 shadow-2xl">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-futuristic text-white uppercase italic tracking-tighter mb-2">Acesso ao <span
+                    class="text-neon">Target</span></h2>
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-[0.3em]">Identificação Requerida</p>
         </div>
-        <div class="mb-6">
-            <label class="block text-slate-700 font-semibold mb-2" for="password">Senha</label>
-            <input class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                type="password" name="password" id="password" required>
+
+        <form method="POST" class="space-y-6">
+            <div class="space-y-2">
+                <label class="block text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em] ml-1"
+                    for="email">E-mail de Operador</label>
+                <input
+                    class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium"
+                    type="email" name="email" id="email" placeholder="nome@exemplo.com" required>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em] ml-1"
+                    for="password">Chave de Segurança</label>
+                <input
+                    class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-medium"
+                    type="password" name="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button
+                class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-futuristic py-4 px-4 rounded-2xl transition-all transform hover:scale-[1.02] shadow-lg shadow-emerald-500/20 uppercase tracking-widest text-sm"
+                type="submit">
+                Entrar no Sistema
+            </button>
+        </form>
+
+        <div class="mt-10 pt-8 border-t border-white/5 text-center">
+            <p class="text-slate-500 text-xs font-medium">
+                Novo por aqui? <a href="{{ url_for('register') }}"
+                    class="text-emerald-400 hover:text-white transition-colors font-bold">Solicitar Credenciais</a>
+            </p>
         </div>
-        <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition"
-            type="submit">
-            Entrar
-        </button>
-    </form>
-    <p class="mt-6 text-center text-slate-600">
-        Não tem uma conta? <a href="{{ url_for('register') }}" class="text-indigo-600 hover:underline">Cadastre-se</a>
-    </p>
+    </div>
 </div>
 {% endblock %}
