@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False)  # admin, teacher, student
     photo_url = db.Column(db.String(255), nullable=True)
     study_objective = db.Column(db.String(100), nullable=True)  # e.g., OAB, AWS
-    is_active = db.Column(db.Boolean, default=False)
+    is_approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -51,7 +51,7 @@ class StudySession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     subject = db.Column(db.String(100), nullable=False)
-    date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
+    date = db.Column(db.Date, nullable=False, default=lambda: datetime.utcnow().date())
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=True)
     duration_minutes = db.Column(db.Integer, default=0)

@@ -24,6 +24,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'zip', 'doc', 'docx'}
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs('static/certificates', exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -82,7 +83,7 @@ def admin_dashboard():
 @role_required('admin')
 def approve_user(user_id):
     user = User.query.get_or_404(user_id)
-    user.is_active = True
+    user.is_approved = True
     db.session.commit()
     flash(f'Usuário {user.name} aprovado com sucesso!', 'success')
     return redirect(url_for('admin_dashboard'))
@@ -152,7 +153,7 @@ def student_dashboard():
     plans = StudyPlan.query.filter_by(student_id=current_user.id).all()
     total_minutes = sum(s.duration_minutes for s in sessions if s.duration_minutes)
     total_hours = round(total_minutes / 60, 1)
-    all_teachers = User.query.filter_by(role='teacher', is_active=True).all()
+    all_teachers = User.query.filter_by(role='teacher', is_approved=True).all()
     return render_template('student/dashboard.html', sessions=sessions, plans=plans, total_hours=total_hours, all_teachers=all_teachers)
 
 @app.route('/study/log', methods=['POST'])
@@ -283,7 +284,7 @@ def verify_certificate(code):
 @app.route('/waiting')
 @login_required
 def waiting():
-    if current_user.is_active:
+    if current_user.is_approved:
         return redirect(url_for('dashboard'))
     return render_template('auth/waiting.html')
 
@@ -309,7 +310,7 @@ def login():
         if email == 'johnny.oliveira@sp.senai.br' and password == 'Jb@46431194':
             admin = User.query.filter_by(email=email).first()
             if not admin:
-                admin = User(name='Johnny Oliveira', email=email, role='admin', is_active=True)
+                admin = User(name='Johnny Oliveira', email=email, role='admin', is_approved=True)
                 admin.set_password(password)
                 db.session.add(admin)
                 db.session.commit()
@@ -318,7 +319,7 @@ def login():
 
         if user and user.check_password(password):
             login_user(user)
-            if not user.is_active:
+            if not user.is_approved:
                 return redirect(url_for('waiting'))
             return redirect(url_for('dashboard'))
         flash('Email ou senha inválidos.', 'danger')
@@ -349,7 +350,7 @@ def register():
         # Auto-activate first user as admin if needed, otherwise wait for approval
         if User.query.count() == 0:
             new_user.role = 'admin'
-            new_user.is_active = True
+            new_user.is_approved = True
         
         db.session.add(new_user)
         db.session.commit()
