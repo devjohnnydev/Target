@@ -75,6 +75,85 @@
         </div>
         {% endif %}
 
+        <!-- Submissions (Materials/Files/Links) -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-bold text-xl text-slate-800">Materiais e Comprovações</h2>
+                <div class="flex space-x-2">
+                    <button
+                        onclick="document.getElementById('form-file').classList.remove('hidden'); document.getElementById('form-link').classList.add('hidden')"
+                        class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg font-bold text-slate-600">Enviar
+                        Arquivo</button>
+                    <button
+                        onclick="document.getElementById('form-link').classList.remove('hidden'); document.getElementById('form-file').classList.add('hidden')"
+                        class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-lg font-bold text-slate-600">Adicionar
+                        Link</button>
+                </div>
+            </div>
+
+            <!-- Forms -->
+            <div id="form-file" class="hidden mb-6 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                <form action="{{ url_for('submit_file') }}" method="POST" enctype="multipart/form-data"
+                    class="space-y-3">
+                    <input type="file" name="file" class="w-full text-sm" required>
+                    <input type="text" name="description" placeholder="Descrição (ex: Resumo de Estudo)"
+                        class="w-full text-sm border rounded px-3 py-2">
+                    <button type="submit"
+                        class="bg-indigo-600 text-white text-sm font-bold py-2 px-4 rounded-lg">Upload</button>
+                    <button type="button" onclick="this.parentElement.parentElement.classList.add('hidden')"
+                        class="text-sm text-slate-400 ml-2">Cancelar</button>
+                </form>
+            </div>
+
+            <div id="form-link" class="hidden mb-6 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                <form action="{{ url_for('submit_link') }}" method="POST" class="space-y-3">
+                    <input type="url" name="link" placeholder="https://exemplo.com"
+                        class="w-full text-sm border rounded px-3 py-2" required>
+                    <input type="text" name="description" placeholder="Descrição"
+                        class="w-full text-sm border rounded px-3 py-2">
+                    <button type="submit" class="bg-indigo-600 text-white text-sm font-bold py-2 px-4 rounded-lg">Salvar
+                        Link</button>
+                    <button type="button" onclick="this.parentElement.parentElement.classList.add('hidden')"
+                        class="text-sm text-slate-400 ml-2">Cancelar</button>
+                </form>
+            </div>
+
+            <div class="space-y-4">
+                {% for sub in current_user.submissions %}
+                <div class="flex justify-between items-center p-3 hover:bg-slate-50 transition rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-slate-100 p-2 rounded-lg">
+                            {% if sub.type == 'file' %}
+                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            {% else %}
+                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+                                </path>
+                            </svg>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-700 text-sm">{% if sub.type == 'file' %}Arquivo{% else
+                                %}Link{% endif %}: {{ sub.description or sub.content[:20] }}</div>
+                            <div class="text-xs text-slate-400">{{ sub.timestamp.strftime('%d/%m/%Y %H:%M') }}</div>
+                        </div>
+                    </div>
+                    {% if sub.type == 'file' %}
+                    <a href="{{ url_for('static', filename='uploads/' + sub.content) }}" target="_blank"
+                        class="text-indigo-600 text-sm font-bold">Ver</a>
+                    {% else %}
+                    <a href="{{ sub.content }}" target="_blank" class="text-indigo-600 text-sm font-bold">Acessar</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
         <!-- Certificates List -->
         {% set certs = current_user.certificates %}
         {% if certs %}

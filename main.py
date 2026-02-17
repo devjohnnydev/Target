@@ -3,13 +3,30 @@ import uuid
 from datetime import datetime, timedelta
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate
+from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission
 from functools import wraps
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'target-saas-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///target.db'
+
+# Railway / Production Database Configuration
+database_url = os.environ.get('DATABASE_URL')
+if database_url and database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///target.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Upload Configuration
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'zip', 'doc', 'docx'}
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 db.init_app(app)
 
@@ -171,6 +188,62 @@ def generate_cert():
     db.session.commit()
     
     flash('Certificado gerado com sucesso!', 'success')
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/study/submit-file', methods=['POST'])
+@role_required('student')
+def submit_file():
+    if 'file' not in request.files:
+        flash('Nenhum arquivo enviado.', 'danger')
+        return redirect(url_for('student_dashboard'))
+    
+    file = request.files['file']
+    description = request.form.get('description')
+    
+    if file.filename == '':
+        flash('Nenhum arquivo selecionado.', 'danger')
+        return redirect(url_for('student_dashboard'))
+    
+    if file and allowed_file(file.filename):
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(file.filename)
+        # Unique mapping: user_id + timestamp + filename
+        unique_filename = f"{current_user.id}_{int(datetime.utcnow().timestamp())}_{filename}"
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+        
+        new_submission = Submission(
+            student_id=current_user.id,
+            type='file',
+            content=unique_filename,
+            description=description
+        )
+        db.session.add(new_submission)
+        db.session.commit()
+        flash('Arquivo enviado com sucesso!', 'success')
+    else:
+        flash('Tipo de arquivo não permitido.', 'danger')
+        
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/study/submit-link', methods=['POST'])
+@role_required('student')
+def submit_link():
+    link = request.form.get('link')
+    description = request.form.get('description')
+    
+    if not link:
+        flash('O link é obrigatório.', 'danger')
+        return redirect(url_for('student_dashboard'))
+    
+    new_submission = Submission(
+        student_id=current_user.id,
+        type='link',
+        content=link,
+        description=description
+    )
+    db.session.add(new_submission)
+    db.session.commit()
+    flash('Link salvo com sucesso!', 'success')
     return redirect(url_for('student_dashboard'))
 
 @app.route('/certificates/<filename>')

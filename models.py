@@ -24,6 +24,7 @@ class User(UserMixin, db.Model):
     certificates = db.relationship('Certificate', backref='student', lazy=True)
     mentorships_as_student = db.relationship('Mentorship', backref='student', lazy=True, foreign_keys='Mentorship.student_id')
     mentorships_as_teacher = db.relationship('Mentorship', backref='teacher', lazy=True, foreign_keys='Mentorship.teacher_id')
+    submissions = db.relationship('Submission', backref='student', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -94,3 +95,15 @@ class Certificate(db.Model):
 
     def __repr__(self):
         return f'<Certificate {self.verification_code}>'
+
+class Submission(db.Model):
+    __tablename__ = 'submissions'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    type = db.Column(db.String(10), nullable=False)  # 'file' or 'link'
+    content = db.Column(db.String(255), nullable=False)  # filename or URL
+    description = db.Column(db.String(200), nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Submission {self.type} - {self.content}>'
