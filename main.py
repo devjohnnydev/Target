@@ -358,7 +358,17 @@ def register():
         return redirect(url_for('login'))
     return render_template('auth/register.html')
 
+from sqlalchemy import text
+
 with app.app_context():
+    # Simple auto-migration: try to rename is_active to is_approved if it exists
+    try:
+        db.session.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
+        db.session.commit()
+        print("Migração bem sucedida: is_active -> is_approved")
+    except Exception:
+        db.session.rollback()
+    
     db.create_all()
 
 if __name__ == '__main__':
