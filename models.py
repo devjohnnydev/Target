@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
     photo_url = db.Column(db.String(255), nullable=True)
     study_objective = db.Column(db.String(100), nullable=True)  # e.g., OAB, AWS
     is_approved = db.Column(db.Boolean, default=False)
+    needs_password_change = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships

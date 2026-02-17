@@ -94,11 +94,11 @@ def approve_user(user_id):
 @role_required('admin')
 def admin_reset_password(user_id):
     user = User.query.get_or_404(user_id)
-    new_password = request.form.get('new_password')
-    if new_password:
-        user.set_password(new_password)
-        db.session.commit()
-        flash(f'Senha de {user.name} resetada com sucesso!', 'success')
+    # Requisito do usuário: senha padrão "target"
+    user.set_password('target')
+    user.needs_password_change = True
+    db.session.commit()
+    flash(f'Senha de {user.name} resetada para "target". O usuário deverá trocar a senha no próximo acesso.', 'info')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/license/create', methods=['POST'])
@@ -321,6 +321,9 @@ def login():
 
         if user and user.check_password(password):
             login_user(user, force=True)
+            if user.needs_password_change:
+                flash('Sua senha foi resetada. Por favor, crie uma nova senha de segurança.', 'warning')
+                return redirect(url_for('change_password'))
             if not user.is_approved:
                 return redirect(url_for('waiting'))
             return redirect(url_for('dashboard'))
@@ -363,21 +366,48 @@ def register():
 from sqlalchemy import text
 
 with app.app_context():
-    # Robust Migration: Ensure is_approved column exists
+    # Robust Migration: Ensure columns exist
     try:
-        # 1. Try to rename is_active to is_approved (Common migration case)
+        # 1. Try to rename is_active to is_approved
         db.session.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
         db.session.commit()
     except Exception:
         db.session.rollback()
-        try:
-            # 2. If rename failed, try to add it (New install or already renamed)
-            db.session.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
+        
+    try:
+        # 2. Add is_approved if not exists (checked via create_all normally, but explicit for safety)
+        db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE;"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    try:
+        # 3. Add needs_password_change
+        db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS needs_password_change BOOLEAN DEFAULT FALSE;"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
     
     db.create_all()
+
+@app.route('/auth/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        new_password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if new_password != confirm_password:
+            flash('As senhas não coincidem.', 'danger')
+            return render_template('auth/change_password.html')
+            
+        current_user.set_password(new_password)
+        current_user.needs_password_change = False
+        db.session.commit()
+        flash('Senha atualizada com sucesso!', 'success')
+        return redirect(url_for('dashboard'))
+        
+    return render_template('auth/change_password.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
