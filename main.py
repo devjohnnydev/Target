@@ -366,43 +366,39 @@ def register():
 from sqlalchemy import text, inspect
 
 def ensure_db_schema():
+    print("Iniciando sincronização do banco de dados...")
     with app.app_context():
-        # First ensure tables exist
-        db.create_all()
+        try:
+            db.create_all()
+            print("Tabelas base conferidas/criadas.")
+        except Exception as e:
+            print(f"Erro ao executar create_all: {e}")
         
-        # Then check columns in 'users' table
-        inspector = inspect(db.engine)
-        if 'users' in inspector.get_table_names():
-            columns = [c['name'] for c in inspector.get_columns('users')]
-            
-            with db.engine.connect() as conn:
-                # 1. Handle is_approved (rename or add)
-                if 'is_approved' not in columns:
-                    if 'is_active' in columns:
-                        try:
-                            conn.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
-                            print("Coluna is_active renomeada para is_approved.")
-                        except Exception as e:
-                            print(f"Erro ao renomear: {e}")
-                    else:
-                        try:
-                            # Use BOOLEAN DEFAULT FALSE which works for both SQLite and Postgres
-                            conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
-                            print("Coluna is_approved adicionada.")
-                        except Exception as e:
-                            print(f"Erro ao adicionar is_approved: {e}")
-                    conn.commit()
+        with db.engine.connect() as conn:
+            # 1. Rename is_active
+            try:
+                conn.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
+                conn.commit()
+                print("Coluna is_active renomeada para is_approved com sucesso.")
+            except Exception:
+                pass
 
-                # 2. Handle needs_password_change
-                # Re-inspect columns after potential rename
-                columns = [c['name'] for c in inspector.get_columns('users')]
-                if 'needs_password_change' not in columns:
-                    try:
-                        conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
-                        print("Coluna needs_password_change adicionada.")
-                    except Exception as e:
-                        print(f"Erro ao adicionar needs_password_change: {e}")
-                    conn.commit()
+            # 2. Add is_approved
+            try:
+                conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
+                conn.commit()
+                print("Coluna is_approved adicionada/verificada.")
+            except Exception:
+                pass
+
+            # 3. Add needs_password_change
+            try:
+                conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
+                conn.commit()
+                print("Coluna needs_password_change adicionada/verificada.")
+            except Exception:
+                pass
+    print("Sincronização concluída.")
 
 ensure_db_schema()
 

@@ -81,11 +81,12 @@
                                     class="text-indigo-600 hover:text-indigo-700 font-bold text-sm">Reset Senha</button>
                             </div>
                             <form id="reset-{{user.id}}" action="{{ url_for('admin_reset_password', user_id=user.id) }}"
-                                method="POST" class="hidden mt-2">
-                                <input type="password" name="new_password" placeholder="Nova senha"
-                                    class="border px-2 py-1 text-sm rounded">
+                                method="POST" class="hidden mt-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Resetar
+                                    para senha padrão <span class="text-indigo-600">"target"</span>?</p>
                                 <button type="submit"
-                                    class="bg-indigo-600 text-white px-2 py-1 text-sm rounded">Salvar</button>
+                                    class="w-full bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 text-xs rounded-lg font-bold uppercase tracking-widest transition-all">Confirmar
+                                    Reset</button>
                             </form>
                         </td>
                     </tr>
