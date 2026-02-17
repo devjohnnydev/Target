@@ -339,7 +339,8 @@ def register():
         return redirect(url_for('login'))
     return render_template('auth/register.html')
 
+with app.app_context():
+    db.create_all()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
