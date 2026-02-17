@@ -1,81 +1,91 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="relative overflow-hidden bg-slate-900 rounded-3xl mb-16 shadow-2xl">
-    <!-- Abstract Tech Background -->
+<div class="relative overflow-hidden bg-slate-900 rounded-[2.5rem] mb-16 shadow-2xl group">
+    <!-- Hero Background Image -->
     <div
-        class="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1635776062127-d379bfcbb9f8?q=80&w=1932&auto=format&fit=crop')] bg-cover bg-center">
+        class="absolute inset-0 opacity-40 grayscale group-hover:grayscale-0 transition-all duration-1000 bg-[url('/static/img/A1.jpeg')] bg-cover bg-center">
     </div>
-    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-slate-900/90 to-slate-900"></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-950/90 via-slate-900/95 to-slate-900/80"></div>
 
-    <div class="relative max-w-4xl mx-auto text-center py-20 px-6">
+    <div class="relative max-w-4xl mx-auto text-center py-28 px-6">
         <div
-            class="inline-flex items-center space-x-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-2 mb-8">
+            class="inline-flex items-center space-x-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-5 py-2 mb-10 shadow-xl">
             <span class="relative flex h-3 w-3">
                 <span
-                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
-            <span class="text-indigo-300 text-sm font-bold tracking-wide uppercase">New: Validação de Foco com AI</span>
+            <span class="text-white text-xs font-black tracking-[0.2em] uppercase">Evolução do Foco</span>
         </div>
 
-        <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-8 tracking-tight">
-            Controle Seus Estudos com <span
-                class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Precisão
-                Cirúrgica</span>
+        <h1 class="text-6xl md:text-8xl font-black text-white mb-8 tracking-tighter leading-none italic uppercase">
+            Sua Meta.<br><span
+                class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-indigo-400 to-sky-400">Seu
+                Alvo.</span>
         </h1>
 
-        <p class="text-xl text-slate-300 mb-12 leading-relaxed max-w-2xl mx-auto">
-            A plataforma definitiva para gerenciar, comprovar e validar suas horas de estudo para OAB, Concursos e
-            Certificações.
+        <p class="text-xl md:text-2xl text-slate-300 mb-12 leading-relaxed max-w-2xl mx-auto font-medium">
+            A plataforma de alta produtividade para quem busca aprovação em OAB, Concursos e Certificações.
         </p>
 
-        <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
+        <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-8">
             <a href="{{ url_for('register') }}"
-                class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-2xl text-lg transition-all transform hover:scale-105 shadow-xl shadow-indigo-600/20">
-                Começar Agora
+                class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black py-5 px-12 rounded-2xl text-xl transition-all transform hover:scale-105 shadow-2xl shadow-emerald-500/30 uppercase tracking-tight">
+                Entrar no Alvo
             </a>
             <a href="#features"
-                class="w-full sm:w-auto bg-slate-800 text-white hover:bg-slate-700 font-bold py-4 px-10 rounded-2xl text-lg transition-all border border-slate-700">
-                Ver Funcionalidades
+                class="w-full sm:w-auto bg-white/5 backdrop-blur-sm text-white hover:bg-white/10 font-bold py-5 px-12 rounded-2xl text-xl transition-all border border-white/10 uppercase tracking-tight">
+                Ver Mais
             </a>
         </div>
     </div>
 </div>
 
-<div id="features" class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mb-4 mx-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+<div id="features" class="grid grid-cols-1 md:grid-cols-3 gap-10">
+    <div
+        class="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 group hover:border-indigo-200 transition-all">
+        <div class="relative h-48 mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <img src="/static/img/A2.jpeg"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                alt="Registro">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div class="absolute bottom-4 left-4 text-white font-bold text-lg uppercase tracking-wider">Registro Pro
+            </div>
         </div>
-        <h3 class="font-bold text-xl mb-2">Registro Preciso</h3>
-        <p class="text-slate-500">Cronometre suas sessões ou registre manualmente com validação ante-fraude.</p>
+        <h3 class="font-black text-2xl mb-3 text-slate-800 uppercase tracking-tighter italic">Precisão Total</h3>
+        <p class="text-slate-500 leading-relaxed font-medium">Cronometre suas sessões com validação antijogo e
+            relatórios detalhados por matéria.</p>
     </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-4 mx-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+
+    <div
+        class="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 group hover:border-emerald-200 transition-all">
+        <div class="relative h-48 mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <img src="/static/img/A3.jpeg"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                alt="Certificado">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div class="absolute bottom-4 left-4 text-white font-bold text-lg uppercase tracking-wider">UUID Verified
+            </div>
         </div>
-        <h3 class="font-bold text-xl mb-2">Certificação</h3>
-        <p class="text-slate-500">Gere certificados de horas com código de validação pública UUID.</p>
+        <h3 class="font-black text-2xl mb-3 text-slate-800 uppercase tracking-tighter italic">Certificação</h3>
+        <p class="text-slate-500 leading-relaxed font-medium">Gere comprovantes oficiais com validação pública por QR
+            Code e código UUID único.</p>
     </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center mb-4 mx-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+
+    <div
+        class="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 group hover:border-sky-200 transition-all">
+        <div class="relative h-48 mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <img src="/static/img/A4.jpeg"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                alt="Mentoria">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div class="absolute bottom-4 left-4 text-white font-bold text-lg uppercase tracking-wider">Smart Mentory
+            </div>
         </div>
-        <h3 class="font-bold text-xl mb-2">Mentoria</h3>
-        <p class="text-slate-500">Conecte-se com professores que podem guiar e validar seu progresso.</p>
+        <h3 class="font-black text-2xl mb-3 text-slate-800 uppercase tracking-tighter italic">Apoio Real</h3>
+        <p class="text-slate-500 leading-relaxed font-medium">Conecte-se com mentores certificados que acompanham seu
+            desempenho em tempo real.</p>
     </div>
 </div>
 </div>

@@ -27,7 +27,7 @@ def generate_study_certificate(student_name, total_hours, verification_code, obj
     # Logo text
     c.setFont("Helvetica-Bold", 40)
     c.setFillColorRGB(0.2, 0.2, 0.6)
-    c.drawCentredString(width/2, height - 3*cm, "TARGET SaaS")
+    c.drawString(100, 750, "TARGET - CERTIFICADO DE ESTUDOS")
     
     # Content
     c.setFont("Helvetica", 18)

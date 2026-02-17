@@ -18,18 +18,21 @@
     <nav class="bg-indigo-900 text-white shadow-lg">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
             <a href="{{ url_for('index') }}" class="flex items-center space-x-2">
-                <div class="bg-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-200">
+                <div class="bg-indigo-500 p-1.5 rounded-xl shadow-lg shadow-indigo-500/20">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 18c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6zM12 14c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z">
                         </path>
                     </svg>
                 </div>
-                <span class="font-black text-2xl tracking-tighter text-white">TARGET<span
-                        class="text-emerald-400">SaaS</span></span>
+                <span class="font-black text-2xl tracking-tighter text-white uppercase italic">Target</span>
             </a>
-            <div class="space-x-4">
+            <div class="flex items-center space-x-6">
                 {% if current_user.is_authenticated %}
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('admin_monitoring') }}"
+                    class="text-sm font-bold uppercase tracking-wider text-indigo-200 hover:text-white transition">Monitoramento</a>
+                {% endif %}
                 <a href="{{ url_for('dashboard') }}" class="hover:text-emerald-400">Dashboard</a>
                 <a href="{{ url_for('logout') }}"
                     class="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-lg transition">Sair</a>

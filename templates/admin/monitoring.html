@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-10 space-y-4 md:space-y-0">
+        <div>
+            <h1 class="text-4xl font-black text-slate-800 uppercase italic tracking-tighter">Live Monitoring</h1>
+            <p class="text-slate-500 font-medium">Acompanhamento em tempo real dos alunos em sessão.</p>
+        </div>
+
+        <div class="flex items-center space-x-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+            <input type="text" id="studentSearch" placeholder="Filtrar aluno..."
+                class="px-4 py-2 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none w-64">
+            <div class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-widest">
+                <span id="activeCount">{{ active_sessions|length }}</span> Estudando
+            </div>
+        </div>
+    </div>
+
+    <div id="monitoringBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for session in active_sessions %}
+        <div class="student-card bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col justify-between"
+            data-name="{{ session.student.name.lower() }}">
+            <div>
+                <div class="flex justify-between items-start mb-6">
+                    <div class="flex items-center space-x-4">
+                        <div
+                            class="w-14 h-14 bg-indigo-50 rounded-2xl items-center justify-center flex text-indigo-600 shadow-inner">
+                            <span class="text-2xl font-black">{{ session.student.name[0] }}</span>
+                        </div>
+                        <div>
+                            <h3 class="font-black text-xl text-slate-800 uppercase tracking-tight italic">{{
+                                session.student.name }}</h3>
+                            <span class="text-xs font-bold text-slate-400 tracking-[0.2em] uppercase">{{ session.subject
+                                }}</span>
+                        </div>
+                    </div>
+                    <span
+                        class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse">Online</span>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-6 mb-6 text-center border border-slate-100">
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Tempo de Estudo
+                    </div>
+                    <div class="timer text-3xl font-black text-slate-800 tracking-tighter"
+                        data-start="{{ session.start_time.isoformat() }}">
+                        00:00:00:00
+                    </div>
+                    <div class="flex justify-center space-x-4 mt-2 text-[9px] font-bold text-slate-400 uppercase">
+                        <span>Dias</span>
+                        <span>Horas</span>
+                        <span>Min</span>
+                        <span>Seg</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-3">
+                <button
+                    class="flex-1 bg-slate-900 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all">Ver
+                    Plano</button>
+                <button
+                    class="bg-slate-100 text-slate-400 px-4 rounded-xl hover:bg-rose-50 hover:text-rose-500 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function updateTimers() {
+        const timers = document.querySelectorAll('.timer');
+        timers.forEach(timer => {
+            const start = new Date(timer.dataset.start);
+            const now = new Date();
+            const diff = Math.floor((now - start) / 1000);
+
+            const days = Math.floor(diff / 86400);
+            const hours = Math.floor((diff % 86400) / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            const seconds = diff % 60;
+
+            timer.innerText = `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        });
+    }
+
+    setInterval(updateTimers, 1000);
+    updateTimers();
+
+    document.getElementById('studentSearch').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        const cards = document.querySelectorAll('.student-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            if (card.dataset.name.includes(query)) {
+                card.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+        document.getElementById('activeCount').innerText = visibleCount;
+    });
+</script>
+{% endblock %}

@@ -1,7 +1,7 @@
-# Target SaaS - Plataforma de Gestão de Horas de Estudo
+# Target - Plataforma de Gestão de Horas de Estudo
 
 ## 🚀 Sobre o Projeto
-O **Target** é uma plataforma SaaS completa desenvolvida em Python/Flask, projetada para ajudar estudantes a gerenciarem, comprovarem e validarem suas horas de estudo para objetivos específicos como OAB, Concursos Públicos e Certificações. O sistema conta com a supervisão de Professores/Mentores e uma administração centralizada.
+O **Target** é uma plataforma de alta produtividade desenvolvida em Python/Flask, projetada para ajudar estudantes a gerenciarem, comprovarem e validarem suas horas de estudo para objetivos específicos como OAB, Concursos Públicos e Certificações. O sistema conta com a supervisão de Professores/Mentores e uma administração centralizada.
 
 ## 🛠️ Stack Tecnológica
 - **Backend:** Python 3 + Flask
