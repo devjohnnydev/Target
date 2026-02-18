@@ -366,41 +366,56 @@ def register():
 from sqlalchemy import text, inspect
 
 def ensure_db_schema():
-    print("Iniciando sincronização do banco de dados...")
+    print(">>> [DB SYNC] Iniciando sincronização do banco de dados...")
     with app.app_context():
         try:
             db.create_all()
-            print("Tabelas base conferidas/criadas.")
+            print(">>> [DB SYNC] Tabelas base conferidas.")
         except Exception as e:
-            print(f"Erro ao executar create_all: {e}")
+            print(f">>> [DB SYNC] Erro fatal no create_all: {e}")
         
-        with db.engine.connect() as conn:
-            # 1. Rename is_active
-            try:
-                conn.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
-                conn.commit()
-                print("Coluna is_active renomeada para is_approved com sucesso.")
-            except Exception:
-                pass
+        try:
+            inspector = inspect(db.engine)
+            columns = [c['name'] for c in inspector.get_columns('users')]
+            print(f">>> [DB SYNC] Colunas encontradas em 'users': {columns}")
 
-            # 2. Add is_approved
-            try:
-                conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
-                conn.commit()
-                print("Coluna is_approved adicionada/verificada.")
-            except Exception:
-                pass
+            # Identificar colunas faltantes
+            missing_approved = 'is_approved' not in columns
+            has_active = 'is_active' in columns
+            missing_pwd_change = 'needs_password_change' not in columns
 
-            # 3. Add needs_password_change
-            try:
-                conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
-                conn.commit()
-                print("Coluna needs_password_change adicionada/verificada.")
-            except Exception:
-                pass
-    print("Sincronização concluída.")
+            if missing_approved or missing_pwd_change:
+                with db.engine.connect() as conn:
+                    # Rename is_active -> is_approved
+                    if missing_approved and has_active:
+                        print(">>> [DB SYNC] Renomeando is_active para is_approved...")
+                        conn.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
+                    
+                    # Add is_approved if still missing
+                    if missing_approved and not has_active:
+                        print(">>> [DB SYNC] Adicionando coluna is_approved...")
+                        conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
+                    
+                    # Add needs_password_change
+                    if missing_pwd_change:
+                        print(">>> [DB SYNC] Adicionando coluna needs_password_change...")
+                        conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
+                    
+                    conn.commit()
+                    print(">>> [DB SYNC] Alterações de schema aplicadas com sucesso.")
+        except Exception as e:
+            print(f">>> [DB SYNC] Erro durante sincronização manual: {e}")
+            db.session.rollback()
 
 ensure_db_schema()
+
+@app.route('/health')
+def health_check():
+    try:
+        User.query.first()
+        return {"status": "healthy", "database": "connected", "schema": "up_to_date"}, 200
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}, 500
 
 @app.route('/auth/change-password', methods=['GET', 'POST'])
 @login_required
@@ -409,14 +424,14 @@ def change_password():
         new_password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         
-        if new_password != confirm_password:
+        if not new_password or new_password != confirm_password:
             flash('As senhas não coincidem.', 'danger')
             return render_template('auth/change_password.html')
             
         current_user.set_password(new_password)
         current_user.needs_password_change = False
         db.session.commit()
-        flash('Senha atualizada com sucesso!', 'success')
+        flash('Sua chave de acesso foi atualizada com sucesso!', 'success')
         return redirect(url_for('dashboard'))
         
     return render_template('auth/change_password.html')
