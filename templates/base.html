@@ -51,6 +51,10 @@
                 {% endif %}
                 <a href="{{ url_for('dashboard') }}"
                     class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-400 transition-colors">Dashboard</a>
+                {% if current_user.role == 'student' %}
+                <a href="{{ url_for('student_profile') }}"
+                    class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-400 transition-colors text-neon">Perfil</a>
+                {% endif %}
                 <a href="{{ url_for('logout') }}"
                     class="bg-white/5 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 rounded-full border border-white/10 transition-all">Sair</a>
                 {% else %}

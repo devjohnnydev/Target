@@ -14,7 +14,9 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False)  # admin, teacher, student
     photo_url = db.Column(db.String(255), nullable=True)
+    profile_image_type = db.Column(db.String(20), default='url') # 'url' or 'local'
     study_objective = db.Column(db.String(100), nullable=True)  # e.g., OAB, AWS
+    search_intent = db.Column(db.Text, nullable=True) # "Qual o objetivo do estudo? O que busca?"
     is_approved = db.Column(db.Boolean, default=False)
     needs_password_change = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <!-- Header -->
+    <div
+        class="bg-slate-900/50 p-10 rounded-[2.5rem] border border-white/5 backdrop-blur-md relative overflow-hidden group">
+        <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+            <svg class="w-32 h-32 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+        </div>
+        <div class="relative z-10">
+            <h1 class="text-4xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Meu <span
+                    class="text-emerald-400">Perfil</span></h1>
+            <p class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em]">Personalização de Mentoria e
+                Identidade Digital</p>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-8">
+        <!-- Identity Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 space-y-6">
+                <div
+                    class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 flex flex-col items-center text-center">
+                    <div
+                        class="w-32 h-32 rounded-full border-2 border-emerald-500/30 p-1 mb-6 relative group overflow-hidden">
+                        <div class="w-full h-full rounded-full overflow-hidden bg-white/5">
+                            {% if current_user.photo_url %}
+                            <img src="{{ current_user.photo_url if current_user.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + current_user.photo_url) }}"
+                                class="w-full h-full object-cover" id="img-preview">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-slate-500 text-2xl font-bold"
+                                id="img-placeholder">
+                                {{ current_user.name[:2].upper() }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="space-y-4 w-full">
+                        <div class="flex flex-col space-y-2">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tipo de
+                                Imagem</label>
+                            <div class="grid grid-cols-2 gap-2 bg-slate-950/50 p-1 rounded-xl border border-white/5">
+                                <button type="button" onclick="setImgType('url')" id="btn-url"
+                                    class="py-2 text-[8px] font-bold uppercase rounded-lg transition-all {% if current_user.profile_image_type == 'url' %}bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20{% else %}text-slate-500 hover:text-white{% endif %}">External
+                                    URL</button>
+                                <button type="button" onclick="setImgType('local')" id="btn-local"
+                                    class="py-2 text-[8px] font-bold uppercase rounded-lg transition-all {% if current_user.profile_image_type == 'local' %}bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20{% else %}text-slate-500 hover:text-white{% endif %}">Local
+                                    File</button>
+                            </div>
+                            <input type="hidden" name="image_type" id="image_type"
+                                value="{{ current_user.profile_image_type or 'url' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-10 space-y-8">
+                    <!-- Image Input Contextual -->
+                    <div id="url-container"
+                        class="{% if current_user.profile_image_type == 'local' %}hidden{% endif %} space-y-4">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">URL da Imagem
+                            de Perfil</label>
+                        <input type="text" name="photo_url"
+                            value="{{ current_user.photo_url if current_user.profile_image_type == 'url' else '' }}"
+                            placeholder="https://exemplo.com/foto.jpg"
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-xs outline-none focus:border-emerald-500/30 transition-all font-mono">
+                    </div>
+
+                    <div id="local-container"
+                        class="{% if current_user.profile_image_type != 'local' %}hidden{% endif %} space-y-4">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Selecione seu
+                            Arquivo Local</label>
+                        <div class="relative group">
+                            <input type="file" name="local_photo" class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                onchange="previewFile(this)">
+                            <div
+                                class="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center group-hover:border-emerald-500/30 transition-all bg-slate-950/30">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                                    id="file-label">Arraste ou clique para selecionar</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Objetivo
+                                de Estudo Principal</label>
+                            <input type="text" name="study_objective" value="{{ current_user.study_objective or '' }}"
+                                placeholder="Ex: Certificação AWS, OAB, Python Master"
+                                class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-xs outline-none focus:border-emerald-500/30 transition-all">
+                        </div>
+                        <div class="space-y-4">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">O que
+                                você está em busca?</label>
+                            <textarea name="search_intent" rows="3"
+                                placeholder="Conte um pouco sobre suas metas e o que espera do PCP..."
+                                class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-xs outline-none focus:border-emerald-500/30 transition-all resize-none">{{ current_user.search_intent or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="submit"
+                        class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-futuristic py-5 px-12 rounded-2xl text-[12px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-emerald-500/20 italic font-bold">Salvar
+                        Configurações</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    function setImgType(type) {
+        document.getElementById('image_type').value = type;
+        const btnUrl = document.getElementById('btn-url');
+        const btnLocal = document.getElementById('btn-local');
+        const contUrl = document.getElementById('url-container');
+        const contLocal = document.getElementById('local-container');
+
+        if (type === 'url') {
+            btnUrl.className = "py-2 text-[8px] font-bold uppercase rounded-lg transition-all bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20";
+            btnLocal.className = "py-2 text-[8px] font-bold uppercase rounded-lg transition-all text-slate-500 hover:text-white";
+            contUrl.classList.remove('hidden');
+            contLocal.classList.add('hidden');
+        } else {
+            btnLocal.className = "py-2 text-[8px] font-bold uppercase rounded-lg transition-all bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20";
+            btnUrl.className = "py-2 text-[8px] font-bold uppercase rounded-lg transition-all text-slate-500 hover:text-white";
+            contLocal.classList.remove('hidden');
+            contUrl.classList.add('hidden');
+        }
+    }
+
+    function previewFile(input) {
+        if (input.files && input.files[0]) {
+            const label = document.getElementById('file-label');
+            label.innerText = `Selecionado: ${input.files[0].name}`;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const preview = document.getElementById('img-preview');
+                const placeholder = document.getElementById('img-placeholder');
+
+                if (preview) {
+                    preview.src = e.target.result;
+                } else if (placeholder) {
+                    placeholder.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

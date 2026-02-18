@@ -91,11 +91,16 @@ def admin_dashboard():
     if subject_filter:
         sessions_query = sessions_query.filter(StudySession.subject.ilike(f"%{subject_filter}%"))
     if date_filter:
-        try:
-            target_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+        if date_filter == 'today':
+            target_date = datetime.utcnow().date()
             sessions_query = sessions_query.filter(StudySession.date == target_date)
-        except:
-            pass
+            date_filter = target_date.strftime('%Y-%m-%d')
+        else:
+            try:
+                target_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+                sessions_query = sessions_query.filter(StudySession.date == target_date)
+            except:
+                pass
 
     # Aggregated Stats
     total_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
@@ -110,10 +115,12 @@ def admin_dashboard():
         User.name,
         User.email,
         User.is_approved,
+        User.photo_url,
+        User.profile_image_type,
         db.func.sum(StudySession.duration_minutes).label('total_minutes')
     ).join(StudySession, User.id == StudySession.student_id, isouter=True)\
      .filter(User.role == 'student')\
-     .group_by(User.id)
+     .group_by(User.id, User.photo_url, User.profile_image_type)
 
     # Apply sorting
     if sort_order == 'asc':
@@ -125,14 +132,19 @@ def admin_dashboard():
     
     # Format ranking results
     ranking = []
-    for s_id, s_name, s_email, s_approved, s_minutes in all_students:
+    for s_id, s_name, s_email, s_approved, s_photo, s_img_type, s_minutes in all_students:
         ranking.append({
             'id': s_id,
             'name': s_name,
             'email': s_email,
             'is_approved': s_approved,
+            'photo_url': s_photo,
+            'profile_image_type': s_img_type,
             'hours': round((s_minutes or 0) / 60, 1)
         })
+
+    # Active sessions for Real-time Monitoring
+    active_sessions = StudySession.query.filter(StudySession.end_time == None).all()
 
     licenses = License.query.all()
     # Unique subjects for the filter dropdown
@@ -143,6 +155,7 @@ def admin_dashboard():
                          ranking=ranking, 
                          total_hours=total_hours, 
                          licenses=licenses,
+                         active_sessions=active_sessions,
                          available_subjects=available_subjects,
                          current_subject=subject_filter,
                          current_date=date_filter,
@@ -245,6 +258,33 @@ def create_study_plan():
     return redirect(url_for('teacher_dashboard'))
 
 # --- Student Routes ---
+
+@app.route('/student/profile', methods=['GET', 'POST'])
+@role_required('student')
+def student_profile():
+    if request.method == 'POST':
+        user = User.query.get(current_user.id)
+        user.study_objective = request.form.get('study_objective')
+        user.search_intent = request.form.get('search_intent')
+        
+        img_type = request.form.get('image_type') # 'local' or 'url'
+        user.profile_image_type = img_type
+        
+        if img_type == 'url':
+            user.photo_url = request.form.get('photo_url')
+        else:
+            file = request.files.get('local_photo')
+            if file and allowed_file(file.filename):
+                filename = f"profile_{user.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
+                os.makedirs('static/uploads/profiles', exist_ok=True)
+                file.save(os.path.join('static/uploads/profiles', filename))
+                user.photo_url = filename
+        
+        db.session.commit()
+        flash('Perfil atualizado com sucesso!', 'success')
+        return redirect(url_for('student_profile'))
+        
+    return render_template('student/profile.html', user=current_user)
 
 @app.route('/student')
 @role_required('student')
@@ -648,6 +688,10 @@ def ensure_db_schema():
                         conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
                 if 'needs_password_change' not in columns_users:
                     conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
+                if 'profile_image_type' not in columns_users:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN profile_image_type VARCHAR(20) DEFAULT 'url';"))
+                if 'search_intent' not in columns_users:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN search_intent TEXT;"))
                 
                 # Check study_sessions table
                 columns_sessions = [c['name'] for c in inspector.get_columns('study_sessions')]
