@@ -1,5 +1,6 @@
 import os
 import uuid
+import requests
 from datetime import datetime, timedelta
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -25,6 +26,10 @@ ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'zip', 'doc', 'docx'}
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('static/certificates', exist_ok=True)
+
+# Kuryos AI Config (Groq)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "SUA_CHAVE_AQUI")
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -75,11 +80,73 @@ def dashboard():
 @app.route('/admin')
 @role_required('admin')
 def admin_dashboard():
-    users = User.query.all()
-    total_hours = db.session.query(db.func.sum(StudySession.duration_minutes)).scalar() or 0
-    total_hours = round(total_hours / 60, 1)
+    # Filters from request
+    subject_filter = request.args.get('subject')
+    date_filter = request.args.get('date') # YYYY-MM-DD
+    sort_order = request.args.get('sort', 'desc') # 'asc' or 'desc'
+
+    # Base query for stats
+    sessions_query = StudySession.query
+
+    if subject_filter:
+        sessions_query = sessions_query.filter(StudySession.subject.ilike(f"%{subject_filter}%"))
+    if date_filter:
+        try:
+            target_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            sessions_query = sessions_query.filter(StudySession.date == target_date)
+        except:
+            pass
+
+    # Aggregated Stats
+    total_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
+        StudySession.id.in_(sessions_query.with_entities(StudySession.id))
+    ).scalar() or 0
+    total_hours = round(total_minutes / 60, 1)
+
+    # Student Ranking Data
+    # Calculate sum of minutes per student
+    student_stats = db.session.query(
+        User.id,
+        User.name,
+        User.email,
+        User.is_approved,
+        db.func.sum(StudySession.duration_minutes).label('total_minutes')
+    ).join(StudySession, User.id == StudySession.student_id, isouter=True)\
+     .filter(User.role == 'student')\
+     .group_by(User.id)
+
+    # Apply sorting
+    if sort_order == 'asc':
+        student_stats = student_stats.order_by(db.text('total_minutes ASC'))
+    else:
+        student_stats = student_stats.order_by(db.text('total_minutes DESC'))
+
+    all_students = student_stats.all()
+    
+    # Format ranking results
+    ranking = []
+    for s_id, s_name, s_email, s_approved, s_minutes in all_students:
+        ranking.append({
+            'id': s_id,
+            'name': s_name,
+            'email': s_email,
+            'is_approved': s_approved,
+            'hours': round((s_minutes or 0) / 60, 1)
+        })
+
     licenses = License.query.all()
-    return render_template('admin/dashboard.html', users=users, total_hours=total_hours, licenses=licenses)
+    # Unique subjects for the filter dropdown
+    available_subjects = db.session.query(StudySession.subject).distinct().all()
+    available_subjects = [s[0] for s in available_subjects]
+
+    return render_template('admin/dashboard.html', 
+                         ranking=ranking, 
+                         total_hours=total_hours, 
+                         licenses=licenses,
+                         available_subjects=available_subjects,
+                         current_subject=subject_filter,
+                         current_date=date_filter,
+                         current_sort=sort_order)
 
 @app.route('/admin/approve/<int:user_id>')
 @role_required('admin')
@@ -429,6 +496,46 @@ def update_plan_status(plan_id):
         db.session.commit()
         return {"status": "success", "new_status": new_status}
     return {"error": "Invalid status"}, 400
+
+@app.route('/ai/ask', methods=['POST'])
+@role_required('student')
+def ai_ask():
+    user_question = request.json.get('question')
+    if not user_question:
+        return {"error": "No question provided"}, 400
+
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # System prompt to define Kuryos AI personality
+    system_prompt = (
+        "Você é o Kuryos AI, um Mentor de Estudos Premium e conciso. "
+        "Seu objetivo é ajudar alunos do SENAI e usuários da plataforma Target SaaS a tirar dúvidas técnicas e de estudo. "
+        "Seja motivador, use tom futurista e mantenha as respostas diretas ao ponto. "
+        "Formate suas respostas em Markdown (negrito, listas, etc) para facilitar a leitura."
+    )
+
+    data = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_question}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 1024
+    }
+
+    try:
+        response = requests.post(GROQ_API_URL, headers=headers, json=data, timeout=15)
+        response.raise_for_status()
+        result = response.json()
+        ai_message = result['choices'][0]['message']['content']
+        return {"answer": ai_message}
+    except Exception as e:
+        print(f"Groq API Error: {e}")
+        return {"error": "O Kuryos AI está temporariamente offline. Tente novamente em instantes."}, 500
 
 # --- Public Route ---
 

@@ -265,7 +265,6 @@
             </div>
         </div>
 
-        <!-- Timeline & Filtering -->
         <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 group">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
                 <h2 class="text-xl font-futuristic text-white uppercase tracking-widest italic">Timeline de Foco</h2>
@@ -282,8 +281,17 @@
 
             <div class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2" id="timeline-list">
                 {% for session in sessions %}
-                <div class="timeline-item flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-2xl hover:border-emerald-500/20 transition-all group/item"
-                    data-title="{{ session.subject }} {{ session.subtitle }}">
+                <div class="timeline-item flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-2xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group/item cursor-pointer"
+                    onclick="showSessionDetails({
+                         subject: '{{ session.subject }}',
+                         subtitle: '{{ session.subtitle or "" }}',
+                         duration: '{{ session.duration_minutes }}',
+                         date: '{{ session.start_time.strftime(" %d/%m/%Y") }}',
+                    start: '{{ session.start_time.strftime("%H:%M") }}' ,
+                    end: '{{ session.end_time.strftime("%H:%M") if session.end_time else "Ativa" }}' ,
+                    comment: '{{ session.completion_comment or "Sem comentário." }}' ,
+                    link: '{{ session.completion_link or "" }}' , file: '{{ session.completion_file or "" }}' ,
+                    type: '{{ session.type }}' })" data-title="{{ session.subject }} {{ session.subtitle }}">
                     <div class="flex items-center space-x-5">
                         <div
                             class="w-12 h-12 rounded-xl bg-white/5 flex flex-col items-center justify-center border border-white/5">
@@ -314,6 +322,41 @@
 
     <!-- Sidebar -->
     <div class="space-y-8">
+        <!-- Kuryos AI Mentor (New Section) -->
+        <div class="bg-indigo-600/10 rounded-[2.5rem] border border-indigo-500/30 p-8 relative overflow-hidden group">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-sm font-futuristic text-white uppercase tracking-[0.3em] italic">Kuryos AI Mentor</h2>
+                <div class="flex space-x-1">
+                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></span>
+                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"
+                        style="animation-delay: 0.2s"></span>
+                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"
+                        style="animation-delay: 0.4s"></span>
+                </div>
+            </div>
+
+            <div id="ai-chat-box" class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 mb-6">
+                <div class="bg-indigo-500/10 rounded-2xl p-4 border border-indigo-500/10">
+                    <p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mb-1">Kuryos AI</p>
+                    <p class="text-xs text-white leading-relaxed">Olá, sou seu mentor assistente. Qual sua dúvida
+                        técnica ou de estudo hoje?</p>
+                </div>
+            </div>
+
+            <div class="relative">
+                <input type="text" id="ai-input" placeholder="DIGITE SUA DÚVIDA..."
+                    class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[10px] font-bold tracking-widest uppercase outline-none focus:border-indigo-500/50 pr-12">
+                <button onclick="askAI()" id="ai-send-btn"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-400 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
         <!-- Mentorship -->
         <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
             <h2 class="text-sm font-futuristic text-white mb-6 uppercase tracking-[0.3em] italic">Vincular Mentor</h2>
@@ -386,7 +429,151 @@
     </div>
 </div>
 
+<!-- Session Details Modal -->
+<div id="session-modal"
+    class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+    <div
+        class="bg-slate-900 border border-white/10 w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+        <div class="absolute top-0 right-0 p-6">
+            <button onclick="closeModal()" class="text-slate-500 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="p-10 space-y-8">
+            <div>
+                <div
+                    class="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 mb-4">
+                    <span class="text-emerald-500 text-[8px] font-bold uppercase tracking-[0.2em]" id="modal-type">FREE
+                        SESSION</span>
+                </div>
+                <h2 class="text-3xl font-futuristic text-white uppercase italic tracking-tight" id="modal-subject">
+                    ESTUDO GERAL</h2>
+                <p class="text-emerald-400 font-bold text-xs uppercase tracking-widest mt-2" id="modal-subtitle">//
+                    SUB-TÓPICO</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 pb-6 border-b border-white/5">
+                <div class="bg-white/5 p-4 rounded-2xl">
+                    <span class="text-slate-500 font-bold text-[9px] uppercase tracking-widest block mb-1">Duração
+                        Total</span>
+                    <span class="text-xl font-futuristic text-white" id="modal-duration">60M</span>
+                </div>
+                <div class="bg-white/5 p-4 rounded-2xl text-right">
+                    <span class="text-slate-500 font-bold text-[9px] uppercase tracking-widest block mb-1">Data e
+                        Hora</span>
+                    <span class="text-[11px] font-futuristic text-white" id="modal-datetime">17/02/2026 - 21:00</span>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Resumo
+                        do Aprendizado</span>
+                    <p class="text-xs text-white leading-relaxed p-5 bg-slate-950/50 border border-white/5 rounded-2xl italic"
+                        id="modal-comment">Nenhum comentário registrado.</p>
+                </div>
+
+                <div class="flex gap-4" id="modal-actions">
+                    <!-- Dynamic Links -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
+    function showSessionDetails(data) {
+        document.getElementById('modal-subject').innerText = data.subject;
+        document.getElementById('modal-subtitle').innerText = data.subtitle ? `// ${data.subtitle}` : '';
+        document.getElementById('modal-duration').innerText = `${data.duration}M`;
+        document.getElementById('modal-datetime').innerText = `${data.date} • ${data.start} - ${data.end}`;
+        document.getElementById('modal-comment').innerText = data.comment;
+        document.getElementById('modal-type').innerText = `${data.type} session`.toUpperCase();
+
+        const actions = document.getElementById('modal-actions');
+        actions.innerHTML = '';
+
+        if (data.link) {
+            actions.innerHTML += `<a href="${data.link}" target="_blank" class="flex-1 bg-white/5 hover:bg-emerald-500 hover:text-slate-950 border border-white/10 py-3 rounded-xl text-center text-[10px] font-bold uppercase tracking-widest transition-all">Ver Link</a>`;
+        }
+
+        if (data.file) {
+            actions.innerHTML += `<a href="/static/uploads/${data.file}" target="_blank" class="flex-1 bg-emerald-500 text-slate-950 py-3 rounded-xl text-center text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20">Ver Arquivo</a>`;
+        }
+
+        document.getElementById('session-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('session-modal').classList.add('hidden');
+    }
+
+    // AI Chat Logic
+    async function askAI() {
+        const input = document.getElementById('ai-input');
+        const question = input.value.trim();
+        if (!question) return;
+
+        const chatBox = document.getElementById('ai-chat-box');
+        const sendBtn = document.getElementById('ai-send-btn');
+
+        // Append User Message
+        const userDiv = document.createElement('div');
+        userDiv.className = 'bg-white/5 rounded-2xl p-4 border border-white/5 ml-4';
+        userDiv.innerHTML = `<p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Você</p>
+                            <p class="text-xs text-white leading-relaxed">${question}</p>`;
+        chatBox.appendChild(userDiv);
+
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Loading Indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'bg-indigo-500/10 rounded-2xl p-4 border border-indigo-500/10 animate-pulse ai-temp';
+        loadingDiv.innerHTML = `<p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mb-1">Kuryos AI</p>
+                                <p class="text-xs text-indigo-200">Pensando...</p>`;
+        chatBox.appendChild(loadingDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        sendBtn.disabled = true;
+
+        try {
+            const response = await fetch('/ai/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question })
+            });
+            const data = await response.json();
+
+            document.querySelectorAll('.ai-temp').forEach(el => el.remove());
+
+            const aiDiv = document.createElement('div');
+            aiDiv.className = 'bg-indigo-500/10 rounded-2xl p-4 border border-indigo-500/10';
+            const formattedAnswer = marked.parse(data.answer || data.error);
+            aiDiv.innerHTML = `<p class="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mb-1">Kuryos AI</p>
+                               <div class="text-xs text-white leading-relaxed prose-invert prose-xs">${formattedAnswer}</div>`;
+            chatBox.appendChild(aiDiv);
+        } catch (e) {
+            document.querySelectorAll('.ai-temp').forEach(el => el.remove());
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'bg-rose-500/10 rounded-2xl p-4 border border-rose-500/10';
+            errorDiv.innerHTML = `<p class="text-xs text-rose-400">Erro na conexão. Tente novamente.</p>`;
+            chatBox.appendChild(errorDiv);
+        } finally {
+            sendBtn.disabled = false;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    }
+
+    document.getElementById('ai-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') askAI();
+    });
+
     // Kanban Logic
     function allowDrop(ev) { ev.preventDefault(); }
     function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
@@ -476,6 +663,28 @@
     .kanban-card:active {
         transform: rotate(2deg);
         opacity: 0.8;
+    }
+
+    /* Prose minimal styles for AI response */
+    .prose-xs {
+        font-size: 0.75rem;
+        line-height: 1.5;
+        color: #fff;
+    }
+
+    .prose-xs strong {
+        color: #818cf8;
+        font-weight: 800;
+    }
+
+    .prose-xs ul {
+        list-style-type: disc;
+        margin-left: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .prose-xs p {
+        margin-bottom: 0.5rem;
     }
 </style>
 {% endblock %}
