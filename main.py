@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask
+from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage
 from functools import wraps
 from werkzeug.utils import secure_filename
 
