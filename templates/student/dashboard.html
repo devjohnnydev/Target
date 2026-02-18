@@ -386,9 +386,9 @@
         <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
             <h2 class="text-sm font-futuristic text-white mb-6 uppercase tracking-[0.3em] italic">Vincular Mentor</h2>
             <form action="{{ url_for('request_mentorship') }}" method="POST" class="space-y-4">
-                <select name="teacher_id"
+                <select name="teacher_id" required
                     class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-[10px] font-bold tracking-widest uppercase appearance-none focus:border-emerald-500/30">
-                    <option value="">STATUS: BUSCANDO MENTOR</option>
+                    <option value="" disabled selected>STATUS: BUSCANDO MENTOR</option>
                     {% for teacher in all_teachers %}
                     <option value="{{ teacher.id }}">{{ teacher.name }}</option>
                     {% endfor %}

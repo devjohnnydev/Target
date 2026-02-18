@@ -512,15 +512,31 @@ def download_certificate(filename):
 @role_required('student')
 def request_mentorship():
     teacher_id = request.form.get('teacher_id')
+    
+    if not teacher_id or not str(teacher_id).isdigit():
+        flash('Por favor, selecione um mentor válido.', 'danger')
+        return redirect(url_for('student_dashboard'))
+        
+    teacher = User.query.filter_by(id=teacher_id, role='teacher').first()
+    if not teacher:
+        flash('Mentor não encontrado ou inválido.', 'danger')
+        return redirect(url_for('student_dashboard'))
+
     # Check if already exists
     exists = Mentorship.query.filter_by(student_id=current_user.id, teacher_id=teacher_id).first()
     if exists:
-        flash('Solicitação de mentoria já enviada ou ativa.', 'info')
+        flash('Você já possui uma solicitação ou vínculo com este mentor.', 'info')
     else:
-        new_mentorship = Mentorship(student_id=current_user.id, teacher_id=teacher_id, status='active') # Auto-active for simplicity here
-        db.session.add(new_mentorship)
-        db.session.commit()
-        flash('Mentor vinculado com sucesso!', 'success')
+        try:
+            new_mentorship = Mentorship(student_id=current_user.id, teacher_id=teacher_id, status='active')
+            db.session.add(new_mentorship)
+            db.session.commit()
+            flash(f'Vínculo com {teacher.name} estabelecido com sucesso!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            print(f"Erro ao vincular mentor: {e}")
+            flash('Erro técnico ao processar o vínculo. Tente novamente.', 'danger')
+            
     return redirect(url_for('student_dashboard'))
 
 @app.route('/study/plan/update-status/<int:plan_id>', methods=['POST'])
