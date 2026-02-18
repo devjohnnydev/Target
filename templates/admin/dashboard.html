@@ -11,10 +11,14 @@
             <p class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.3em]">Monitoramento Analítico e Gestão
                 do Sistema</p>
         </div>
-        <div class="flex items-center space-x-6">
+        <div class="flex items-center space-x-4">
             <a href="{{ url_for('admin_monitoring') }}"
-                class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-futuristic py-4 px-8 rounded-2xl text-[10px] transition-all shadow-lg shadow-emerald-500/20 uppercase tracking-[0.2em] italic">Monitoramento
-                Live</a>
+                class="bg-indigo-500/10 hover:bg-indigo-500 text-indigo-400 hover:text-white font-futuristic py-4 px-6 rounded-2xl text-[9px] border border-indigo-500/20 transition-all uppercase tracking-[0.2em] italic flex items-center">
+                <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping mr-2"></span> Monitoramento Live
+            </a>
+            <a href="{{ url_for('admin_analytics') }}"
+                class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-futuristic py-4 px-8 rounded-2xl text-[10px] transition-all shadow-lg shadow-emerald-500/20 uppercase tracking-[0.2em] italic">📈
+                Analytics Avançado</a>
             <div class="bg-white/5 px-8 py-4 rounded-2xl border border-white/5 text-right">
                 <span class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] block mb-1">Total
                     Filtrado</span>
@@ -74,26 +78,80 @@
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for session in active_sessions %}
-            <div class="bg-indigo-950/30 border border-indigo-500/10 p-5 rounded-2xl flex items-center space-x-4">
-                <div class="w-10 h-10 rounded-full border border-indigo-500/20 overflow-hidden flex-shrink-0">
-                    {% if session.student.photo_url %}
-                    <img src="{{ session.student.photo_url if session.student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + session.student.photo_url) }}"
-                        class="w-full h-full object-cover">
-                    {% else %}
-                    <div
-                        class="w-full h-full bg-indigo-500/20 flex items-center justify-center text-indigo-300 text-[10px] font-bold">
-                        {{ session.student.name[:2].upper() }}
+            <div
+                class="bg-indigo-950/30 border border-indigo-500/10 p-5 rounded-2xl flex items-center justify-between group">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 rounded-full border border-indigo-500/20 overflow-hidden flex-shrink-0">
+                        {% if session.student.photo_url %}
+                        <img src="{{ session.student.photo_url if session.student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + session.student.photo_url) }}"
+                            class="w-full h-full object-cover">
+                        {% else %}
+                        <div
+                            class="w-full h-full bg-indigo-500/20 flex items-center justify-center text-indigo-300 text-[10px] font-bold">
+                            {{ session.student.name[:2].upper() }}
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
+                    <div>
+                        <div class="text-[10px] font-futuristic text-white uppercase">{{ session.student.name }}</div>
+                        <div class="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">{{ session.subject
+                            }}
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <div class="text-[10px] font-futuristic text-white uppercase">{{ session.student.name }}</div>
-                    <div class="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">{{ session.subject }}
-                    </div>
+                <div class="text-right">
+                    <div class="text-[10px] font-futuristic text-emerald-400"
+                        data-start-time="{{ session.start_time.isoformat() }}" data-live-timer>00:00:00</div>
+                    <div class="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Em Sessão</div>
                 </div>
             </div>
             {% endfor %}
         </div>
+    </div>
+    {% endif %}
+
+    <!-- User Approvals -->
+    {% if pending_users %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {% for role in ['teacher', 'student'] %}
+        {% set role_users = pending_users | selectattr('role', 'equalto', role) | list %}
+        {% if role_users %}
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
+            <h2 class="text-xs font-futuristic text-white mb-6 uppercase tracking-[0.3em] italic">
+                Aprovações Pendentes: <span class="text-{{ 'emerald-400' if role == 'teacher' else 'amber-400' }}">{{
+                    role|upper }}S</span>
+            </h2>
+            <div class="space-y-4">
+                {% for user in role_users %}
+                <div
+                    class="bg-slate-950/50 border border-white/5 p-5 rounded-2xl flex items-center justify-between group">
+                    <div class="flex items-center space-x-4">
+                        <div
+                            class="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-slate-500 text-xs font-bold">
+                            {{ user.name[:2].upper() }}
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-futuristic text-white uppercase">{{ user.name }}</div>
+                            <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{{ user.email }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <form action="{{ url_for('admin_approve', user_id=user.id) }}" method="POST">
+                            <button type="submit"
+                                class="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-slate-950 px-4 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all">Aprovar</button>
+                        </form>
+                        <form action="{{ url_for('admin_reject', user_id=user.id) }}" method="POST">
+                            <button type="submit"
+                                class="bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-slate-950 px-4 py-2 rounded-lg text-[8px] font-bold uppercase tracking-widest transition-all">Rejeitar</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
     </div>
     {% endif %}
 
@@ -245,6 +303,35 @@
         const form = document.getElementById('reset-' + id);
         form.classList.toggle('hidden');
     }
+
+    // Real-time Timer Logic
+    function updateTimers() {
+        const timers = document.querySelectorAll('[data-live-timer]');
+        timers.forEach(timer => {
+            const startTimeStr = timer.getAttribute('data-start-time');
+            if (!startTimeStr) return;
+
+            const startTime = new Date(startTimeStr);
+            const now = new Date();
+            const diff = now - startTime;
+
+            if (diff < 0) return;
+
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+
+            const display =
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+
+            timer.innerText = display;
+        });
+    }
+
+    setInterval(updateTimers, 1000);
+    updateTimers();
 </script>
 
 <style>

@@ -146,6 +146,9 @@ def admin_dashboard():
     # Active sessions for Real-time Monitoring
     active_sessions = StudySession.query.filter(StudySession.end_time == None).all()
 
+    # Pending Users for Approval
+    pending_users = User.query.filter_by(is_approved=False).order_by(User.created_at.desc()).all()
+
     licenses = License.query.all()
     # Unique subjects for the filter dropdown
     available_subjects = db.session.query(StudySession.subject).distinct().all()
@@ -156,19 +159,67 @@ def admin_dashboard():
                          total_hours=total_hours, 
                          licenses=licenses,
                          active_sessions=active_sessions,
+                         pending_users=pending_users,
                          available_subjects=available_subjects,
                          current_subject=subject_filter,
                          current_date=date_filter,
                          current_sort=sort_order)
 
-@app.route('/admin/approve/<int:user_id>')
+@app.route('/admin/approve/<int:user_id>', methods=['POST'])
 @role_required('admin')
-def approve_user(user_id):
+def admin_approve(user_id):
     user = User.query.get_or_404(user_id)
     user.is_approved = True
     db.session.commit()
     flash(f'Usuário {user.name} aprovado com sucesso!', 'success')
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/reject/<int:user_id>', methods=['POST'])
+@role_required('admin')
+def admin_reject(user_id):
+    user = User.query.get_or_404(user_id)
+    name = user.name
+    db.session.delete(user)
+    db.session.commit()
+    flash(f'Solicitação de {name} removida.', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/analytics')
+@role_required('admin')
+def admin_analytics():
+    # 1. Study time per Student
+    time_per_student = db.session.query(
+        User.name,
+        db.func.sum(StudySession.duration_minutes).label('total_minutes')
+    ).join(StudySession, User.id == StudySession.student_id)\
+     .group_by(User.id, User.name)\
+     .order_by(db.text('total_minutes DESC')).all()
+    
+    # 2. Study time per Subject/Title
+    time_per_subject = db.session.query(
+        StudySession.subject,
+        db.func.sum(StudySession.duration_minutes).label('total_minutes')
+    ).group_by(StudySession.subject)\
+     .order_by(db.text('total_minutes DESC')).all()
+    
+    # 3. Study time per Date (Last 30 days)
+    last_30_days = datetime.utcnow().date() - timedelta(days=30)
+    time_per_day = db.session.query(
+        StudySession.date,
+        db.func.sum(StudySession.duration_minutes).label('total_minutes')
+    ).filter(StudySession.date >= last_30_days)\
+     .group_by(StudySession.date)\
+     .order_by(StudySession.date.asc()).all()
+
+    # Format data for template (converting to hours)
+    metrics = {
+        'students': [{'name': r[0], 'hours': round(r[1]/60, 1)} for r in time_per_student],
+        'subjects': [{'name': r[0], 'hours': round(r[1]/60, 1)} for r in time_per_subject],
+        'dates': [{'date': r[0].strftime('%d/%m'), 'hours': round(r[1]/60, 1)} for r in time_per_day]
+    }
+
+    return render_template('admin/analytics.html', metrics=metrics)
+
 
 @app.route('/admin/reset-password/<int:user_id>', methods=['POST'])
 @role_required('admin')

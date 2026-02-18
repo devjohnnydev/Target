@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-10">
+    <!-- Header -->
+    <div
+        class="bg-slate-900/50 p-10 rounded-[2.5rem] border border-white/5 backdrop-blur-md relative overflow-hidden group">
+        <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+            <svg class="w-32 h-32 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                </path>
+            </svg>
+        </div>
+        <div class="relative z-10">
+            <h1 class="text-4xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Analytics <span
+                    class="text-emerald-400">Avançado</span></h1>
+            <p class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em]">Distribuição de Performance e
+                Engajamento Profundo</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Time per Student -->
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 space-y-6">
+            <h2 class="text-xs font-futuristic text-white uppercase tracking-[0.3em] italic">Tempo por <span
+                    class="text-emerald-400">Estudante</span></h2>
+            <div class="space-y-4">
+                {% for student in metrics.students %}
+                <div class="relative group">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-slate-300 uppercase">{{ student.name }}</span>
+                        <span class="text-[10px] font-futuristic text-emerald-400">{{ student.hours }}H</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-white/5">
+                        {% set max_hours = metrics.students[0].hours if metrics.students else 1 %}
+                        {% set percentage = (student.hours / max_hours * 100)|round(0) %}
+                        <div class="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000"
+                            style="width: {{ percentage }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Time per Subject -->
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 space-y-6">
+            <h2 class="text-xs font-futuristic text-white uppercase tracking-[0.3em] italic">Distribuição por <span
+                    class="text-amber-400">Assunto</span></h2>
+            <div class="space-y-4">
+                {% for subject in metrics.subjects %}
+                <div class="relative group">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-slate-300 uppercase">{{ subject.name }}</span>
+                        <span class="text-[10px] font-futuristic text-amber-400">{{ subject.hours }}H</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-white/5">
+                        {% set max_hours_sub = metrics.subjects[0].hours if metrics.subjects else 1 %}
+                        {% set percentage_sub = (subject.hours / max_hours_sub * 100)|round(0) %}
+                        <div class="h-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)] transition-all duration-1000"
+                            style="width: {{ percentage_sub }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Time per Day (Trend Chart) -->
+    <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-10 space-y-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h2 class="text-xs font-futuristic text-white uppercase tracking-[0.3em] italic">Tendência de Estudo <span
+                    class="text-indigo-400">(Últimos 30 Dias)</span></h2>
+            <div
+                class="px-5 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[8px] font-bold text-indigo-300 uppercase tracking-widest">
+                Snapshot de Atividade</div>
+        </div>
+
+        <div class="h-64 flex items-end space-x-2 md:space-x-4">
+            {% for day in metrics.dates %}
+            <div class="flex-grow flex flex-col items-center group relative">
+                <!-- Tooltip -->
+                <div
+                    class="absolute bottom-full mb-4 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-300 pointer-events-none z-20">
+                    <div
+                        class="bg-indigo-500 text-slate-950 text-[9px] font-black py-2 px-3 rounded-lg shadow-xl shadow-indigo-500/30">
+                        {{ day.hours }}H
+                    </div>
+                    <div class="w-2 h-2 bg-indigo-500 rotate-45 mx-auto -mt-1"></div>
+                </div>
+
+                {% set max_day_hours = metrics.dates|map(attribute='hours')|max if metrics.dates else 1 %}
+                {% if max_day_hours == 0 %}{% set max_day_hours = 1 %}{% endif %}
+                <div class="w-full bg-indigo-500 rounded-lg group-hover:bg-indigo-400 transition-all duration-500 shadow-[0_0_15px_rgba(99,102,241,0.1)] group-hover:shadow-indigo-500/30"
+                    style="height: {{ (day.hours / max_day_hours * 100)|round(0) }}%"></div>
+                <div class="mt-4 text-[8px] font-bold text-slate-500 uppercase tracking-tighter">{{ day.date }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
