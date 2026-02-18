@@ -941,6 +941,10 @@ def ensure_db_schema():
                     conn.execute(text("ALTER TABLE study_sessions ADD COLUMN completion_file VARCHAR(255);"))
                 if 'completion_link' not in columns_sessions:
                     conn.execute(text("ALTER TABLE study_sessions ADD COLUMN completion_link VARCHAR(255);"))
+                if 'mentor_feedback' not in columns_sessions:
+                    conn.execute(text("ALTER TABLE study_sessions ADD COLUMN mentor_feedback TEXT;"))
+                if 'mentor_feedback_at' not in columns_sessions:
+                    conn.execute(text("ALTER TABLE study_sessions ADD COLUMN mentor_feedback_at TIMESTAMP;"))
                 
                 # Check certificates table
                 columns_certs = [c['name'] for c in inspector.get_columns('certificates')]
