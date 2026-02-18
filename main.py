@@ -354,13 +354,27 @@ def student_dashboard():
     # Fetch certificates (Internal and External)
     certificates = Certificate.query.filter_by(student_id=current_user.id).order_by(Certificate.issue_date.desc()).all()
     
+    # Intelligence: Unique subjects studied and time per subject
+    history_subjects = db.session.query(StudySession.subject).filter_by(student_id=current_user.id).distinct().all()
+    plan_subjects = [p.target_subject for p in plans]
+    unique_subjects = sorted(list(set([s[0] for s in history_subjects] + plan_subjects + ["Estudo Geral"])))
+    
+    time_per_subject = db.session.query(
+        StudySession.subject,
+        db.func.sum(StudySession.duration_minutes)
+    ).filter_by(student_id=current_user.id).group_by(StudySession.subject).all()
+    
+    subject_metrics = [{'name': s[0], 'hours': round(s[1]/60, 1)} for s in time_per_subject]
+    
     return render_template('student/dashboard.html', 
                          sessions=sessions, 
                          plans=plans, 
                          total_hours=total_hours, 
                          all_teachers=all_teachers,
                          assigned_tasks=assigned_tasks,
-                         certificates=certificates)
+                         certificates=certificates,
+                         unique_subjects=unique_subjects,
+                         subject_metrics=subject_metrics)
 
 @app.route('/study/log', methods=['POST'])
 @role_required('student')

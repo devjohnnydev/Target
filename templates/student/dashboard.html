@@ -183,7 +183,12 @@
             </div>
 
             <!-- Manual Study -->
-            <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 backdrop-blur-sm">
+            <div
+                class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 backdrop-blur-sm relative overflow-hidden group">
+                <div
+                    class="absolute -top-12 -right-12 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors">
+                </div>
+
                 <div class="flex items-center justify-between mb-8">
                     <h2 class="text-lg font-futuristic text-white uppercase tracking-widest italic">Estudo Livre</h2>
                     <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,13 +200,14 @@
                     <div class="space-y-2">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assunto /
                             Meta</label>
-                        <select name="subject"
-                            class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-5 py-4 text-white text-xs font-bold uppercase cursor-pointer focus:border-emerald-500/30 outline-none appearance-none">
-                            {% for plan in plans %}
-                            <option value="{{ plan.target_subject }}">{{ plan.target_subject }}</option>
-                            {% endfor %}
-                            <option value="Estudo Geral">Estudo Geral</option>
-                        </select>
+                        <input type="text" name="subject" list="subject-list"
+                            placeholder="DIGITE OU SELECIONE UM TEMA..." autocomplete="off" required
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-5 py-4 text-white text-xs font-bold uppercase focus:border-emerald-500/30 outline-none placeholder:text-slate-700">
+                        <datalist id="subject-list">
+                            {% for subject in unique_subjects %}
+                            <option value="{{ subject }}">
+                                {% endfor %}
+                        </datalist>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Sub-título
@@ -217,6 +223,41 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Resumo de Foco por Assunto -->
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-lg font-futuristic text-white uppercase tracking-widest italic">Resumo por Assunto</h2>
+                <div
+                    class="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+                    Tempo Acumulado</div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for metric in subject_metrics %}
+                <div class="bg-slate-950/50 border border-white/5 p-5 rounded-2xl group hover:border-emerald-500/30 transition-all cursor-pointer"
+                    onclick="filterTimelineBySubject('{{ metric.name }}')">
+                    <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">{{ metric.name }}
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <div class="text-xl font-futuristic text-white group-hover:text-emerald-400 transition-colors">
+                            {{ metric.hours }}h</div>
+                        <div class="w-12 h-1 bg-white/5 rounded-full overflow-hidden">
+                            {% set max_h = subject_metrics|map(attribute='hours')|max if subject_metrics else 1 %}
+                            {% if max_h == 0 %}{% set max_h = 1 %}{% endif %}
+                            <div class="h-full bg-emerald-500/50 group-hover:bg-emerald-500 transition-all"
+                                style="width: {{ (metric.hours / max_h * 100)|round(0) }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not subject_metrics %}
+                <div class="col-span-full py-10 text-center">
+                    <p class="text-slate-600 italic text-xs">Inicie seu primeiro estudo para gerar métricas.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
 
         <!-- Interactive Study Board (Kanban) -->
         <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
@@ -657,6 +698,17 @@
             item.style.display = title.includes(term) ? 'flex' : 'none';
         });
     });
+
+    function filterTimelineBySubject(subject) {
+        const filterInput = document.getElementById('timeline-filter');
+        if (filterInput) {
+            filterInput.value = subject;
+            filterInput.dispatchEvent(new Event('input'));
+
+            // Scroll to timeline
+            document.querySelector('#timeline-list').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
 </script>
 
 <style>
