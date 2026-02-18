@@ -59,6 +59,49 @@
         </div>
         {% endif %}
 
+        <!-- Assigned Missions from Mentor -->
+        {% if assigned_tasks %}
+        <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-[2.5rem] p-8">
+            <h3 class="text-xs font-futuristic text-indigo-300 uppercase tracking-[0.3em] mb-6 flex items-center">
+                <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping mr-3"></span>
+                Missões de Mentoria (Ativas)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for task in assigned_tasks %}
+                <div
+                    class="bg-indigo-950/30 border border-indigo-500/10 p-5 rounded-2xl group hover:border-indigo-400/30 transition-all">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">{{ task.task_type
+                            or 'MISSÃO' }}</span>
+                        <span class="text-[8px] font-bold text-slate-500 uppercase">{{ task.created_at.strftime('%d/%m')
+                            }}</span>
+                    </div>
+                    <h4 class="text-xs font-futuristic text-white uppercase mb-2 line-clamp-1">{{ task.title }}</h4>
+                    <p class="text-[9px] text-slate-400 line-clamp-2 mb-4 leading-relaxed">{{ task.description or
+                        'Inicie esta missão para progredir em seu objetivo.' }}</p>
+
+                    <div class="flex items-center space-x-3">
+                        <button
+                            onclick="document.getElementById('subject-input').value = '{{ task.title }}'; window.scrollTo({top: 0, behavior: 'smooth'});"
+                            class="flex-1 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 text-[8px] font-bold uppercase tracking-widest py-2 rounded-lg border border-emerald-500/20 transition-all">
+                            Iniciar Foco
+                        </button>
+                        {% if task.file_path %}
+                        <a href="{{ url_for('static', filename='uploads/missions/' + task.file_path) }}" target="_blank"
+                            class="p-2 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/5 transition-all">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Active Session / Timer -->
         {% set active_session = sessions|selectattr("end_time", "none")|first %}
         {% if active_session %}

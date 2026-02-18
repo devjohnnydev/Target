@@ -144,7 +144,18 @@ def admin_dashboard():
         })
 
     # Active sessions for Real-time Monitoring
-    active_sessions = StudySession.query.filter(StudySession.end_time == None).all()
+    active_sessions_query = StudySession.query.filter(StudySession.end_time == None)
+    
+    # Multi-student filter for Monitoring
+    selected_student_ids = request.args.getlist('student_ids', type=int)
+    if selected_student_ids:
+        active_sessions_query = active_sessions_query.filter(StudySession.student_id.in_(selected_student_ids))
+    
+    active_sessions = active_sessions_query.all()
+
+    # Total Counts for Stats
+    total_students = User.query.filter_by(role='student').count()
+    total_teachers = User.query.filter_by(role='teacher').count()
 
     # Pending Users for Approval
     pending_users = User.query.filter_by(is_approved=False).order_by(User.created_at.desc()).all()
@@ -154,16 +165,85 @@ def admin_dashboard():
     available_subjects = db.session.query(StudySession.subject).distinct().all()
     available_subjects = [s[0] for s in available_subjects]
 
-    return render_template('admin/dashboard.html', 
-                         ranking=ranking, 
-                         total_hours=total_hours, 
+    return render_template('admin/dashboard.html',
+                         ranking=ranking,
+                         total_hours=total_hours,
+                         total_students=total_students,
+                         total_teachers=total_teachers,
                          licenses=licenses,
                          active_sessions=active_sessions,
                          pending_users=pending_users,
                          available_subjects=available_subjects,
                          current_subject=subject_filter,
                          current_date=date_filter,
-                         current_sort=sort_order)
+                         current_sort=sort_order,
+                         selected_student_ids=selected_student_ids)
+
+@app.route('/admin/users')
+@role_required('admin')
+def admin_users():
+    role_filter = request.args.get('role')
+    search_query = request.args.get('search')
+    
+    query = User.query
+    if role_filter:
+        query = query.filter_by(role=role_filter)
+    if search_query:
+        query = query.filter(User.name.ilike(f"%{search_query}%") | User.email.ilike(f"%{search_query}%"))
+    
+    users = query.order_by(User.created_at.desc()).all()
+    
+    total_students = User.query.filter_by(role='student').count()
+    total_teachers = User.query.filter_by(role='teacher').count()
+    
+    return render_template('admin/users.html', 
+                         users=users, 
+                         total_students=total_students, 
+                         total_teachers=total_teachers,
+                         current_role=role_filter,
+                         current_search=search_query)
+
+@app.route('/admin/user/delete/<int:user_id>', methods=['POST'])
+@role_required('admin')
+def admin_delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('Você não pode deletar sua própria conta!', 'danger')
+        return redirect(url_for('admin_users'))
+    
+    name = user.name
+    db.session.delete(user)
+    db.session.commit()
+    flash(f'Usuário {name} removido com sucesso.', 'info')
+    return redirect(url_for('admin_users'))
+
+@app.route('/support/send', methods=['POST'])
+@login_required
+def send_support_message():
+    content = request.form.get('content')
+    if not content:
+        flash('A mensagem não pode estar vazia.', 'warning')
+        return redirect(request.referrer)
+    
+    msg = SupportMessage(user_id=current_user.id, content=content)
+    db.session.add(msg)
+    db.session.commit()
+    flash('Mensagem de suporte enviada com sucesso!', 'success')
+    return redirect(request.referrer)
+
+@app.route('/admin/messages')
+@role_required('admin')
+def admin_messages():
+    messages = SupportMessage.query.order_by(SupportMessage.created_at.desc()).all()
+    return render_template('admin/messages.html', messages=messages)
+
+@app.route('/admin/messages/read/<int:msg_id>', methods=['POST'])
+@role_required('admin')
+def admin_read_message(msg_id):
+    msg = SupportMessage.query.get_or_404(msg_id)
+    msg.is_read = True
+    db.session.commit()
+    return '', 204
 
 @app.route('/admin/approve/<int:user_id>', methods=['POST'])
 @role_required('admin')
@@ -262,9 +342,33 @@ def teacher_dashboard():
     # Show students linked to this teacher via Mentorship
     mentorships = Mentorship.query.filter_by(teacher_id=current_user.id, status='active').all()
     students = [m.student for m in mentorships]
+    student_ids = [s.id for s in students]
+    
     # Fetch tasks created by this teacher
     tasks = AssignedTask.query.filter_by(teacher_id=current_user.id).order_by(AssignedTask.created_at.desc()).all()
-    return render_template('teacher/dashboard.html', students=students, tasks=tasks)
+    
+    # Fetch student submissions (sessions that are completed and have a comment/file)
+    submissions = StudySession.query.filter(
+        StudySession.student_id.in_(student_ids),
+        StudySession.end_time != None,
+        (StudySession.completion_comment != None) | (StudySession.completion_file != None)
+    ).order_by(StudySession.end_time.desc()).all()
+    
+    return render_template('teacher/dashboard.html', students=students, tasks=tasks, submissions=submissions)
+
+@app.route('/teacher/feedback/<int:session_id>', methods=['POST'])
+@role_required('teacher')
+def post_feedback(session_id):
+    session = StudySession.query.get_or_404(session_id)
+    feedback = request.form.get('feedback')
+    
+    if feedback:
+        session.mentor_feedback = feedback
+        session.mentor_feedback_at = datetime.utcnow()
+        db.session.commit()
+        flash('Feedback enviado ao aluno!', 'success')
+    
+    return redirect(url_for('teacher_dashboard'))
 
 @app.route('/teacher/task/create', methods=['POST'])
 @role_required('teacher')
@@ -357,7 +461,8 @@ def student_dashboard():
     # Intelligence: Unique subjects studied and time per subject
     history_subjects = db.session.query(StudySession.subject).filter_by(student_id=current_user.id).distinct().all()
     plan_subjects = [p.target_subject for p in plans]
-    unique_subjects = sorted(list(set([s[0] for s in history_subjects] + plan_subjects + ["Estudo Geral"])))
+    task_subjects = [t.title for t in assigned_tasks]
+    unique_subjects = sorted(list(set([s[0] for s in history_subjects] + plan_subjects + task_subjects + ["Estudo Geral"])))
     
     time_per_subject = db.session.query(
         StudySession.subject,

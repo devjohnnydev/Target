@@ -80,6 +80,10 @@ class StudySession(db.Model):
     completion_comment = db.Column(db.Text, nullable=True)
     completion_file = db.Column(db.String(255), nullable=True)
     completion_link = db.Column(db.String(255), nullable=True)
+    
+    # Mentor Interaction
+    mentor_feedback = db.Column(db.Text, nullable=True)
+    mentor_feedback_at = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
         return f'<StudySession {self.subject} - {self.duration_minutes}min>'
@@ -135,3 +139,17 @@ class Submission(db.Model):
 
     def __repr__(self):
         return f'<Submission {self.type} - {self.content}>'
+
+class SupportMessage(db.Model):
+    __tablename__ = 'support_messages'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship to user
+    user = db.relationship('User', backref=db.backref('support_messages', lazy=True))
+
+    def __repr__(self):
+        return f'<SupportMessage from {self.user_id}>'

@@ -11,19 +11,29 @@
             <p class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.3em]">Monitoramento Analítico e Gestão
                 do Sistema</p>
         </div>
-        <div class="flex items-center space-x-4">
-            <a href="{{ url_for('admin_monitoring') }}"
-                class="bg-indigo-500/10 hover:bg-indigo-500 text-indigo-400 hover:text-white font-futuristic py-4 px-6 rounded-2xl text-[9px] border border-indigo-500/20 transition-all uppercase tracking-[0.2em] italic flex items-center">
-                <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping mr-2"></span> Monitoramento Live
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center space-x-2 mr-4">
+                <div class="bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+                    <span class="text-[8px] font-bold text-slate-500 uppercase block">Alunos</span>
+                    <span class="text-xs font-futuristic text-white">{{ total_students }}</span>
+                </div>
+                <div class="bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+                    <span class="text-[8px] font-bold text-slate-500 uppercase block">Professores</span>
+                    <span class="text-xs font-futuristic text-white">{{ total_teachers }}</span>
+                </div>
+            </div>
+
+            <a href="{{ url_for('admin_users') }}"
+                class="bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white font-futuristic py-3 px-6 rounded-2xl text-[9px] border border-blue-500/20 transition-all uppercase tracking-[0.2em] italic">
+                Gestão de Usuários
+            </a>
+            <a href="{{ url_for('admin_messages') }}"
+                class="bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-white font-futuristic py-3 px-6 rounded-2xl text-[9px] border border-amber-500/20 transition-all uppercase tracking-[0.2em] italic">
+                Mensagens Suporte
             </a>
             <a href="{{ url_for('admin_analytics') }}"
-                class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-futuristic py-4 px-8 rounded-2xl text-[10px] transition-all shadow-lg shadow-emerald-500/20 uppercase tracking-[0.2em] italic">📈
-                Analytics Avançado</a>
-            <div class="bg-white/5 px-8 py-4 rounded-2xl border border-white/5 text-right">
-                <span class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] block mb-1">Total
-                    Filtrado</span>
-                <span class="text-2xl font-futuristic text-white">{{ total_hours }}H</span>
-            </div>
+                class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-futuristic py-3 px-8 rounded-2xl text-[10px] transition-all shadow-lg shadow-emerald-500/20 uppercase tracking-[0.2em] italic">
+                Analytics</a>
         </div>
     </div>
 
@@ -67,48 +77,139 @@
                 Real-time Today
             </a>
         </form>
-    </div>
 
-    <!-- Active Sessions (Real-time) -->
-    {% if active_sessions %}
-    <div class="bg-indigo-500/10 border border-indigo-500/20 p-8 rounded-[2.5rem] backdrop-blur-md">
-        <h3 class="text-xs font-futuristic text-indigo-300 uppercase tracking-[0.3em] mb-6 flex items-center">
-            <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping mr-3"></span>
-            Monitoramento Live ({{ active_sessions|length }} Estudantes)
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for session in active_sessions %}
-            <div
-                class="bg-indigo-950/30 border border-indigo-500/10 p-5 rounded-2xl flex items-center justify-between group">
-                <div class="flex items-center space-x-4">
-                    <div class="w-10 h-10 rounded-full border border-indigo-500/20 overflow-hidden flex-shrink-0">
-                        {% if session.student.photo_url %}
-                        <img src="{{ session.student.photo_url if session.student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + session.student.photo_url) }}"
-                            class="w-full h-full object-cover">
-                        {% else %}
-                        <div
-                            class="w-full h-full bg-indigo-500/20 flex items-center justify-center text-indigo-300 text-[10px] font-bold">
-                            {{ session.student.name[:2].upper() }}
+        <!-- Multi-student Selection for Monitoring -->
+        <div class="mt-8 pt-8 border-t border-white/5">
+            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Monitoramento Seletivo
+                (Inspiracional)</h4>
+            <form method="GET" action="{{ url_for('admin_dashboard') }}" id="multi-monitor-form"
+                class="flex flex-wrap gap-3">
+                <!-- Keep existing filters -->
+                <input type="hidden" name="subject" value="{{ current_subject or '' }}">
+                <input type="hidden" name="date" value="{{ current_date or '' }}">
+
+                {% for student in ranking %}
+                <label class="cursor-pointer group">
+                    <input type="checkbox" name="student_ids" value="{{ student.id }}" {% if student.id in
+                        selected_student_ids %}checked{% endif %} class="hidden peer"
+                        onchange="document.getElementById('multi-monitor-form').submit()">
+                    <div
+                        class="flex items-center space-x-2 bg-slate-950/50 border border-white/5 rounded-full px-3 py-1.5 peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/10 transition-all hover:border-white/20">
+                        <div class="w-5 h-5 rounded-full overflow-hidden border border-white/5">
+                            {% if student.photo_url %}
+                            <img src="{{ student.photo_url if student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + student.photo_url) }}"
+                                class="w-full h-full object-cover">
+                            {% else %}
+                            <div
+                                class="w-full h-full bg-emerald-500/20 flex items-center justify-center text-[6px] font-bold text-emerald-400">
+                                {{ student.name[:2].upper() }}
+                            </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
+                        <span class="text-[8px] font-bold text-slate-400 peer-checked:text-emerald-400 uppercase">{{
+                            student.name.split()[0] }}</span>
                     </div>
-                    <div>
-                        <div class="text-[10px] font-futuristic text-white uppercase">{{ session.student.name }}</div>
-                        <div class="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">{{ session.subject
-                            }}
-                        </div>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <div class="text-[10px] font-futuristic text-emerald-400"
-                        data-start-time="{{ session.start_time.isoformat() }}" data-live-timer>00:00:00</div>
-                    <div class="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Em Sessão</div>
-                </div>
-            </div>
-            {% endfor %}
+                </label>
+                {% endfor %}
+            </form>
         </div>
     </div>
-    {% endif %}
+
+    <!-- Hall of Focus: Inspirational Study Board -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-indigo-500/10 border border-indigo-500/20 p-8 rounded-[2.5rem] backdrop-blur-md">
+                <h3
+                    class="text-xs font-futuristic text-indigo-300 uppercase tracking-[0.3em] mb-6 flex items-center justify-between">
+                    <span class="flex items-center">
+                        <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping mr-3"></span>
+                        Hall of Focus / Monitoramento Seletivo
+                    </span>
+                    <span class="text-[9px] font-bold bg-white/5 px-3 py-1 rounded-full text-slate-400">{{
+                        active_sessions|length }} Estudando Agora</span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for session in active_sessions %}
+                    <div
+                        class="bg-indigo-950/30 border border-indigo-500/10 p-6 rounded-2xl group hover:border-indigo-400/30 transition-all relative overflow-hidden">
+                        <!-- Background Glow Effect -->
+                        <div
+                            class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-all">
+                        </div>
+
+                        <div class="flex items-start space-x-5 relative z-10">
+                            <div
+                                class="w-16 h-16 rounded-2xl border border-indigo-500/20 overflow-hidden flex-shrink-0 shadow-xl">
+                                {% if session.student.photo_url %}
+                                <img src="{{ session.student.photo_url if session.student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + session.student.photo_url) }}"
+                                    class="w-full h-full object-cover">
+                                {% else %}
+                                <div
+                                    class="w-full h-full bg-indigo-500/20 flex items-center justify-center text-indigo-300 text-sm font-bold">
+                                    {{ session.student.name[:2].upper() }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-xs font-futuristic text-white uppercase mb-1">{{ session.student.name
+                                    }}</div>
+                                <div class="text-[9px] font-bold text-indigo-400 uppercase tracking-[0.2em] mb-3">{{
+                                    session.subject }}</div>
+
+                                <div class="flex items-center justify-between mt-4">
+                                    <div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Tempo de
+                                        Foco</div>
+                                    <div class="text-xs font-mono font-bold text-emerald-400"
+                                        data-start-time="{{ session.start_time.isoformat() }}" data-live-timer>00:00:00
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+                            <div class="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Resumo Evolutivo
+                            </div>
+                            <button
+                                class="text-indigo-400 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-all italic underline decoration-indigo-500/30 underline-offset-4"
+                                onclick="alert('Em breve: Evolução detalhada para {{ session.student.name }}')">
+                                Detalhes do Aluno →
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not active_sessions %}
+                    <div
+                        class="col-span-full py-20 text-center bg-white/5 border border-dashed border-white/10 rounded-3xl">
+                        <div class="text-slate-600 italic text-xs uppercase tracking-widest">Selecione alunos ou aguarde
+                            sessões ativas para inspiração...</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Summary for inspiração -->
+        <div class="space-y-8">
+            <div class="bg-slate-900/40 border border-white/5 p-8 rounded-[2.5rem]">
+                <h3 class="text-xs font-futuristic text-emerald-400 uppercase tracking-[0.3em] mb-6">Métricas do Grupo
+                </h3>
+                <div class="space-y-6">
+                    <div class="bg-slate-950/50 p-6 rounded-2xl border border-white/5">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total
+                            Consolidado</div>
+                        <div class="text-3xl font-futuristic text-white">{{ total_hours }}H</div>
+                    </div>
+                    <div class="bg-slate-950/50 p-6 rounded-2xl border border-white/5">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Foco Atual
+                        </div>
+                        <div class="text-xl font-futuristic text-indigo-400 uppercase italic">{{ current_subject or
+                            'Diversos' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- User Approvals -->
     {% if pending_users %}
