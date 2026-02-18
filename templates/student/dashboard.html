@@ -7,7 +7,6 @@
         <!-- Profile & Overall Stats -->
         <div class="bg-slate-900/50 rounded-[2.5rem] p-8 border border-white/5 relative overflow-hidden group">
             <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -tr-10"></div>
-
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 class="text-3xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Olá, <span
@@ -39,209 +38,274 @@
         {% set active_session = sessions|selectattr("end_time", "none")|first %}
         {% if active_session %}
         <div
-            class="bg-emerald-500/10 border border-emerald-500/30 rounded-[3rem] p-10 flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden group">
+            class="bg-emerald-500/10 border border-emerald-500/30 rounded-[3rem] p-10 flex flex-col justify-between gap-8 relative overflow-hidden group">
             <div
                 class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse">
             </div>
 
-            <div class="text-center md:text-left">
-                <div
-                    class="inline-flex items-center space-x-2 bg-emerald-500/20 border border-emerald-500/20 rounded-full px-4 py-1.5 mb-4">
-                    <span class="relative flex h-2 w-2">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Sessão Ativa</span>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <div
+                        class="inline-flex items-center space-x-2 bg-emerald-500/20 border border-emerald-500/20 rounded-full px-4 py-1.5 mb-4">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Sessão
+                            Ativa</span>
+                    </div>
+                    <h2 class="text-4xl font-futuristic text-white uppercase tracking-tight italic mb-2">{{
+                        active_session.subject }}</h2>
+                    {% if active_session.subtitle %}<p
+                        class="text-emerald-400/80 text-xs font-bold uppercase tracking-widest mb-2">// {{
+                        active_session.subtitle }}</p>{% endif %}
+                    <p class="text-slate-400 text-sm">Iniciado em: <span class="text-white">{{
+                            active_session.start_time.strftime('%H:%M') }}</span></p>
                 </div>
-                <h2 class="text-4xl font-futuristic text-white uppercase tracking-tight italic mb-2">{{
-                    active_session.subject }}</h2>
-                <p class="text-slate-400 text-sm">Iniciado em: <span class="text-white">{{
-                        active_session.start_time.strftime('%H:%M') }}</span></p>
+                <div class="text-6xl font-futuristic text-neon animate-pulse" id="live-timer">00:00:00</div>
             </div>
 
-            <div class="flex flex-col items-center">
-                <div class="text-6xl font-futuristic text-neon mb-6 animate-pulse" id="live-timer">00:00:00</div>
-                <form action="{{ url_for('stop_session', session_id=active_session.id) }}" method="POST">
-                    <button type="submit"
-                        class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/30 font-futuristic py-4 px-10 rounded-full text-sm transition-all duration-300 uppercase tracking-widest hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]">
-                        Finalizar Sessão
-                    </button>
-                </form>
-            </div>
-        </div>
-        {% else %}
-        <div class="bg-slate-900/30 rounded-[2.5rem] border border-white/5 p-8 backdrop-blur-sm">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-xl font-futuristic text-white uppercase tracking-widest italic">Iniciar Estudo</h2>
-                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-            </div>
-            <form action="{{ url_for('start_session') }}" method="POST" class="flex flex-col md:flex-row gap-4">
-                <div class="relative flex-grow">
-                    <select name="subject"
-                        class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white appearance-none focus:outline-none focus:border-emerald-500/50 transition-all cursor-pointer">
-                        {% for plan in plans %}
-                        <option value="{{ plan.target_subject }}">{{ plan.target_subject }}</option>
-                        {% endfor %}
-                        <option value="Estudo Geral">Estudo Geral</option>
-                    </select>
-                    <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                            </path>
-                        </svg>
+            <form action="{{ url_for('stop_session', session_id=active_session.id) }}" method="POST"
+                enctype="multipart/form-data" class="space-y-6 pt-6 border-t border-emerald-500/10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label
+                            class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Comentário/Resumo</label>
+                        <textarea name="comment" placeholder="O QUE FOI CONCLUÍDO?"
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-emerald-500/30 min-h-[80px]"></textarea>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Link de
+                                Entrega</label>
+                            <input type="url" name="link" placeholder="HTTPS://..."
+                                class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-emerald-500/30">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Anexo
+                                PDF/IMG</label>
+                            <input type="file" name="file"
+                                class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20">
+                        </div>
                     </div>
                 </div>
                 <button type="submit"
-                    class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-futuristic py-4 px-12 rounded-2xl transition-all transform hover:scale-105 shadow-lg shadow-emerald-500/20 uppercase tracking-widest">
-                    Start
+                    class="w-full bg-emerald-500 text-slate-950 font-futuristic py-4 rounded-2xl transition-all transform hover:scale-[1.01] shadow-lg shadow-emerald-500/20 uppercase tracking-[0.2em]">
+                    Finalizar e Enviar para o Alvo
                 </button>
             </form>
         </div>
+        {% else %}
+        <!-- Start Study Selection -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Assisted Tasks -->
+            <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 backdrop-blur-sm group">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-lg font-futuristic text-white uppercase tracking-widest italic">Tarefas do Mentor
+                    </h2>
+                    <svg class="w-6 h-6 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                </div>
+                <div class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                    {% for task in assigned_tasks %}
+                    <div
+                        class="p-5 bg-slate-950/50 border border-white/5 rounded-2xl hover:border-neon/30 transition-all flex flex-col gap-4">
+                        <div>
+                            <div class="text-sm font-futuristic text-white uppercase tracking-tight mb-1">{{ task.title
+                                }}</div>
+                            <div class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{{ task.description or
+                                'Inicie agora esta missão assistida.' }}</div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex gap-2">
+                                {% if task.external_link %}
+                                <a href="{{ task.external_link }}" target="_blank"
+                                    class="p-2 bg-white/5 rounded-lg hover:bg-neon/20 transition-colors"><svg
+                                        class="w-3 h-3 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                        </path>
+                                    </svg></a>
+                                {% endif %}
+                                {% if task.attachment_path %}
+                                <a href="{{ url_for('static', filename='uploads/' + task.attachment_path) }}"
+                                    target="_blank"
+                                    class="p-2 bg-white/5 rounded-lg hover:bg-neon/20 transition-colors"><svg
+                                        class="w-3 h-3 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                        </path>
+                                    </svg></a>
+                                {% endif %}
+                            </div>
+                            <form action="{{ url_for('start_session') }}" method="POST">
+                                <input type="hidden" name="subject" value="{{ task.title }}">
+                                <input type="hidden" name="task_id" value="{{ task.id }}">
+                                <button type="submit"
+                                    class="bg-neon text-slate-950 text-[10px] font-futuristic px-6 py-2 rounded-full uppercase tracking-widest hover:scale-105 transition-transform">Iniciar</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not assigned_tasks %}
+                    <p class="text-center py-6 text-slate-600 italic text-xs">Nenhuma tarefa assistida no radar.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Manual Study -->
+            <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 backdrop-blur-sm">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-lg font-futuristic text-white uppercase tracking-widest italic">Estudo Livre</h2>
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <form action="{{ url_for('start_session') }}" method="POST" class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assunto /
+                            Meta</label>
+                        <select name="subject"
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-5 py-4 text-white text-xs font-bold uppercase cursor-pointer focus:border-emerald-500/30 outline-none appearance-none">
+                            {% for plan in plans %}
+                            <option value="{{ plan.target_subject }}">{{ plan.target_subject }}</option>
+                            {% endfor %}
+                            <option value="Estudo Geral">Estudo Geral</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Sub-título
+                            (Ex: Lambda)</label>
+                        <input type="text" name="subtitle" placeholder="OPCIONAL"
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-5 py-4 text-white text-xs font-bold uppercase focus:border-emerald-500/30 outline-none">
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-emerald-500 text-slate-950 font-futuristic py-5 rounded-2xl transition-all hover:bg-emerald-400 uppercase tracking-widest shadow-xl shadow-emerald-500/10 mt-2">
+                        Start Manual
+                    </button>
+                </form>
+            </div>
+        </div>
         {% endif %}
 
-        <!-- Study Plan Progress -->
-        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 group">
-            <h2
-                class="text-xl font-futuristic text-white mb-8 uppercase tracking-widest italic group-hover:text-emerald-400 transition-colors">
-                Progresso das Metas</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {% for plan in plans %}
-                <div
-                    class="bg-slate-950/40 border border-white/5 rounded-3xl p-6 hover:border-emerald-500/20 transition-all">
-                    <div class="flex justify-between items-end mb-4">
-                        <div>
-                            <span
-                                class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Assunto</span>
-                            <span class="font-futuristic text-white uppercase tracking-tight">{{ plan.target_subject
-                                }}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-neon font-futuristic text-lg">{{ plan.completed_hours }}</span>
-                            <span class="text-slate-500 text-xs font-bold uppercase tracking-widest">/ {{
-                                plan.target_hours }}h</span>
-                        </div>
-                    </div>
-                    <div class="w-full bg-white/5 rounded-full h-2 relative overflow-hidden">
-                        {% set progress = (plan.completed_hours / plan.target_hours * 100)|round(0) if plan.target_hours
-                        > 0 else 0 %}
-                        <div class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(52,211,153,0.3)]"
-                            style="width: {{ progress }}%">
+        <!-- Interactive Study Board (Kanban) -->
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
+            <h2 class="text-xl font-futuristic text-white mb-8 uppercase tracking-widest italic text-center">Interactive
+                Focus Board</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Backlog -->
+                <div class="kanban-col space-y-4" id="backlog">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] text-center mb-4">A
+                        Planejar</h3>
+                    {% for plan in plans if plan.status == 'backlog' %}
+                    <div class="kanban-card bg-slate-950/50 border border-white/5 p-4 rounded-xl cursor-grab active:cursor-grabbing hover:border-white/20 transition-all"
+                        draggable="true" ondragstart="drag(event)" id="plan-{{ plan.id }}">
+                        <div class="text-[10px] font-futuristic text-white uppercase italic mb-2">{{ plan.target_subject
+                            }}</div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-[8px] font-bold text-slate-500">{{ plan.completed_hours }} / {{
+                                plan.target_hours }}H</div>
+                            <div class="w-12 bg-white/5 h-1 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full"
+                                    style="width:{{ (plan.completed_hours/plan.target_hours*100)|round(0) if plan.target_hours > 0 else 0 }}%">
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-                {% if not plans %}
-                <div class="md:col-span-2 text-center py-10">
-                    <p class="text-slate-500 italic font-medium">Aguardando definição de plano pelo mentor...</p>
+
+                <!-- Active -->
+                <div class="kanban-col space-y-4" id="active">
+                    <h3 class="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em] text-center mb-4">Em
+                        Foco</h3>
+                    {% for plan in plans if plan.status == 'active' %}
+                    <div class="kanban-card bg-slate-950/50 border border-emerald-500/20 p-4 rounded-xl cursor-grab active:cursor-grabbing hover:border-emerald-400/30 transition-all shadow-lg shadow-emerald-500/5"
+                        draggable="true" ondragstart="drag(event)" id="plan-{{ plan.id }}">
+                        <div class="text-[10px] font-futuristic text-white uppercase italic mb-2">{{ plan.target_subject
+                            }}</div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-[8px] font-bold text-emerald-400">{{ plan.completed_hours }} / {{
+                                plan.target_hours }}H</div>
+                            <div class="w-12 bg-emerald-500/10 h-1 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full"
+                                    style="width:{{ (plan.completed_hours/plan.target_hours*100)|round(0) if plan.target_hours > 0 else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endif %}
+
+                <!-- Completed -->
+                <div class="kanban-col space-y-4" id="completed">
+                    <h3 class="text-[10px] font-bold text-neon uppercase tracking-[0.4em] text-center mb-4">Completado
+                    </h3>
+                    {% for plan in plans if plan.status == 'completed' %}
+                    <div class="kanban-card bg-slate-950/50 border border-neon/20 p-4 rounded-xl cursor-grab active:cursor-grabbing hover:border-neon transition-all opacity-60 grayscale hover:grayscale-0 hover:opacity-100"
+                        draggable="true" ondragstart="drag(event)" id="plan-{{ plan.id }}">
+                        <div class="text-[10px] font-futuristic text-white uppercase italic mb-2">{{ plan.target_subject
+                            }}</div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-[8px] font-bold text-neon">{{ plan.completed_hours }}H</div>
+                            <svg class="w-2 h-2 text-neon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
-        <!-- Materials & Submissions -->
-        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
-                <h2 class="text-xl font-futuristic text-white uppercase tracking-widest italic">Central de Entregas</h2>
-                <div class="flex gap-3">
-                    <button
-                        onclick="document.getElementById('form-file').classList.toggle('hidden'); document.getElementById('form-link').classList.add('hidden')"
-                        class="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-[10px] font-bold text-white uppercase tracking-[0.2em] transition-all">
-                        + Doc
-                    </button>
-                    <button
-                        onclick="document.getElementById('form-link').classList.toggle('hidden'); document.getElementById('form-file').classList.add('hidden')"
-                        class="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-[10px] font-bold text-white uppercase tracking-[0.2em] transition-all">
-                        + Link
-                    </button>
+        <!-- Timeline & Filtering -->
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 group">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+                <h2 class="text-xl font-futuristic text-white uppercase tracking-widest italic">Timeline de Foco</h2>
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="timeline-filter" placeholder="FILTRAR POR TÍTULO..."
+                        class="w-full bg-white/5 border border-white/10 rounded-full px-5 py-2.5 text-[10px] text-white font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none transition-all">
+                    <svg class="w-4 h-4 text-slate-500 absolute right-4 top-1/2 -translate-y-1/2" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                 </div>
             </div>
 
-            <!-- Forms -->
-            <div id="form-file"
-                class="hidden mb-10 p-6 bg-emerald-500/5 rounded-3xl border border-dashed border-emerald-500/20">
-                <form action="{{ url_for('submit_file') }}" method="POST" enctype="multipart/form-data"
-                    class="space-y-6">
-                    <div
-                        class="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-2xl p-8 hover:border-emerald-500/30 transition-all cursor-pointer relative group">
-                        <input type="file" name="file" class="absolute inset-0 opacity-0 cursor-pointer" required>
-                        <svg class="w-10 h-10 text-slate-500 mb-4 group-hover:text-emerald-400 transition-colors"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                            </path>
-                        </svg>
-                        <p class="text-slate-400 text-sm font-medium">Arraste seu arquivo ou <span
-                                class="text-emerald-400">clique aqui</span></p>
-                    </div>
-                    <input type="text" name="description" placeholder="IDENTIFICAÇÃO DO MATERIAL"
-                        class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-3 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none">
-                    <div class="flex justify-end gap-3">
-                        <button type="button" onclick="document.getElementById('form-file').classList.add('hidden')"
-                            class="text-xs font-bold text-slate-500 uppercase tracking-widest px-6">Cancelar</button>
-                        <button type="submit"
-                            class="bg-emerald-500 text-slate-950 text-[10px] font-futuristic tracking-[0.3em] px-8 py-3 rounded-full uppercase">Enviar
-                            para o Alvo</button>
-                    </div>
-                </form>
-            </div>
-
-            <div id="form-link"
-                class="hidden mb-10 p-6 bg-emerald-500/5 rounded-3xl border border-dashed border-emerald-500/20">
-                <form action="{{ url_for('submit_link') }}" method="POST" class="space-y-6">
-                    <input type="url" name="link" placeholder="URL COMPLETA (HTTPS://...)"
-                        class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-4 text-white text-sm focus:border-emerald-500/30 outline-none"
-                        required>
-                    <input type="text" name="description" placeholder="DESCRIÇÃO DO LINK"
-                        class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-4 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none">
-                    <div class="flex justify-end gap-3">
-                        <button type="button" onclick="document.getElementById('form-link').classList.add('hidden')"
-                            class="text-xs font-bold text-slate-500 uppercase tracking-widest px-6">Cancelar</button>
-                        <button type="submit"
-                            class="bg-emerald-500 text-slate-950 text-[10px] font-futuristic tracking-[0.3em] px-8 py-3 rounded-full uppercase">Salvar
-                            Link</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="space-y-4">
-                {% for sub in current_user.submissions|reverse %}
-                <div
-                    class="flex items-center justify-between p-4 bg-slate-950/30 border border-white/5 rounded-2xl hover:border-white/10 transition-all group">
-                    <div class="flex items-center space-x-4">
+            <div class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2" id="timeline-list">
+                {% for session in sessions %}
+                <div class="timeline-item flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-2xl hover:border-emerald-500/20 transition-all group/item"
+                    data-title="{{ session.subject }} {{ session.subtitle }}">
+                    <div class="flex items-center space-x-5">
                         <div
-                            class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors">
-                            {% if sub.type == 'file' %}
-                            <svg class="w-6 h-6 text-slate-500 group-hover:text-emerald-400 transition-colors"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            {% else %}
-                            <svg class="w-6 h-6 text-slate-500 group-hover:text-emerald-400 transition-colors"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
-                                </path>
-                            </svg>
-                            {% endif %}
+                            class="w-12 h-12 rounded-xl bg-white/5 flex flex-col items-center justify-center border border-white/5">
+                            <span class="text-[10px] font-bold text-emerald-500">{{ session.start_time.strftime('%d')
+                                }}</span>
+                            <span class="text-[8px] font-bold text-slate-500 uppercase">{{
+                                session.start_time.strftime('%b') }}</span>
                         </div>
                         <div>
-                            <div class="text-white text-sm font-bold tracking-tight mb-1">{{ sub.description or
-                                sub.content[:30] }}</div>
-                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{{
-                                sub.timestamp.strftime('%d %b %Y // %H:%M') }}</div>
+                            <div
+                                class="text-sm font-futuristic text-white uppercase tracking-tight group-hover/item:text-neon transition-colors">
+                                {{ session.subject }}</div>
+                            {% if session.subtitle %}<div
+                                class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">// {{
+                                session.subtitle }}</div>{% endif %}
                         </div>
                     </div>
-                    <a href="{% if sub.type == 'file' %}{{ url_for('static', filename='uploads/' + sub.content) }}{% else %}{{ sub.content }}{% endif %}"
-                        target="_blank"
-                        class="text-emerald-400 font-futuristic text-[10px] tracking-widest uppercase hover:text-white transition-colors px-4 py-2 bg-emerald-500/10 rounded-lg">
-                        Acessar
-                    </a>
+                    <div class="text-right">
+                        <div class="text-xs font-futuristic text-white">{{ session.duration_minutes }}M</div>
+                        <div class="text-[8px] font-bold text-slate-600 uppercase tracking-widest">{{ session.type }}
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -250,111 +314,137 @@
 
     <!-- Sidebar -->
     <div class="space-y-8">
-        <!-- Live Calendar/History -->
-        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 overflow-hidden">
-            <div class="px-8 py-6 bg-white/5 border-b border-white/5">
-                <h2 class="text-sm font-futuristic text-white uppercase tracking-[0.3em] italic">Timeline de Foco</h2>
-            </div>
-            <div class="max-h-[400px] overflow-y-auto custom-scrollbar">
-                <table class="w-full text-left">
-                    <tbody class="divide-y divide-white/5">
-                        {% for session in sessions|reverse %}
-                        <tr class="hover:bg-white/5 transition-colors">
-                            <td class="px-8 py-5">
-                                <div class="text-xs font-bold text-slate-500 tracking-widest uppercase mb-1">{{
-                                    session.date.strftime('%d.%m.%y') }}</div>
-                                <div class="text-sm font-futuristic text-white tracking-tight uppercase">{{
-                                    session.subject }}</div>
-                            </td>
-                            <td class="px-8 py-5 text-right">
-                                <span
-                                    class="inline-block bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest group-hover:bg-emerald-500 transition-all">
-                                    {{ session.duration_minutes }}M
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- Mentorship -->
         <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
             <h2 class="text-sm font-futuristic text-white mb-6 uppercase tracking-[0.3em] italic">Vincular Mentor</h2>
             <form action="{{ url_for('request_mentorship') }}" method="POST" class="space-y-4">
-                <div class="relative">
-                    <select name="teacher_id"
-                        class="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-white text-xs font-bold tracking-widest uppercase appearance-none focus:border-emerald-500/30 transition-all">
-                        <option value="">Status: Sem Mentor</option>
-                        {% for teacher in all_teachers %}
-                        <option value="{{ teacher.id }}">{{ teacher.name }}</option>
-                        {% endfor %}
-                    </select>
+                <select name="teacher_id"
+                    class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-[10px] font-bold tracking-widest uppercase appearance-none focus:border-emerald-500/30">
+                    <option value="">STATUS: BUSCANDO MENTOR</option>
+                    {% for teacher in all_teachers %}
+                    <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit"
+                    class="w-full bg-white/5 hover:bg-emerald-500 hover:text-slate-950 border border-white/10 text-white font-futuristic text-[10px] py-4 rounded-2xl transition-all uppercase tracking-widest">Solicitar
+                    Vínculo</button>
+            </form>
+        </div>
+
+        <!-- Certificate Gallery -->
+        <div class="bg-slate-900/60 rounded-[2.5rem] border border-white/10 p-8 shadow-2xl space-y-8">
+            <div>
+                <h2 class="text-sm font-futuristic text-white mb-6 uppercase tracking-[0.3em] italic">Meus Certificados
+                </h2>
+                <div class="grid grid-cols-2 gap-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                    {% for cert in certificates %}
+                    <a href="{{ url_for('static', filename='uploads/' + cert.pdf_path) if cert.is_external else url_for('static', filename='certificates/' + cert.pdf_path) }}"
+                        target="_blank"
+                        class="block p-3 bg-slate-950/50 border border-white/5 rounded-xl hover:border-emerald-500/30 transition-all group">
+                        <div class="text-[8px] font-bold text-slate-500 uppercase mb-1">{{
+                            cert.issue_date.strftime('%d.%m.%Y') }}</div>
+                        <div
+                            class="text-[10px] font-futuristic text-white uppercase italic line-clamp-1 group-hover:text-neon transition-colors">
+                            {{ cert.external_issuer or 'Target SaaS' }}</div>
+                        <div class="text-[9px] font-bold text-emerald-400 mt-2">{{ cert.total_hours }}H</div>
+                    </a>
+                    {% endfor %}
+                    {% if not certificates %}
+                    <p class="col-span-2 text-center py-4 text-slate-600 italic text-[10px]">Nenhum certificado
+                        registrado.</p>
+                    {% endif %}
                 </div>
-                <button type="submit"
-                    class="w-full bg-white/5 hover:bg-emerald-500 hover:text-slate-950 border border-white/10 text-white font-futuristic text-[10px] py-4 rounded-2xl transition-all uppercase tracking-widest">
-                    Solicitar Vínculo
-                </button>
-            </form>
-        </div>
-
-        <!-- Quick Log (Manual) -->
-        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
-            <h2 class="text-sm font-futuristic text-white mb-6 uppercase tracking-[0.3em] italic">Registro Manual</h2>
-            <form action="{{ url_for('log_study') }}" method="POST" class="space-y-4">
-                <input type="text" name="subject" placeholder="Assunto"
-                    class="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-emerald-500/30">
-                <input type="number" name="minutes" placeholder="Minutos"
-                    class="w-full bg-slate-950/50 border border-white/5 rounded-2xl px-6 py-4 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-emerald-500/30">
-                <button type="submit"
-                    class="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-emerald-400 font-futuristic text-[10px] py-4 rounded-2xl transition-all uppercase tracking-widest">
-                    Salvar Offline
-                </button>
-            </form>
-        </div>
-
-        <!-- High-End Certificate CTA -->
-        <div
-            class="bg-gradient-to-br from-emerald-500 to-sky-600 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
-            <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
-            <div class="relative z-10">
-                <h2 class="text-xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Elite Club</h2>
-                <p class="text-white/80 text-xs font-medium mb-6 leading-relaxed">Emita seu certificado oficial
-                    verificado e comprove sua jornada de alta performance.</p>
-                <a href="{{ url_for('generate_cert') }}"
-                    class="block w-full text-center bg-white text-slate-950 font-futuristic py-4 rounded-xl text-[10px] transition-all transform hover:scale-105 uppercase tracking-widest shadow-xl">
-                    Gerar Certificado
-                </a>
             </div>
-            <!-- Decorative Icon -->
-            <svg class="absolute -bottom-4 -right-4 w-24 h-24 text-white/10" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
-            </svg>
+
+            <div class="h-px bg-white/5 w-full"></div>
+
+            <div>
+                <h2 class="text-sm font-futuristic text-white mb-6 uppercase tracking-[0.3em] italic">Nova Conquista
+                    Externa</h2>
+                <form action="{{ url_for('upload_external_certificate') }}" method="POST" enctype="multipart/form-data"
+                    class="space-y-4">
+                    <input type="text" name="issuer" placeholder="EMISSOR (EX: AWS, UDEMY)"
+                        class="w-full bg-slate-950/50 border border-white/5 rounded-xl px-5 py-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-emerald-500/30"
+                        required>
+                    <input type="number" step="0.1" name="hours" placeholder="CARGA HORÁRIA"
+                        class="w-full bg-slate-950/50 border border-white/5 rounded-xl px-5 py-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-emerald-500/30"
+                        required>
+                    <div class="relative group">
+                        <input type="file" name="file" class="absolute inset-0 opacity-0 cursor-pointer z-10" required>
+                        <div
+                            class="border border-dashed border-white/10 rounded-xl p-6 text-center group-hover:border-emerald-500/30 transition-all">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Enviar
+                                PDF/PNG</span>
+                        </div>
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-emerald-500 text-slate-950 font-futuristic text-[10px] py-4 rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-emerald-500/20">Registrar
+                        Certificado</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Kanban Logic
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+
+    document.querySelectorAll('.kanban-col').forEach(col => {
+        col.addEventListener('dragover', allowDrop);
+        col.addEventListener('drop', async (ev) => {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const card = document.getElementById(data);
+            const targetCol = ev.currentTarget;
+
+            if (targetCol.classList.contains('kanban-col')) {
+                const planId = data.replace('plan-', '');
+                const newStatus = targetCol.id;
+
+                // Optimistic UI
+                targetCol.appendChild(card);
+
+                try {
+                    const response = await fetch(`/study/plan/update-status/${planId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    if (!response.ok) throw new Error();
+                } catch (e) {
+                    location.reload(); // Revert on error
+                }
+            }
+        });
+    });
+
     // Live Timer for Active Session
     {% if active_session %}
-    const startTime = new Date("{{ active_session.start_time.strftime('%Y-%m-%dT%H:%M:%S') }}");
-
+    const startTimeStr = "{{ active_session.start_time.strftime('%Y-%m-%dT%H:%M:%S') }}";
+    const startTime = new Date(startTimeStr + "Z"); // Force UTC
     function updateTimer() {
         const now = new Date();
         const diff = now - startTime;
-
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         const s = Math.floor((diff % 60000) / 1000);
-
         document.getElementById('live-timer').innerText =
-            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            `${String(Math.max(0, h)).padStart(2, '0')}:${String(Math.max(0, m)).padStart(2, '0')}:${String(Math.max(0, s)).padStart(2, '0')}`;
     }
-
     setInterval(updateTimer, 1000);
     updateTimer();
     {% endif %}
+
+    // Timeline Filter
+    document.getElementById('timeline-filter')?.addEventListener('input', function (e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            const title = item.dataset.title.toLowerCase();
+            item.style.display = title.includes(term) ? 'flex' : 'none';
+        });
+    });
 </script>
 
 <style>
@@ -373,6 +463,19 @@
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: rgba(16, 185, 129, 0.4);
+    }
+
+    .kanban-col {
+        min-height: 200px;
+        padding: 1rem;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px dashed rgba(255, 255, 255, 0.05);
+    }
+
+    .kanban-card:active {
+        transform: rotate(2deg);
+        opacity: 0.8;
     }
 </style>
 {% endblock %}

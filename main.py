@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission
+from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask
 from functools import wraps
 from werkzeug.utils import secure_filename
 
@@ -131,7 +131,38 @@ def teacher_dashboard():
     # Show students linked to this teacher via Mentorship
     mentorships = Mentorship.query.filter_by(teacher_id=current_user.id, status='active').all()
     students = [m.student for m in mentorships]
-    return render_template('teacher/dashboard.html', students=students)
+    # Fetch tasks created by this teacher
+    tasks = AssignedTask.query.filter_by(teacher_id=current_user.id).order_by(AssignedTask.created_at.desc()).all()
+    return render_template('teacher/dashboard.html', students=students, tasks=tasks)
+
+@app.route('/teacher/task/create', methods=['POST'])
+@role_required('teacher')
+def create_task():
+    title = request.form.get('title')
+    description = request.form.get('description')
+    external_link = request.form.get('external_link')
+    student_id = request.form.get('student_id') # Can be None for general tasks
+    
+    file = request.files.get('file')
+    attachment_path = None
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        unique_filename = f"task_{int(datetime.utcnow().timestamp())}_{filename}"
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+        attachment_path = unique_filename
+        
+    new_task = AssignedTask(
+        teacher_id=current_user.id,
+        student_id=student_id if student_id else None,
+        title=title,
+        description=description,
+        external_link=external_link,
+        attachment_path=attachment_path
+    )
+    db.session.add(new_task)
+    db.session.commit()
+    flash('Nova tarefa assistida designada!', 'success')
+    return redirect(url_for('teacher_dashboard'))
 
 @app.route('/teacher/plan/create', methods=['POST'])
 @role_required('teacher')
@@ -156,17 +187,34 @@ def student_dashboard():
     total_minutes = sum(s.duration_minutes for s in sessions if s.duration_minutes)
     total_hours = round(total_minutes / 60, 1)
     all_teachers = User.query.filter_by(role='teacher', is_approved=True).all()
-    return render_template('student/dashboard.html', sessions=sessions, plans=plans, total_hours=total_hours, all_teachers=all_teachers)
+    
+    # Fetch tasks: specific to student OR for everyone
+    assigned_tasks = AssignedTask.query.filter(
+        (AssignedTask.student_id == current_user.id) | (AssignedTask.student_id == None)
+    ).order_by(AssignedTask.created_at.desc()).all()
+    
+    # Fetch certificates (Internal and External)
+    certificates = Certificate.query.filter_by(student_id=current_user.id).order_by(Certificate.issue_date.desc()).all()
+    
+    return render_template('student/dashboard.html', 
+                         sessions=sessions, 
+                         plans=plans, 
+                         total_hours=total_hours, 
+                         all_teachers=all_teachers,
+                         assigned_tasks=assigned_tasks,
+                         certificates=certificates)
 
 @app.route('/study/log', methods=['POST'])
 @role_required('student')
 def log_study():
     subject = request.form.get('subject')
+    subtitle = request.form.get('subtitle', '')
     minutes = int(request.form.get('minutes'))
     
     new_session = StudySession(
         student_id=current_user.id,
         subject=subject,
+        subtitle=subtitle,
         start_time=datetime.utcnow() - timedelta(minutes=minutes),
         end_time=datetime.utcnow(),
         duration_minutes=minutes,
@@ -188,6 +236,9 @@ def log_study():
 @role_required('student')
 def start_session():
     subject = request.form.get('subject')
+    subtitle = request.form.get('subtitle', '')
+    task_id = request.form.get('task_id')
+    
     # Check if there's already an active session
     active = StudySession.query.filter_by(student_id=current_user.id, end_time=None).first()
     if active:
@@ -197,12 +248,14 @@ def start_session():
     new_session = StudySession(
         student_id=current_user.id,
         subject=subject,
+        subtitle=subtitle,
+        task_id=task_id if task_id else None,
         start_time=datetime.utcnow(),
-        type='scheduled'
+        type='assisted' if task_id else 'scheduled'
     )
     db.session.add(new_session)
     db.session.commit()
-    flash(f'Sessão de {subject} iniciada!', 'success')
+    flash(f'Foco iniciado em {subject}!', 'success')
     return redirect(url_for('student_dashboard'))
 
 @app.route('/study/stop/<int:session_id>', methods=['POST'])
@@ -217,13 +270,24 @@ def stop_session(session_id):
     session.duration_minutes = int(duration)
     session.is_validated = True
     
+    # Submission details
+    session.completion_comment = request.form.get('comment')
+    session.completion_link = request.form.get('link')
+    
+    file = request.files.get('file')
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        unique_filename = f"delivery_{int(datetime.utcnow().timestamp())}_{filename}"
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+        session.completion_file = unique_filename
+    
     # Update Study Plan progress
     plan = StudyPlan.query.filter_by(student_id=current_user.id, target_subject=session.subject).first()
     if plan:
         plan.completed_hours += round(duration / 60, 2)
         
     db.session.commit()
-    flash('Sessão finalizada com sucesso!', 'success')
+    flash('Missão cumprida! Registro salvo.', 'success')
     return redirect(url_for('student_dashboard'))
 
 @app.route('/certificate/generate')
@@ -246,6 +310,34 @@ def generate_cert():
     db.session.commit()
     
     flash('Certificado gerado com sucesso!', 'success')
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/certificate/upload-external', methods=['POST'])
+@role_required('student')
+def upload_external_certificate():
+    description = request.form.get('description')
+    hours = float(request.form.get('hours', 0))
+    file = request.files.get('file')
+    
+    if not file or not allowed_file(file.filename):
+        flash('Arquivo inválido ou não selecionado.', 'danger')
+        return redirect(url_for('student_dashboard'))
+        
+    filename = secure_filename(file.filename)
+    unique_filename = f"ext_cert_{int(datetime.utcnow().timestamp())}_{filename}"
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+    
+    new_cert = Certificate(
+        student_id=current_user.id,
+        verification_code=f"EXT-{uuid.uuid4().hex[:8].upper()}",
+        total_hours=hours,
+        pdf_path=unique_filename,
+        is_external=True,
+        external_issuer=request.form.get('issuer', 'Externo')
+    )
+    db.session.add(new_cert)
+    db.session.commit()
+    flash('Certificado externo registrado com sucesso!', 'success')
     return redirect(url_for('student_dashboard'))
 
 @app.route('/study/submit-file', methods=['POST'])
@@ -323,6 +415,20 @@ def request_mentorship():
         db.session.commit()
         flash('Mentor vinculado com sucesso!', 'success')
     return redirect(url_for('student_dashboard'))
+
+@app.route('/study/plan/update-status/<int:plan_id>', methods=['POST'])
+@role_required('student')
+def update_plan_status(plan_id):
+    plan = StudyPlan.query.get_or_404(plan_id)
+    if plan.student_id != current_user.id:
+        return {"error": "Unauthorized"}, 403
+        
+    new_status = request.json.get('status')
+    if new_status in ['backlog', 'active', 'completed']:
+        plan.status = new_status
+        db.session.commit()
+        return {"status": "success", "new_status": new_status}
+    return {"error": "Invalid status"}, 400
 
 # --- Public Route ---
 
@@ -414,7 +520,7 @@ def register():
 from sqlalchemy import text, inspect
 
 def ensure_db_schema():
-    print(">>> [DB SYNC] Iniciando sincronização do banco de dados...")
+    print(">>> [DB SYNC] Iniciando sincronização do banco de dados Phase 2...")
     with app.app_context():
         try:
             db.create_all()
@@ -424,35 +530,47 @@ def ensure_db_schema():
         
         try:
             inspector = inspect(db.engine)
-            columns = [c['name'] for c in inspector.get_columns('users')]
-            print(f">>> [DB SYNC] Colunas encontradas em 'users': {columns}")
-
-            # Identificar colunas faltantes
-            missing_approved = 'is_approved' not in columns
-            has_active = 'is_active' in columns
-            missing_pwd_change = 'needs_password_change' not in columns
-
-            if missing_approved or missing_pwd_change:
-                with db.engine.connect() as conn:
-                    # Rename is_active -> is_approved
-                    if missing_approved and has_active:
-                        print(">>> [DB SYNC] Renomeando is_active para is_approved...")
+            
+            # Check users table
+            columns_users = [c['name'] for c in inspector.get_columns('users')]
+            with db.engine.connect() as conn:
+                if 'is_approved' not in columns_users:
+                    if 'is_active' in columns_users:
                         conn.execute(text("ALTER TABLE users RENAME COLUMN is_active TO is_approved;"))
-                    
-                    # Add is_approved if still missing
-                    if missing_approved and not has_active:
-                        print(">>> [DB SYNC] Adicionando coluna is_approved...")
+                    else:
                         conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
-                    
-                    # Add needs_password_change
-                    if missing_pwd_change:
-                        print(">>> [DB SYNC] Adicionando coluna needs_password_change...")
-                        conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
-                    
-                    conn.commit()
-                    print(">>> [DB SYNC] Alterações de schema aplicadas com sucesso.")
+                if 'needs_password_change' not in columns_users:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
+                
+                # Check study_sessions table
+                columns_sessions = [c['name'] for c in inspector.get_columns('study_sessions')]
+                if 'task_id' not in columns_sessions:
+                    conn.execute(text("ALTER TABLE study_sessions ADD COLUMN task_id INTEGER;"))
+                if 'subtitle' not in columns_sessions:
+                    conn.execute(text("ALTER TABLE study_sessions ADD COLUMN subtitle VARCHAR(100);"))
+                if 'completion_comment' not in columns_sessions:
+                    conn.execute(text("ALTER TABLE study_sessions ADD COLUMN completion_comment TEXT;"))
+                if 'completion_file' not in columns_sessions:
+                    conn.execute(text("ALTER TABLE study_sessions ADD COLUMN completion_file VARCHAR(255);"))
+                if 'completion_link' not in columns_sessions:
+                    conn.execute(text("ALTER TABLE study_sessions ADD COLUMN completion_link VARCHAR(255);"))
+                
+                # Check certificates table
+                columns_certs = [c['name'] for c in inspector.get_columns('certificates')]
+                if 'is_external' not in columns_certs:
+                    conn.execute(text("ALTER TABLE certificates ADD COLUMN is_external BOOLEAN DEFAULT FALSE;"))
+                if 'external_issuer' not in columns_certs:
+                    conn.execute(text("ALTER TABLE certificates ADD COLUMN external_issuer VARCHAR(100);"))
+                
+                # Check study_plans table
+                columns_plans = [c['name'] for c in inspector.get_columns('study_plans')]
+                if 'status' not in columns_plans:
+                    conn.execute(text("ALTER TABLE study_plans ADD COLUMN status VARCHAR(20) DEFAULT 'active';"))
+
+                conn.commit()
+                print(">>> [DB SYNC] Schema Phase 2 sincronizado.")
         except Exception as e:
-            print(f">>> [DB SYNC] Erro durante sincronização manual: {e}")
+            print(f">>> [DB SYNC] Erro durante sincronização: {e}")
             db.session.rollback()
 
 ensure_db_schema()

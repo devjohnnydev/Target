@@ -20,64 +20,161 @@
         </div>
     </div>
 
-    <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-10 backdrop-blur-sm">
-        <h2 class="text-xl font-futuristic text-white mb-10 uppercase tracking-widest italic">Alunos sob sua Mentoria
-        </h2>
-
-        {% if students %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {% for student in students %}
-            <div
-                class="bg-slate-950/40 border border-white/5 rounded-[2.5rem] p-8 hover:border-emerald-500/30 transition-all duration-500 group relative overflow-hidden">
-                <div
-                    class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity">
-                </div>
-
-                <div class="relative z-10">
-                    <div class="flex items-center space-x-4 mb-8">
-                        <div
-                            class="w-14 h-14 bg-white/5 rounded-2xl items-center justify-center flex text-white border border-white/5 shadow-inner group-hover:border-emerald-500/20 transition-all duration-500">
-                            <span class="text-2xl font-futuristic uppercase italic">{{ student.name[0] }}</span>
-                        </div>
-                        <div>
-                            <div
-                                class="font-futuristic text-lg text-white uppercase tracking-tight italic group-hover:text-emerald-400 transition-colors">
-                                {{ student.name }}</div>
-                            <div class="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase mt-1">{{
-                                student.study_objective }}</div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-6">
-                        <div class="h-px bg-white/5 w-full"></div>
-                        <h3 class="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em]">Configurar Nova
-                            Meta</h3>
-
-                        <form action="{{ url_for('create_study_plan') }}" method="POST" class="space-y-4">
-                            <input type="hidden" name="student_id" value="{{ student.id }}">
-                            <div class="space-y-4">
-                                <input type="text" name="subject" placeholder="Assunto da Missão"
-                                    class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-3 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none transition-all"
-                                    required>
-                                <input type="number" name="hours" placeholder="Carga Horária (Obj)"
-                                    class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-3 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none transition-all"
-                                    required>
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-12">
+        <!-- Students List -->
+        <div class="xl:col-span-2 space-y-8">
+            <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-10 backdrop-blur-sm">
+                <h2 class="text-xl font-futuristic text-white mb-10 uppercase tracking-widest italic">Alunos sob sua
+                    Mentoria</h2>
+                {% if students %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {% for student in students %}
+                    <div
+                        class="bg-slate-950/40 border border-white/5 rounded-[2.5rem] p-8 hover:border-emerald-500/30 transition-all duration-500 group relative overflow-hidden">
+                        <div class="relative z-10">
+                            <div class="flex items-center space-x-4 mb-8">
+                                <div
+                                    class="w-14 h-14 bg-white/5 rounded-2xl items-center justify-center flex text-white border border-white/5 shadow-inner group-hover:border-emerald-500/20 transition-all duration-500">
+                                    <span class="text-2xl font-futuristic uppercase italic">{{ student.name[0] }}</span>
+                                </div>
+                                <div>
+                                    <div
+                                        class="font-futuristic text-lg text-white uppercase tracking-tight italic group-hover:text-emerald-400 transition-colors">
+                                        {{ student.name }}</div>
+                                    <div class="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase mt-1">{{
+                                        student.study_objective }}</div>
+                                </div>
                             </div>
-                            <button type="submit"
-                                class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-futuristic text-[10px] py-4 rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-emerald-500/10">
-                                Atribuir Meta
-                            </button>
-                        </form>
+                            <div class="space-y-6">
+                                <div class="h-px bg-white/5 w-full"></div>
+                                <h3 class="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.4em]">Configurar
+                                    Nova Meta</h3>
+                                <form action="{{ url_for('create_study_plan') }}" method="POST" class="space-y-4">
+                                    <input type="hidden" name="student_id" value="{{ student.id }}">
+                                    <input type="text" name="subject" placeholder="Assunto da Missão"
+                                        class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-3 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none transition-all"
+                                        required>
+                                    <input type="number" name="hours" placeholder="Carga Horária (Obj)"
+                                        class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-3 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none transition-all"
+                                        required>
+                                    <button type="submit"
+                                        class="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-slate-950 font-futuristic text-[10px] py-4 rounded-xl transition-all uppercase tracking-widest border border-emerald-500/20">Atribuir
+                                        Meta</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-20 border-2 border-dashed border-white/5 rounded-[2.5rem]">
+                    <p class="text-slate-500 italic font-medium">Nenhum vínculo tático estabelecido no momento.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Task Creation Sidebar -->
+        <div class="space-y-8">
+            <div class="bg-slate-900/60 rounded-[2.5rem] border border-white/5 p-8 backdrop-blur-md">
+                <h2 class="text-sm font-futuristic text-white mb-8 uppercase tracking-[0.3em] italic">Nova Tarefa
+                    Assistida</h2>
+                <form action="{{ url_for('create_task') }}" method="POST" enctype="multipart/form-data"
+                    class="space-y-4">
+                    <input type="text" name="title" placeholder="TÍTULO DA TAREFA"
+                        class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-4 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none"
+                        required>
+                    <textarea name="description" placeholder="ORIENTAÇÕES E DETALHES"
+                        class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-4 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none min-h-[100px]"></textarea>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Link de Apoio
+                            (Opcional)</label>
+                        <input type="url" name="external_link" placeholder="HTTPS://..."
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-4 text-white text-xs focus:border-emerald-500/30 outline-none">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Material
+                            PDF/Anexo</label>
+                        <div class="relative group">
+                            <input type="file" name="file"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <div
+                                class="bg-slate-950/50 border border-dashed border-white/10 rounded-xl p-4 flex items-center justify-center group-hover:border-emerald-500/30 transition-all">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Escolher
+                                    Arquivo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Atribuir
+                            a:</label>
+                        <select name="student_id"
+                            class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-4 text-white text-xs font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none appearance-none">
+                            <option value="">TODOS OS ALUNOS</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}">{{ student.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-emerald-500 text-slate-950 font-futuristic text-[10px] py-5 rounded-xl transition-all transform hover:scale-[1.02] uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 mt-4">
+                        Desdobrar Tarefa
+                    </button>
+                </form>
+            </div>
+
+            <!-- Active Tasks History -->
+            <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 overflow-hidden">
+                <div class="px-8 py-6 bg-white/5 border-b border-white/5">
+                    <h2 class="text-[10px] font-futuristic text-white uppercase tracking-[0.3em] italic">Tarefas Ativas
+                    </h2>
+                </div>
+                <div class="max-h-[400px] overflow-y-auto">
+                    {% for task in tasks %}
+                    <div class="p-6 border-b border-white/5 hover:bg-white/5 transition-colors group">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-xs font-futuristic text-white uppercase tracking-tight italic">{{
+                                task.title }}</div>
+                            <span
+                                class="text-[8px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">{{
+                                task.created_at.strftime('%d.%m') }}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500 line-clamp-2 mb-4 leading-relaxed">{{ task.description or
+                            'Sem descrição.' }}</div>
+                        <div class="flex gap-2">
+                            {% if task.external_link %}
+                            <a href="{{ task.external_link }}" target="_blank"
+                                class="p-2 bg-white/5 rounded-lg hover:bg-emerald-500/20 transition-colors">
+                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                    </path>
+                                </svg>
+                            </a>
+                            {% endif %}
+                            {% if task.attachment_path %}
+                            <a href="{{ url_for('static', filename='uploads/' + task.attachment_path) }}"
+                                target="_blank"
+                                class="p-2 bg-white/5 rounded-lg hover:bg-emerald-500/20 transition-colors">
+                                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    </path>
+                                </svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
         </div>
-        {% else %}
-        <div class="text-center py-20 border-2 border-dashed border-white/5 rounded-[2.5rem]">
-            <p class="text-slate-500 italic font-medium">Nenhum vínculo tático estabelecido no momento.</p>
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
