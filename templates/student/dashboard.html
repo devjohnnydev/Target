@@ -378,7 +378,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
                 <h2 class="text-xl font-futuristic text-white uppercase tracking-widest italic">Timeline de Foco</h2>
                 <div class="relative w-full sm:w-64">
-                    <input type="text" id="timeline-filter" placeholder="FILTRAR POR TÍTULO..."
+                    <input type="text" id="timeline-filter" placeholder="FILTRAR POR ASSUNTO..."
                         class="w-full bg-white/5 border border-white/10 rounded-full px-5 py-2.5 text-[10px] text-white font-bold tracking-widest uppercase focus:border-emerald-500/30 outline-none transition-all">
                     <svg class="w-4 h-4 text-slate-500 absolute right-4 top-1/2 -translate-y-1/2" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
@@ -388,40 +388,96 @@
                 </div>
             </div>
 
-            <div class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2" id="timeline-list">
-                {% for session in sessions %}
-                <div class="timeline-item flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-2xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group/item cursor-pointer"
-                    onclick="showSessionDetails({
-                         subject: '{{ session.subject }}',
-                         subtitle: '{{ session.subtitle or "" }}',
-                         duration: '{{ session.duration_minutes }}',
-                         date: '{{ session.start_time.strftime(" %d/%m/%Y") }}',
-                    start: '{{ session.start_time.strftime("%H:%M") }}' ,
-                    end: '{{ session.end_time.strftime("%H:%M") if session.end_time else "Ativa" }}' ,
-                    comment: '{{ session.completion_comment or "Sem comentário." }}' ,
-                    link: '{{ session.completion_link or "" }}' , file: '{{ session.completion_file or "" }}' ,
-                    type: '{{ session.type }}' })" data-title="{{ session.subject }} {{ session.subtitle }}">
-                    <div class="flex items-center space-x-5">
-                        <div
-                            class="w-12 h-12 rounded-xl bg-white/5 flex flex-col items-center justify-center border border-white/5">
-                            <span class="text-[10px] font-bold text-emerald-500">{{ session.start_time.strftime('%d')
-                                }}</span>
-                            <span class="text-[8px] font-bold text-slate-500 uppercase">{{
-                                session.start_time.strftime('%b') }}</span>
-                        </div>
-                        <div>
+            <div class="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2" id="timeline-list">
+                {% for group in subject_groups %}
+                <div class="subject-group-card border border-white/10 rounded-2xl overflow-hidden transition-all hover:border-emerald-500/30"
+                    data-subject="{{ group.subject }}">
+                    <!-- Subject Header (Clickable) -->
+                    <div class="subject-header bg-gradient-to-r from-emerald-500/10 to-transparent p-6 cursor-pointer flex items-center justify-between"
+                        onclick="toggleSubjectGroup('{{ group.subject }}')">
+                        <div class="flex items-center space-x-4">
                             <div
-                                class="text-sm font-futuristic text-white uppercase tracking-tight group-hover/item:text-neon transition-colors">
-                                {{ session.subject }}</div>
-                            {% if session.subtitle %}<div
-                                class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">// {{
-                                session.subtitle }}</div>{% endif %}
+                                class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-futuristic text-white uppercase tracking-tight">{{ group.subject
+                                    }}</h3>
+                                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">{{
+                                    group.session_count }} SESSÕES REGISTRADAS</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-6">
+                            <div class="text-right">
+                                <div class="text-2xl font-futuristic text-emerald-400">{{ (group.total_minutes /
+                                    60)|round(1) }}H</div>
+                                <div class="text-[8px] font-bold text-slate-600 uppercase tracking-widest">TOTAL
+                                    ACUMULADO</div>
+                            </div>
+                            <svg class="w-5 h-5 text-slate-500 transition-transform duration-300 expand-icon"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-xs font-futuristic text-white">{{ session.duration_minutes }}M</div>
-                        <div class="text-[8px] font-bold text-slate-600 uppercase tracking-widest">{{ session.type }}
+
+                    <!-- Expandable Sessions List -->
+                    <div class="subject-sessions hidden bg-slate-950/30 p-6 space-y-3">
+                        <div class="flex justify-end mb-4">
+                            <a href="{{ url_for('export_subject_pdf', subject=group.subject) }}"
+                                class="flex items-center space-x-2 bg-emerald-500/10 hover:bg-emerald-500 hover:text-slate-950 border border-emerald-500/30 px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <span class="text-emerald-400">Exportar PDF</span>
+                            </a>
                         </div>
+
+                        {% for session in group.sessions %}
+                        <div class="timeline-item flex items-center justify-between p-4 bg-slate-900/40 border border-white/5 rounded-xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all cursor-pointer"
+                            onclick="showSessionDetails({
+                                 subject: '{{ session.subject }}',
+                                 subtitle: '{{ session.subtitle or '' }}',
+                                 duration: '{{ session.duration_minutes }}',
+                                 date: '{{ session.start_time.strftime('%d/%m/%Y') }}',
+                                 start: '{{ session.start_time.strftime('%H:%M') }}',
+                                 end: '{{ session.end_time.strftime('%H:%M') if session.end_time else 'Ativa' }}',
+                                 comment: '{{ session.completion_comment or 'Sem comentário.' }}',
+                                 link: '{{ session.completion_link or '' }}',
+                                 file: '{{ session.completion_file or '' }}',
+                                 type: '{{ session.type }}'
+                            })">
+                            <div class="flex items-center space-x-4">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-white/5 flex flex-col items-center justify-center border border-white/5">
+                                    <span class="text-[9px] font-bold text-emerald-500">{{
+                                        session.start_time.strftime('%d') }}</span>
+                                    <span class="text-[7px] font-bold text-slate-500 uppercase">{{
+                                        session.start_time.strftime('%b') }}</span>
+                                </div>
+                                <div>
+                                    {% if session.subtitle %}
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">// {{
+                                        session.subtitle }}</div>
+                                    {% endif %}
+                                    <div class="text-[8px] text-slate-600 mt-0.5">{{
+                                        session.start_time.strftime('%H:%M') }} - {{ session.end_time.strftime('%H:%M')
+                                        if session.end_time else 'Ativa' }}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-futuristic text-white">{{ session.duration_minutes }}M</div>
+                                <div class="text-[7px] font-bold text-slate-600 uppercase tracking-widest">{{
+                                    session.type }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
                 {% endfor %}
@@ -736,9 +792,9 @@
     // Timeline Filter
     document.getElementById('timeline-filter')?.addEventListener('input', function (e) {
         const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.timeline-item').forEach(item => {
-            const title = item.dataset.title.toLowerCase();
-            item.style.display = title.includes(term) ? 'flex' : 'none';
+        document.querySelectorAll('.subject-group-card').forEach(card => {
+            const subject = card.dataset.subject.toLowerCase();
+            card.style.display = subject.includes(term) ? 'block' : 'none';
         });
     });
 
@@ -751,6 +807,25 @@
             // Scroll to timeline
             document.querySelector('#timeline-list').scrollIntoView({ behavior: 'smooth' });
         }
+    }
+
+    // Subject Group Expand/Collapse
+    function toggleSubjectGroup(subject) {
+        const cards = document.querySelectorAll('.subject-group-card');
+        cards.forEach(card => {
+            if (card.dataset.subject === subject) {
+                const sessionsDiv = card.querySelector('.subject-sessions');
+                const expandIcon = card.querySelector('.expand-icon');
+
+                if (sessionsDiv.classList.contains('hidden')) {
+                    sessionsDiv.classList.remove('hidden');
+                    expandIcon.style.transform = 'rotate(180deg)';
+                } else {
+                    sessionsDiv.classList.add('hidden');
+                    expandIcon.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
     }
 </script>
 

@@ -471,6 +471,23 @@ def student_dashboard():
     
     subject_metrics = [{'name': s[0], 'hours': round(s[1]/60, 1)} for s in time_per_subject]
     
+    # NEW: Subject-based grouping for timeline
+    subject_groups = {}
+    for session in sessions:
+        if session.subject not in subject_groups:
+            subject_groups[session.subject] = {
+                'subject': session.subject,
+                'total_minutes': 0,
+                'session_count': 0,
+                'sessions': []
+            }
+        subject_groups[session.subject]['total_minutes'] += session.duration_minutes or 0
+        subject_groups[session.subject]['session_count'] += 1
+        subject_groups[session.subject]['sessions'].append(session)
+    
+    # Convert to list and sort by total time (descending)
+    subject_groups_list = sorted(subject_groups.values(), key=lambda x: x['total_minutes'], reverse=True)
+    
     return render_template('student/dashboard.html', 
                          sessions=sessions, 
                          plans=plans, 
@@ -479,7 +496,8 @@ def student_dashboard():
                          assigned_tasks=assigned_tasks,
                          certificates=certificates,
                          unique_subjects=unique_subjects,
-                         subject_metrics=subject_metrics)
+                         subject_metrics=subject_metrics,
+                         subject_groups=subject_groups_list)
 
 @app.route('/study/log', methods=['POST'])
 @role_required('student')
@@ -588,6 +606,38 @@ def generate_cert():
     
     flash('Certificado gerado com sucesso!', 'success')
     return redirect(url_for('student_dashboard'))
+
+@app.route('/student/export-subject-pdf/<subject>')
+@role_required('student')
+def export_subject_pdf(subject):
+    """Export detailed study report for a specific subject as PDF"""
+    from utils import generate_subject_study_report
+    from flask import send_file
+    
+    # Fetch all sessions for this subject
+    sessions = StudySession.query.filter_by(
+        student_id=current_user.id,
+        subject=subject
+    ).order_by(StudySession.start_time.desc()).all()
+    
+    if not sessions:
+        flash('Nenhuma sessão encontrada para este assunto.', 'warning')
+        return redirect(url_for('student_dashboard'))
+    
+    # Calculate total hours
+    total_minutes = sum(s.duration_minutes for s in sessions if s.duration_minutes)
+    total_hours = round(total_minutes / 60, 1)
+    
+    # Generate PDF
+    filename = generate_subject_study_report(
+        current_user.name,
+        subject,
+        sessions,
+        total_hours
+    )
+    
+    filepath = os.path.join('static/reports', filename)
+    return send_file(filepath, as_attachment=True, download_name=f"Relatorio_{subject.replace(' ', '_')}.pdf")
 
 @app.route('/certificate/upload-external', methods=['POST'])
 @role_required('student')
