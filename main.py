@@ -164,18 +164,66 @@ def log_study():
     subject = request.form.get('subject')
     minutes = int(request.form.get('minutes'))
     
-    # Simple manual log for now
+    new_session = StudySession(
+        student_id=current_user.id,
+        subject=subject,
+        start_time=datetime.utcnow() - timedelta(minutes=minutes),
+        end_time=datetime.utcnow(),
+        duration_minutes=minutes,
+        type='free',
+        is_validated=True
+    )
+    db.session.add(new_session)
+    
+    # Update Study Plan progress
+    plan = StudyPlan.query.filter_by(student_id=current_user.id, target_subject=subject).first()
+    if plan:
+        plan.completed_hours += round(minutes / 60, 2)
+        
+    db.session.commit()
+    flash('Hora de estudo registrada!', 'success')
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/study/start', methods=['POST'])
+@role_required('student')
+def start_session():
+    subject = request.form.get('subject')
+    # Check if there's already an active session
+    active = StudySession.query.filter_by(student_id=current_user.id, end_time=None).first()
+    if active:
+        flash('Você já tem uma sessão ativa!', 'warning')
+        return redirect(url_for('student_dashboard'))
+        
     new_session = StudySession(
         student_id=current_user.id,
         subject=subject,
         start_time=datetime.utcnow(),
-        duration_minutes=minutes,
-        type='free',
-        is_validated=True # Manual for now
+        type='scheduled'
     )
     db.session.add(new_session)
     db.session.commit()
-    flash('Hora de estudo registrada!', 'success')
+    flash(f'Sessão de {subject} iniciada!', 'success')
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/study/stop/<int:session_id>', methods=['POST'])
+@role_required('student')
+def stop_session(session_id):
+    session = StudySession.query.get_or_404(session_id)
+    if session.student_id != current_user.id:
+        return redirect(url_for('dashboard'))
+        
+    session.end_time = datetime.utcnow()
+    duration = (session.end_time - session.start_time).total_seconds() / 60
+    session.duration_minutes = int(duration)
+    session.is_validated = True
+    
+    # Update Study Plan progress
+    plan = StudyPlan.query.filter_by(student_id=current_user.id, target_subject=session.subject).first()
+    if plan:
+        plan.completed_hours += round(duration / 60, 2)
+        
+    db.session.commit()
+    flash('Sessão finalizada com sucesso!', 'success')
     return redirect(url_for('student_dashboard'))
 
 @app.route('/certificate/generate')
