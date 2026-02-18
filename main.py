@@ -120,7 +120,7 @@ def admin_dashboard():
         db.func.sum(StudySession.duration_minutes).label('total_minutes')
     ).join(StudySession, User.id == StudySession.student_id, isouter=True)\
      .filter(User.role == 'student')\
-     .group_by(User.id, User.photo_url, User.profile_image_type)
+     .group_by(User.id, User.name, User.email, User.is_approved, User.photo_url, User.profile_image_type)
 
     # Apply sorting
     if sort_order == 'asc':
