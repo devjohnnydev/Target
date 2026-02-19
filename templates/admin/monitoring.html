@@ -104,27 +104,31 @@
 
                 <!-- BI Metrics Grid -->
                 <div class="grid grid-cols-2 gap-6 mb-10">
-                    <div class="bg-slate-950/40 rounded-3xl p-5 border border-white/5 text-center">
-                        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Global
+                    <div
+                        class="bg-indigo-500/5 rounded-3xl p-6 border border-indigo-500/10 text-center relative group/metric">
+                        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-3">Total Global
                         </div>
-                        <div class="text-2xl font-futuristic text-white" id="global-minutes-{{ item.student.id }}">
+                        <div class="text-5xl font-futuristic text-white transition-all group-hover/metric:text-emerald-400"
+                            id="global-hours-{{ item.student.id }}" data-base-minutes="{{ item.total_time_global }}">
                             {{ (item.total_time_global / 60)|round(1) }}<span
-                                class="text-xs text-slate-600 ml-1">h</span>
+                                class="text-base text-slate-600 ml-1">h</span>
                         </div>
                     </div>
                     <div
-                        class="bg-slate-950/40 rounded-3xl p-5 border border-white/5 text-center relative overflow-hidden group/daily">
+                        class="bg-emerald-500/5 rounded-3xl p-6 border border-emerald-500/10 text-center relative overflow-hidden group/daily group/metric">
                         <input type="date" value="{{ current_date }}"
                             onchange="updateStudentStats({{ item.student.id }}, this.value)"
                             class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                        <div class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-2">Total Dia
+                        <div class="text-[9px] font-bold text-emerald-500/50 uppercase tracking-[0.3em] mb-3">Total Dia
                         </div>
-                        <div class="text-2xl font-futuristic text-emerald-400" id="daily-minutes-{{ item.student.id }}">
+                        <div class="text-4xl font-futuristic text-emerald-400" id="daily-hours-{{ item.student.id }}"
+                            data-base-minutes="{{ item.total_time_today }}">
                             {{ (item.total_time_today / 60)|round(1) }}<span
-                                class="text-[10px] text-emerald-900 ml-1">h</span>
+                                class="text-sm text-emerald-900 ml-1">h</span>
                         </div>
-                        <div class="absolute bottom-1 right-1 opacity-20">
-                            <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div
+                            class="absolute bottom-2 right-2 opacity-10 group-hover/daily:opacity-30 transition-opacity">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                 </path>
@@ -133,18 +137,44 @@
                     </div>
                 </div>
 
-                <!-- Live Performance Timer -->
-                {% if item.active_session %}
+                <!-- Live Performance Timer (High Impact) -->
                 <div
-                    class="bg-emerald-500/5 rounded-[2.5rem] p-8 text-center border border-emerald-500/10 mb-6 relative group/timer">
-                    <div class="text-[10px] font-bold text-emerald-500/50 uppercase tracking-[0.5em] mb-4">Sessão Ativa
+                    class="bg-slate-950/60 rounded-[3rem] p-10 text-center border border-white/5 relative overflow-hidden transition-all duration-500 {% if item.active_session %}border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.05)]{% endif %}">
+                    {% if item.active_session %}
+                    <div class="absolute inset-0 bg-emerald-500/[0.02] animate-pulse pointer-events-none"></div>
+                    {% endif %}
+
+                    <div
+                        class="text-[10px] font-bold {% if item.active_session %}text-emerald-500{% else %}text-slate-600{% endif %} uppercase tracking-[0.6em] mb-6">
+                        Status da Sessão</div>
+
+                    <div class="timer-display font-futuristic flex justify-center items-center space-x-2" {% if
+                        item.active_session %} id="timer-{{ item.student.id }}"
+                        data-start="{{ item.active_session.start_time.isoformat() }}"
+                        data-student-id="{{ item.student.id }}" {% endif %}>
+
+                        {% if item.active_session %}
+                        <div
+                            class="timer text-6xl text-emerald-400 tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                            00:00:00</div>
+                        {% else %}
+                        <div class="text-4xl text-slate-800 tracking-tighter opacity-50">00:00:00</div>
+                        {% endif %}
                     </div>
-                    <div class="timer text-5xl font-futuristic text-emerald-400 tracking-[0.2em] drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                        data-start="{{ item.active_session.start_time.isoformat() }}">
-                        00:00:00
+
+                    {% if item.active_session %}
+                    <div class="mt-6 flex items-center justify-center space-x-2">
+                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
+                        <span class="text-[9px] font-bold text-emerald-500/40 uppercase tracking-widest">Transmitindo
+                            Tempo Real</span>
                     </div>
+                    {% else %}
+                    <div class="mt-6">
+                        <span class="text-[9px] font-bold text-slate-700 uppercase tracking-widest italic">Aguardando
+                            Conexão...</span>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
 
             <!-- Footer Stats -->
@@ -180,54 +210,79 @@
 </style>
 
 <script>
-    // Live Timer Engine
+    // Live Timer Engine with Real-time BI Aggregation
     function updateTimers() {
-        const timers = document.querySelectorAll('.timer');
-        timers.forEach(timer => {
-            const start = new Date(timer.dataset.start);
+        const timers = document.querySelectorAll('.timer-display[data-start]');
+        timers.forEach(display => {
+            const start = new Date(display.dataset.start);
             const now = new Date();
-            // Assuming the server provides ISO format which JS parses as UTC if Z is present, 
-            // but we might need to handle timezone differences if the server is not UTC.
-            // For now, let's assume standard UTC flow.
-            const diff = Math.floor((now - start) / 1000);
+            const studentId = display.dataset.studentId;
 
-            if (diff < 0) return; // Prevention for clock drift
+            // Calculate elapsed time
+            const diffSeconds = Math.floor((now - start) / 1000);
+            if (diffSeconds < 0) return;
 
-            const h = Math.floor(diff / 3600);
-            const m = Math.floor((diff % 3600) / 60);
-            const s = diff % 60;
+            const h = Math.floor(diffSeconds / 3600);
+            const m = Math.floor((diffSeconds % 3600) / 60);
+            const s = diffSeconds % 60;
 
-            timer.innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            // Update session timer UI
+            const timerEl = display.querySelector('.timer');
+            if (timerEl) {
+                timerEl.innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+
+            // Real-time BI Aggregation: Update Daily and Global totals
+            updateLiveAggregation(studentId, diffSeconds);
         });
     }
 
-    // Individual Student BI Analytics Engine
+    function updateLiveAggregation(studentId, activeSeconds) {
+        const dailyEl = document.getElementById(`daily-hours-${studentId}`);
+        const globalEl = document.getElementById(`global-hours-${studentId}`);
+
+        if (!dailyEl || !globalEl) return;
+
+        const baseDailyMinutes = parseFloat(dailyEl.dataset.baseMinutes) || 0;
+        const baseGlobalMinutes = parseFloat(globalEl.dataset.baseMinutes) || 0;
+
+        // Current session minutes (real-time)
+        const activeMinutes = activeSeconds / 60;
+
+        // New totals
+        const totalDailyHours = ((baseDailyMinutes + activeMinutes) / 60).toFixed(1);
+        const totalGlobalHours = ((baseGlobalMinutes + activeMinutes) / 60).toFixed(1);
+
+        dailyEl.innerHTML = `${totalDailyHours}<span class="text-sm text-emerald-900 ml-1">h</span>`;
+        globalEl.innerHTML = `${totalGlobalHours}<span class="text-sm text-slate-600 ml-1">h</span>`;
+    }
+
+    // Individual Student BI Analytics Engine (AJAX)
     async function updateStudentStats(studentId, date) {
-        const dailyEl = document.getElementById(`daily-minutes-${studentId}`);
-        const globalEl = document.getElementById(`global-minutes-${studentId}`);
+        const dailyEl = document.getElementById(`daily-hours-${studentId}`);
+        const globalEl = document.getElementById(`global-hours-${studentId}`);
         const dateLabel = document.getElementById(`date-label-${studentId}`);
 
-        // Visual feedback
-        dailyEl.classList.add('animate-pulse', 'text-slate-500');
-        dateLabel.innerText = "UPDATING...";
+        dailyEl.classList.add('animate-pulse', 'opacity-50');
+        dateLabel.innerText = "REFRESHING...";
 
         try {
             const response = await fetch(`/admin/student_stats/${studentId}?date=${date}`);
             const data = await response.json();
 
-            // UI Update
-            const dailyHours = (data.daily_minutes / 60).toFixed(1);
-            const globalHours = (data.global_minutes / 60).toFixed(1);
+            // Update base data for real-time tracking to continue correctly from the new date context
+            dailyEl.dataset.baseMinutes = data.daily_minutes;
+            globalEl.dataset.baseMinutes = data.global_minutes;
 
-            dailyEl.innerHTML = `${dailyHours}<span class="text-[10px] text-emerald-900 ml-1">h</span>`;
-            globalEl.innerHTML = `${globalHours}<span class="text-xs text-slate-600 ml-1">h</span>`;
+            // Immediate UI update (updateTimers will take over in the next tick)
+            updateLiveAggregation(studentId, 0);
             dateLabel.innerText = data.date;
 
         } catch (error) {
             console.error('BI Update Failed:', error);
             dateLabel.innerText = "ERROR";
         } finally {
-            dailyEl.classList.remove('animate-pulse', 'text-slate-500');
+            dailyEl.classList.remove('animate-pulse', 'opacity-50');
         }
     }
 
