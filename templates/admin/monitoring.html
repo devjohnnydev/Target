@@ -150,7 +150,7 @@
 
                     <div class="timer-display font-futuristic flex justify-center items-center space-x-2" {% if
                         item.active_session %} id="timer-{{ item.student.id }}"
-                        data-start="{{ item.active_session.start_time.isoformat() }}"
+                        data-start="{{ item.active_session.start_time.isoformat() }}Z"
                         data-student-id="{{ item.student.id }}" {% endif %}>
 
                         {% if item.active_session %}
