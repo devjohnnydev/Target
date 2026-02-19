@@ -148,7 +148,7 @@
                             <div
                                 class="w-16 h-16 rounded-2xl border border-indigo-500/20 overflow-hidden flex-shrink-0 shadow-xl">
                                 {% if session.student.photo_url %}
-                                <img src="{{ session.student.photo_url if session.student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + session.student.photo_url) }}"
+                                <img src="{{ session.student.photo_url if (session.student.profile_image_type == 'url' or session.student.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + session.student.photo_url) }}"
                                     class="w-full h-full object-cover">
                                 {% else %}
                                 <div
@@ -287,7 +287,7 @@
                                 <div
                                     class="w-10 h-10 rounded-full border border-white/5 overflow-hidden bg-white/5 flex-shrink-0">
                                     {% if student.photo_url %}
-                                    <img src="{{ student.photo_url if student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + student.photo_url) }}"
+                                    <img src="{{ student.photo_url if (student.profile_image_type == 'url' or student.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + student.photo_url) }}"
                                         class="w-full h-full object-cover">
                                     {% else %}
                                     <div

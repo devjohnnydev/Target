@@ -845,13 +845,51 @@ def update_plan_status(plan_id):
     plan = StudyPlan.query.get_or_404(plan_id)
     if plan.student_id != current_user.id:
         return {"error": "Unauthorized"}, 403
-        
     new_status = request.json.get('status')
     if new_status in ['backlog', 'active', 'completed']:
         plan.status = new_status
         db.session.commit()
         return {"status": "success", "new_status": new_status}
     return {"error": "Invalid status"}, 400
+
+@app.route('/study/plan/create-student', methods=['POST'])
+@role_required('student')
+def create_student_plan():
+    subject = request.form.get('subject')
+    hours = request.form.get('hours', 0)
+    
+    if not subject or not hours:
+        flash('Assunto e carga horária são obrigatórios.', 'danger')
+        return redirect(url_for('student_dashboard'))
+        
+    try:
+        hours = float(hours)
+        new_plan = StudyPlan(
+            student_id=current_user.id,
+            mentor_id=current_user.id, # Self-managed
+            target_subject=subject,
+            target_hours=hours,
+            status='backlog'
+        )
+        db.session.add(new_plan)
+        db.session.commit()
+        flash(f'Meta "{subject}" adicionada ao seu quadro!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erro ao criar meta. Verifique os dados.', 'danger')
+        
+    return redirect(url_for('student_dashboard'))
+
+@app.route('/study/plan/delete/<int:plan_id>', methods=['DELETE'])
+@role_required('student')
+def delete_plan(plan_id):
+    plan = StudyPlan.query.get_or_404(plan_id)
+    if plan.student_id != current_user.id:
+        return {"error": "Unauthorized"}, 403
+        
+    db.session.delete(plan)
+    db.session.commit()
+    return {"status": "success"}
 
 @app.route('/ai/ask', methods=['POST'])
 @role_required('student')

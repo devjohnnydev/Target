@@ -127,7 +127,7 @@
                 <div class="flex items-center space-x-3">
                     <div class="w-8 h-8 rounded-full border border-white/5 overflow-hidden bg-white/5 shrink-0">
                         {% if current_user.photo_url %}
-                        <img src="{{ current_user.photo_url if current_user.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + current_user.photo_url) }}"
+                        <img src="{{ current_user.photo_url if (current_user.profile_image_type == 'url' or current_user.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + current_user.photo_url) }}"
                             class="w-full h-full object-cover">
                         {% else %}
                         <div

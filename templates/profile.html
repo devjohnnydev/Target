@@ -36,7 +36,7 @@
                         class="w-32 h-32 rounded-full border-2 border-emerald-500/30 p-1 mb-6 relative group overflow-hidden">
                         <div class="w-full h-full rounded-full overflow-hidden bg-white/5">
                             {% if current_user.photo_url %}
-                            <img src="{{ current_user.photo_url if current_user.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + current_user.photo_url) }}"
+                            <img src="{{ current_user.photo_url if (current_user.profile_image_type == 'url' or current_user.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + current_user.photo_url) }}"
                                 class="w-full h-full object-cover" id="img-preview">
                             {% else %}
                             <div class="w-full h-full flex items-center justify-center text-slate-500 text-2xl font-bold"

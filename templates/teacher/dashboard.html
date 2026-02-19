@@ -35,7 +35,7 @@
                                 <div
                                     class="w-14 h-14 bg-white/5 rounded-2xl items-center justify-center flex text-white border border-white/5 shadow-inner group-hover:border-emerald-500/20 transition-all duration-500 overflow-hidden">
                                     {% if student.photo_url %}
-                                    <img src="{{ student.photo_url if student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + student.photo_url) }}"
+                                    <img src="{{ student.photo_url if (student.profile_image_type == 'url' or student.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + student.photo_url) }}"
                                         class="w-full h-full object-cover">
                                     {% else %}
                                     <span class="text-2xl font-futuristic uppercase italic">{{ student.name[0] }}</span>

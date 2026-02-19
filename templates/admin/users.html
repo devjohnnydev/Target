@@ -75,7 +75,7 @@
                                 <div
                                     class="w-10 h-10 rounded-full border border-white/5 overflow-hidden bg-white/5 flex-shrink-0">
                                     {% if user.photo_url %}
-                                    <img src="{{ user.photo_url if user.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + user.photo_url) }}"
+                                    <img src="{{ user.photo_url if (user.profile_image_type == 'url' or user.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + user.photo_url) }}"
                                         class="w-full h-full object-cover">
                                     {% else %}
                                     <div

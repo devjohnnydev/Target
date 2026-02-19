@@ -58,7 +58,7 @@
                         <div
                             class="w-20 h-20 rounded-3xl border-2 border-white/5 p-1 relative overflow-hidden group-hover:border-emerald-500/20 transition-all duration-500 shadow-2xl">
                             {% if item.student.photo_url %}
-                            <img src="{{ item.student.photo_url if item.student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + item.student.photo_url) }}"
+                            <img src="{{ item.student.photo_url if (item.student.profile_image_type == 'url' or item.student.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + item.student.photo_url) }}"
                                 class="w-full h-full object-cover rounded-2xl">
                             {% else %}
                             <div
