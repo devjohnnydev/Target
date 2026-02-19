@@ -96,11 +96,14 @@
                         'Inicie esta missão para progredir em seu objetivo.' }}</p>
 
                     <div class="flex items-center space-x-3">
-                        <button
-                            onclick="document.getElementById('subject-input').value = '{{ task.title }}'; window.scrollTo({top: 0, behavior: 'smooth'});"
-                            class="flex-1 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 text-[8px] font-bold uppercase tracking-widest py-2 rounded-lg border border-emerald-500/20 transition-all">
-                            Iniciar Foco
-                        </button>
+                        <form action="{{ url_for('start_session') }}" method="POST" class="flex-1">
+                            <input type="hidden" name="subject" value="{{ task.title }}">
+                            <input type="hidden" name="task_id" value="{{ task.id }}">
+                            <button type="submit"
+                                class="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 text-[8px] font-bold uppercase tracking-widest py-2 rounded-lg border border-emerald-500/20 transition-all">
+                                Iniciar Foco
+                            </button>
+                        </form>
                         {% if task.file_path %}
                         <a href="{{ url_for('static', filename='uploads/missions/' + task.file_path) }}" target="_blank"
                             class="p-2 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/5 transition-all">
