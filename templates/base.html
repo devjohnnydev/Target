@@ -124,6 +124,8 @@
             </a>
             <div class="flex items-center space-x-8">
                 {% if current_user.is_authenticated %}
+                <span class="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">Bem vindo, {{
+                    current_user.name }}</span>
                 {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('admin_monitoring') }}"
                     class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-400 transition-colors">Monitoramento</a>
@@ -185,6 +187,8 @@
         <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
             onclick="document.getElementById('support-modal').classList.add('hidden')"></div>
         <div class="relative bg-slate-900 border border-white/10 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl">
+            <h1 class="text-3xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Bem vindo, <span
+                    class="text-neon">{{ current_user.name }}</span>!</h1>
             <h2 class="text-xl font-futuristic text-white mb-6 uppercase tracking-widest italic">Contato com o <span
                     class="text-amber-400">Admin</span></h2>
             <form action="{{ url_for('send_support_message') }}" method="POST" class="space-y-6">
