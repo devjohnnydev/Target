@@ -11,8 +11,36 @@
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
+        :root {
+            --bg-body: #020617;
+            /* slate-950 */
+            --bg-nav: rgba(15, 23, 42, 0.8);
+            /* slate-900/80 */
+            --text-main: #f1f5f9;
+            /* slate-100 */
+            --text-muted: #64748b;
+            /* slate-500 */
+            --border-color: rgba(255, 255, 255, 0.05);
+            --card-bg: rgba(15, 23, 42, 0.4);
+        }
+
+        .light-theme {
+            --bg-body: #f8fafc;
+            /* slate-50 */
+            --bg-nav: rgba(255, 255, 255, 0.8);
+            --text-main: #0f172a;
+            /* slate-900 */
+            --text-muted: #475569;
+            /* slate-600 */
+            --border-color: rgba(0, 0, 0, 0.1);
+            --card-bg: rgba(255, 255, 255, 0.8);
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .font-futuristic {
@@ -27,7 +55,58 @@
             color: #00FF88;
             text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
+
+        .light-theme .text-neon {
+            color: #059669;
+            /* emerald-600 */
+            text-shadow: none;
+        }
+
+        .light-theme .text-emerald-400 {
+            color: #059669 !important;
+        }
+
+        .light-theme .text-emerald-500 {
+            color: #047857 !important;
+        }
+
+        .light-theme .text-slate-500,
+        .light-theme .text-slate-400 {
+            color: #475569 !important;
+        }
+
+        .light-theme .bg-slate-900\/50,
+        .light-theme .bg-slate-900\/40,
+        .light-theme .bg-slate-900\/60,
+        .light-theme .bg-slate-950\/50,
+        .light-theme .bg-slate-950\/40,
+        .light-theme .bg-slate-950\/30 {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .light-theme .text-white {
+            color: var(--text-main) !important;
+        }
+
+        .light-theme .bg-white\/5,
+        .light-theme .bg-white\/10 {
+            background-color: rgba(0, 0, 0, 0.05) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        nav {
+            background-color: var(--bg-nav) !important;
+            border-bottom-color: var(--border-color) !important;
+        }
     </style>
+    <script>
+        // Apply theme immediately to avoid flash
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.documentElement.classList.add('light-theme');
+        }
+    </script>
 </head>
 
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-emerald-500/30">
@@ -57,9 +136,41 @@
                 {% endif %}
                 <a href="{{ url_for('user_profile') }}"
                     class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-400 transition-colors text-neon">Perfil</a>
+                <button onclick="toggleTheme()" id="theme-toggle"
+                    class="p-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
+                    <!-- Sun Icon (shows in light mode) -->
+                    <svg id="sun-icon" class="hidden w-4 h-4 text-amber-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h1m-16 0H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.95 16.95l.707.707M7.05 7.05l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z">
+                        </path>
+                    </svg>
+                    <!-- Moon Icon (shows in dark mode) -->
+                    <svg id="moon-icon" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                        </path>
+                    </svg>
+                </button>
                 <a href="{{ url_for('logout') }}"
                     class="bg-white/5 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 rounded-full border border-white/10 transition-all">Sair</a>
                 {% else %}
+                <button onclick="toggleTheme()" id="theme-toggle-anon"
+                    class="p-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
+                    <svg id="sun-icon-anon" class="hidden w-4 h-4 text-amber-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h1m-16 0H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.95 16.95l.707.707M7.05 7.05l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z">
+                        </path>
+                    </svg>
+                    <svg id="moon-icon-anon" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                        </path>
+                    </svg>
+                </button>
                 <a href="{{ url_for('login') }}"
                     class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-400 transition-colors">Entrar</a>
                 <a href="{{ url_for('register') }}"
@@ -124,6 +235,36 @@
                 nos Estudos.</p>
         </div>
     </footer>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isLight = html.classList.toggle('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            updateIcons(isLight);
+        }
+
+        function updateIcons(isLight) {
+            const moonIcons = [document.getElementById('moon-icon'), document.getElementById('moon-icon-anon')];
+            const sunIcons = [document.getElementById('sun-icon'), document.getElementById('sun-icon-anon')];
+
+            moonIcons.forEach(icon => {
+                if (icon) icon.classList.toggle('hidden', isLight);
+            });
+            sunIcons.forEach(icon => {
+                if (icon) icon.classList.toggle('hidden', !isLight);
+            });
+        }
+
+        // Initialize icons on load
+        window.addEventListener('scroll', () => {
+            // Existing scroll logic if any, but adding icons sync
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const isLight = document.documentElement.classList.contains('light-theme');
+            updateIcons(isLight);
+        });
+    </script>
 </body>
 
 </html>

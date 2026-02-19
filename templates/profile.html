@@ -12,8 +12,8 @@
             </svg>
         </div>
         <div class="relative z-10">
-            <h1 class="text-4xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Meu <span
-                    class="text-emerald-400">Perfil</span></h1>
+            <h1 class="text-4xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Bem vindo, <span
+                    class="text-emerald-400">{{ current_user.name }}</span></h1>
             <p class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em]">
                 {% if current_user.role == 'admin' %}
                 Gestão de Identidade Administrativa
