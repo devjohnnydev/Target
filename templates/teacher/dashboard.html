@@ -197,8 +197,16 @@
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center space-x-3">
                             <div
-                                class="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-300">
-                                {{ session.student.name[:2].upper() }}
+                                class="w-8 h-8 rounded-full border border-indigo-500/20 overflow-hidden bg-white/5 flex-shrink-0">
+                                {% if session.student.photo_url %}
+                                <img src="{{ session.student.photo_url if session.student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + session.student.photo_url) }}"
+                                    class="w-full h-full object-cover">
+                                {% else %}
+                                <div
+                                    class="w-full h-full flex items-center justify-center text-[10px] font-bold text-indigo-300">
+                                    {{ session.student.name[:2].upper() }}
+                                </div>
+                                {% endif %}
                             </div>
                             <span class="text-[10px] font-futuristic text-white uppercase">{{ session.student.name
                                 }}</span>

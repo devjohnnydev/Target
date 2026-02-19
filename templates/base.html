@@ -124,8 +124,22 @@
             </a>
             <div class="flex items-center space-x-8">
                 {% if current_user.is_authenticated %}
-                <span class="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">Bem vindo, {{
-                    current_user.name }}</span>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full border border-white/5 overflow-hidden bg-white/5 shrink-0">
+                        {% if current_user.photo_url %}
+                        <img src="{{ current_user.photo_url if current_user.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + current_user.photo_url) }}"
+                            class="w-full h-full object-cover">
+                        {% else %}
+                        <div
+                            class="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-500">
+                            {{ current_user.name[:2].upper() }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <span class="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
+                        Bem vindo, {{ current_user.name }}
+                    </span>
+                </div>
                 {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('admin_monitoring') }}"
                     class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-400 transition-colors">Monitoramento</a>

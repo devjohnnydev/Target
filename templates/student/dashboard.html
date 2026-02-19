@@ -8,13 +8,28 @@
         <div class="bg-slate-900/50 rounded-[2.5rem] p-8 border border-white/5 relative overflow-hidden group">
             <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -tr-10"></div>
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 class="text-3xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Bem vindo,
-                        <span class="text-neon">{{ current_user.name }}</span>!</h1>
-                    <div class="flex items-center space-x-2 text-slate-400">
-                        <span class="text-xs font-bold uppercase tracking-[0.2em]">Foco:</span>
-                        <span class="text-emerald-400 font-futuristic text-sm tracking-widest">{{
-                            current_user.study_objective }}</span>
+                <div class="flex items-center space-x-6">
+                    <div
+                        class="w-20 h-20 rounded-[2rem] border border-white/5 overflow-hidden bg-white/5 group-hover:border-emerald-500/20 transition-all duration-500">
+                        {% if current_user.photo_url %}
+                        <img src="{{ current_user.photo_url if current_user.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + current_user.photo_url) }}"
+                            class="w-full h-full object-cover">
+                        {% else %}
+                        <div
+                            class="w-full h-full flex items-center justify-center text-3xl font-futuristic text-slate-500 uppercase italic">
+                            {{ current_user.name[0] }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Bem vindo,
+                            <span class="text-neon">{{ current_user.name }}</span>!
+                        </h1>
+                        <div class="flex items-center space-x-2 text-slate-400">
+                            <span class="text-xs font-bold uppercase tracking-[0.2em]">Foco:</span>
+                            <span class="text-emerald-400 font-futuristic text-sm tracking-widest">{{
+                                current_user.study_objective }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center space-x-6">
