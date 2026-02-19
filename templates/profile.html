@@ -14,8 +14,15 @@
         <div class="relative z-10">
             <h1 class="text-4xl font-futuristic text-white mb-2 uppercase tracking-tight italic">Meu <span
                     class="text-emerald-400">Perfil</span></h1>
-            <p class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em]">Personalização de Mentoria e
-                Identidade Digital</p>
+            <p class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em]">
+                {% if current_user.role == 'admin' %}
+                Gestão de Identidade Administrativa
+                {% elif current_user.role == 'teacher' %}
+                Personalização de Mentoria e Identidade Digital
+                {% else %}
+                Identidade Digital e Objetivos de Estudo
+                {% endif %}
+            </p>
         </div>
     </div>
 
@@ -88,17 +95,26 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Objetivo
-                                de Estudo Principal</label>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                                {% if current_user.role == 'teacher' %}
+                                Área de Atuação / Especialidade
+                                {% else %}
+                                Objetivo de Estudo Principal
+                                {% endif %}
+                            </label>
                             <input type="text" name="study_objective" value="{{ current_user.study_objective or '' }}"
                                 placeholder="Ex: Certificação AWS, OAB, Python Master"
                                 class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-xs outline-none focus:border-emerald-500/30 transition-all">
                         </div>
                         <div class="space-y-4">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">O que
-                                você está em busca?</label>
-                            <textarea name="search_intent" rows="3"
-                                placeholder="Conte um pouco sobre suas metas e o que espera do PCP..."
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                                {% if current_user.role == 'teacher' %}
+                                Bio / Experiência Profissional
+                                {% else %}
+                                O que você está em busca?
+                                {% endif %}
+                            </label>
+                            <textarea name="search_intent" rows="3" placeholder="Conte um pouco sobre suas metas..."
                                 class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-xs outline-none focus:border-emerald-500/30 transition-all resize-none">{{ current_user.search_intent or '' }}</textarea>
                         </div>
                     </div>

@@ -414,9 +414,9 @@ def create_study_plan():
 
 # --- Student Routes ---
 
-@app.route('/student/profile', methods=['GET', 'POST'])
-@role_required('student')
-def student_profile():
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def user_profile():
     if request.method == 'POST':
         user = User.query.get(current_user.id)
         user.study_objective = request.form.get('study_objective')
@@ -437,9 +437,9 @@ def student_profile():
         
         db.session.commit()
         flash('Perfil atualizado com sucesso!', 'success')
-        return redirect(url_for('student_profile'))
+        return redirect(url_for('user_profile'))
         
-    return render_template('student/profile.html', user=current_user)
+    return render_template('profile.html', user=current_user)
 
 @app.route('/student')
 @role_required('student')
