@@ -2,7 +2,7 @@ import os
 import uuid
 import requests
 from datetime import datetime, timedelta
-from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory
+from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage
 from functools import wraps
@@ -330,9 +330,89 @@ def create_license():
 @app.route('/admin/monitoring')
 @role_required('admin')
 def admin_monitoring():
-    # Get active sessions (end_time is None)
-    active_sessions = StudySession.query.filter_by(end_time=None).all()
-    return render_template('admin/monitoring.html', active_sessions=active_sessions)
+    date_filter = request.args.get('date')
+    
+    if date_filter:
+        try:
+            target_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+        except ValueError:
+            target_date = datetime.utcnow().date()
+            
+        sessions = StudySession.query.filter(StudySession.date == target_date).all()
+    else:
+        target_date = datetime.utcnow().date()
+        sessions = StudySession.query.filter(
+            (StudySession.end_time == None) | (StudySession.date == target_date)
+        ).all()
+
+    monitoring_data = {}
+    student_ids = list(set([s.student_id for s in sessions]))
+    
+    global_totals = {}
+    if student_ids:
+        global_stats = db.session.query(
+            StudySession.student_id,
+            db.func.sum(StudySession.duration_minutes)
+        ).filter(StudySession.student_id.in_(student_ids)).group_by(StudySession.student_id).all()
+        global_totals = {s[0]: (s[1] or 0) for s in global_stats}
+
+    daily_totals = {}
+    if student_ids:
+        daily_stats = db.session.query(
+            StudySession.student_id,
+            db.func.sum(StudySession.duration_minutes)
+        ).filter(
+            StudySession.student_id.in_(student_ids),
+            StudySession.date == target_date
+        ).group_by(StudySession.student_id).all()
+        daily_totals = {s[0]: (s[1] or 0) for s in daily_stats}
+
+    for session in sessions:
+        s_id = session.student_id
+        if s_id not in monitoring_data:
+            monitoring_data[s_id] = {
+                'student': session.student,
+                'active_session': None,
+                'total_time_global': global_totals.get(s_id, 0),
+                'total_time_today': daily_totals.get(s_id, 0),
+                'last_activity': session.subject
+            }
+        
+        if session.end_time is None:
+            monitoring_data[s_id]['active_session'] = session
+            monitoring_data[s_id]['last_activity'] = session.subject
+        
+    sorted_data = sorted(
+        monitoring_data.values(),
+        key=lambda x: (x['active_session'] is not None, x['total_time_today']),
+        reverse=True
+    )
+        
+    return render_template('admin/monitoring.html', monitoring_data=sorted_data, current_date=date_filter or target_date.strftime('%Y-%m-%d'))
+
+@app.route('/admin/student_stats/<int:student_id>')
+@role_required('admin')
+def admin_student_stats(student_id):
+    date_str = request.args.get('date')
+    try:
+        target_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else datetime.utcnow().date()
+    except ValueError:
+        target_date = datetime.utcnow().date()
+
+    daily_total = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
+        StudySession.student_id == student_id,
+        StudySession.date == target_date
+    ).scalar() or 0
+
+    global_total = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
+        StudySession.student_id == student_id
+    ).scalar() or 0
+
+    return jsonify({
+        'daily_minutes': daily_total,
+        'global_minutes': global_total,
+        'date': target_date.strftime('%Y-%m-%d')
+    })
 
 # --- Teacher Routes ---
 
