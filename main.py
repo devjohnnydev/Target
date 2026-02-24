@@ -510,10 +510,13 @@ def user_profile():
         else:
             file = request.files.get('local_photo')
             if file and allowed_file(file.filename):
-                filename = f"profile_{user.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
-                os.makedirs('static/uploads/profiles', exist_ok=True)
-                file.save(os.path.join('static/uploads/profiles', filename))
-                user.photo_url = filename
+                import base64
+                # Read file and convert to Base64
+                file_data = file.read()
+                base64_data = base64.b64encode(file_data).decode('utf-8')
+                mime_type = file.mimetype or 'image/png'
+                user.photo_url = f"data:{mime_type};base64,{base64_data}"
+                user.profile_image_type = 'url' # Base64 works as a URL source
         
         db.session.commit()
         flash('Perfil atualizado com sucesso!', 'success')
@@ -1042,6 +1045,12 @@ def ensure_db_schema():
                         conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT FALSE;"))
                 if 'needs_password_change' not in columns_users:
                     conn.execute(text("ALTER TABLE users ADD COLUMN needs_password_change BOOLEAN DEFAULT FALSE;"))
+                
+                # Migração: Garantir que photo_url seja TEXT (para Base64)
+                # No PostgreSQL, ALTER COLUMN TYPE. No SQLite, ignoramos pq SQLite ignora limites de String
+                if db.engine.name == 'postgresql':
+                    conn.execute(text("ALTER TABLE users ALTER COLUMN photo_url TYPE TEXT;"))
+
                 if 'profile_image_type' not in columns_users:
                     conn.execute(text("ALTER TABLE users ADD COLUMN profile_image_type VARCHAR(20) DEFAULT 'url';"))
                 if 'search_intent' not in columns_users:
