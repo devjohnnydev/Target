@@ -22,13 +22,13 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
-    sessions = db.relationship('StudySession', backref='student', lazy=True)
-    study_plans = db.relationship('StudyPlan', backref='student', lazy=True, foreign_keys='StudyPlan.student_id')
-    certificates = db.relationship('Certificate', backref='student', lazy=True)
-    mentorships_as_student = db.relationship('Mentorship', backref='student', lazy=True, foreign_keys='Mentorship.student_id')
-    mentorships_as_teacher = db.relationship('Mentorship', backref='teacher', lazy=True, foreign_keys='Mentorship.teacher_id')
-    submissions = db.relationship('Submission', backref='student', lazy=True)
-    assigned_tasks = db.relationship('AssignedTask', backref='teacher', lazy=True, foreign_keys='AssignedTask.teacher_id')
+    sessions = db.relationship('StudySession', backref='student', lazy=True, cascade="all, delete-orphan")
+    study_plans = db.relationship('StudyPlan', backref='student', lazy=True, foreign_keys='StudyPlan.student_id', cascade="all, delete-orphan")
+    certificates = db.relationship('Certificate', backref='student', lazy=True, cascade="all, delete-orphan")
+    mentorships_as_student = db.relationship('Mentorship', backref='student', lazy=True, foreign_keys='Mentorship.student_id', cascade="all, delete-orphan")
+    mentorships_as_teacher = db.relationship('Mentorship', backref='teacher', lazy=True, foreign_keys='Mentorship.teacher_id', cascade="all, delete-orphan")
+    submissions = db.relationship('Submission', backref='student', lazy=True, cascade="all, delete-orphan")
+    assigned_tasks = db.relationship('AssignedTask', backref='teacher', lazy=True, foreign_keys='AssignedTask.teacher_id', cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -149,7 +149,7 @@ class SupportMessage(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationship to user
-    user = db.relationship('User', backref=db.backref('support_messages', lazy=True))
+    user = db.relationship('User', backref=db.backref('support_messages', cascade="all, delete-orphan", lazy=True))
 
     def __repr__(self):
         return f'<SupportMessage from {self.user_id}>'
