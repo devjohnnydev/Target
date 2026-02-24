@@ -7,6 +7,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage
 from functools import wraps
 from werkzeug.utils import secure_filename
+from utils import get_now, get_today
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'target-saas-secret-key'
@@ -283,7 +284,7 @@ def admin_analytics():
      .order_by(db.text('total_minutes DESC')).all()
     
     # 3. Study time per Date (Last 30 days)
-    last_30_days = datetime.utcnow().date() - timedelta(days=30)
+    last_30_days = get_today() - timedelta(days=30)
     time_per_day = db.session.query(
         StudySession.date,
         db.func.sum(StudySession.duration_minutes).label('total_minutes')
@@ -319,7 +320,7 @@ def create_license():
     limit = int(request.form.get('limit', 10))
     # For simplicity, license valid for 1 year
     from datetime import timedelta
-    valid_until = datetime.utcnow() + timedelta(days=365)
+    valid_until = get_now() + timedelta(days=365)
     
     new_license = License(license_key=key, student_limit=limit, valid_until=valid_until)
     db.session.add(new_license)
@@ -336,11 +337,11 @@ def admin_monitoring():
         try:
             target_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
         except ValueError:
-            target_date = datetime.utcnow().date()
+            target_date = get_today()
             
         sessions = StudySession.query.filter(StudySession.date == target_date).all()
     else:
-        target_date = datetime.utcnow().date()
+        target_date = get_today()
         sessions = StudySession.query.filter(
             (StudySession.end_time == None) | (StudySession.date == target_date)
         ).all()
@@ -395,9 +396,9 @@ def admin_monitoring():
 def admin_student_stats(student_id):
     date_str = request.args.get('date')
     try:
-        target_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else datetime.utcnow().date()
+        target_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else get_today()
     except ValueError:
-        target_date = datetime.utcnow().date()
+        target_date = get_today()
 
     daily_total = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
         StudySession.student_id == student_id,
@@ -444,7 +445,7 @@ def post_feedback(session_id):
     
     if feedback:
         session.mentor_feedback = feedback
-        session.mentor_feedback_at = datetime.utcnow()
+        session.mentor_feedback_at = get_now()
         db.session.commit()
         flash('Feedback enviado ao aluno!', 'success')
     
@@ -462,7 +463,7 @@ def create_task():
     attachment_path = None
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        unique_filename = f"task_{int(datetime.utcnow().timestamp())}_{filename}"
+        unique_filename = f"task_{int(get_now().timestamp())}_{filename}"
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
         attachment_path = unique_filename
         
@@ -593,8 +594,8 @@ def log_study():
         student_id=current_user.id,
         subject=subject,
         subtitle=subtitle,
-        start_time=datetime.utcnow() - timedelta(minutes=minutes),
-        end_time=datetime.utcnow(),
+        start_time=get_now() - timedelta(minutes=minutes),
+        end_time=get_now(),
         duration_minutes=minutes,
         type='free',
         is_validated=True
@@ -628,7 +629,7 @@ def start_session():
         subject=subject,
         subtitle=subtitle,
         task_id=task_id if task_id else None,
-        start_time=datetime.utcnow(),
+        start_time=get_now(),
         type='assisted' if task_id else 'scheduled'
     )
     db.session.add(new_session)
@@ -643,7 +644,7 @@ def stop_session(session_id):
     if session.student_id != current_user.id:
         return redirect(url_for('dashboard'))
         
-    session.end_time = datetime.utcnow()
+    session.end_time = get_now()
     duration = (session.end_time - session.start_time).total_seconds() / 60
     session.duration_minutes = int(duration)
     session.is_validated = True
@@ -655,7 +656,7 @@ def stop_session(session_id):
     file = request.files.get('file')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        unique_filename = f"delivery_{int(datetime.utcnow().timestamp())}_{filename}"
+        unique_filename = f"delivery_{int(get_now().timestamp())}_{filename}"
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
         session.completion_file = unique_filename
     
@@ -734,7 +735,7 @@ def upload_external_certificate():
         return redirect(url_for('student_dashboard'))
         
     filename = secure_filename(file.filename)
-    unique_filename = f"ext_cert_{int(datetime.utcnow().timestamp())}_{filename}"
+    unique_filename = f"ext_cert_{int(get_now().timestamp())}_{filename}"
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
     
     new_cert = Certificate(
@@ -768,7 +769,7 @@ def submit_file():
         from werkzeug.utils import secure_filename
         filename = secure_filename(file.filename)
         # Unique mapping: user_id + timestamp + filename
-        unique_filename = f"{current_user.id}_{int(datetime.utcnow().timestamp())}_{filename}"
+        unique_filename = f"{current_user.id}_{int(get_now().timestamp())}_{filename}"
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
         
         new_submission = Submission(

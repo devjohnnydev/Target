@@ -6,6 +6,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+from utils import get_now, get_today
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -19,7 +21,7 @@ class User(UserMixin, db.Model):
     search_intent = db.Column(db.Text, nullable=True) # "Qual o objetivo do estudo? O que busca?"
     is_approved = db.Column(db.Boolean, default=False)
     needs_password_change = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_now)
 
     # Relationships
     sessions = db.relationship('StudySession', backref='student', lazy=True, cascade="all, delete-orphan")
@@ -48,7 +50,7 @@ class AssignedTask(db.Model):
     description = db.Column(db.Text, nullable=True)
     external_link = db.Column(db.String(255), nullable=True)
     attachment_path = db.Column(db.String(255), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_now)
     is_completed = db.Column(db.Boolean, default=False)
 
 class License(db.Model):
@@ -57,7 +59,7 @@ class License(db.Model):
     license_key = db.Column(db.String(50), unique=True, nullable=False)
     student_limit = db.Column(db.Integer, nullable=False)
     valid_until = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_now)
 
     def __repr__(self):
         return f'<License {self.license_key}>'
@@ -69,7 +71,7 @@ class StudySession(db.Model):
     task_id = db.Column(db.Integer, db.ForeignKey('assigned_tasks.id'), nullable=True)
     subject = db.Column(db.String(100), nullable=False)
     subtitle = db.Column(db.String(100), nullable=True) # For hierarchy like AWS -> Lambda
-    date = db.Column(db.Date, nullable=False, default=lambda: datetime.utcnow().date())
+    date = db.Column(db.Date, nullable=False, default=get_today)
     start_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=True)
     duration_minutes = db.Column(db.Integer, default=0)
@@ -118,7 +120,7 @@ class Certificate(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     verification_code = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     total_hours = db.Column(db.Float, nullable=False)
-    issue_date = db.Column(db.DateTime, default=datetime.utcnow)
+    issue_date = db.Column(db.DateTime, default=get_now)
     pdf_path = db.Column(db.String(255), nullable=True)
     
     # External tracking
@@ -135,7 +137,7 @@ class Submission(db.Model):
     type = db.Column(db.String(10), nullable=False)  # 'file' or 'link'
     content = db.Column(db.String(255), nullable=False)  # filename or URL
     description = db.Column(db.String(200), nullable=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=get_now)
 
     def __repr__(self):
         return f'<Submission {self.type} - {self.content}>'
@@ -146,7 +148,7 @@ class SupportMessage(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_now)
 
     # Relationship to user
     user = db.relationship('User', backref=db.backref('support_messages', cascade="all, delete-orphan", lazy=True))

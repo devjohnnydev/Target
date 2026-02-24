@@ -6,7 +6,15 @@ from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
 from flask import url_for
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+def get_now():
+    """Returns current time in Brasília (UTC-3)."""
+    return datetime.now(timezone(timedelta(hours=-3))).replace(tzinfo=None)
+
+def get_today():
+    """Returns current date in Brasília."""
+    return get_now().date()
 
 def generate_study_certificate(student_name, total_hours, verification_code, objective):
     """Generates a PDF certificate for study hours."""
@@ -75,7 +83,7 @@ def generate_subject_study_report(student_name, subject, sessions, total_hours):
     
     c.setFont("Helvetica", 12)
     c.drawString(2*cm, height - 2.5*cm, f"Aluno: {student_name}")
-    c.drawString(2*cm, height - 2.8*cm, f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    c.drawString(2*cm, height - 2.8*cm, f"Gerado em: {get_now().strftime('%d/%m/%Y %H:%M')}")
     
     # Subject Title
     c.setFillColorRGB(0, 0, 0)
