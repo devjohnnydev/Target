@@ -891,16 +891,17 @@
 
     // Live Timer for Active Session
     {% if active_session %}
+    // start_time already in Brasília (UTC-3) — parse without "Z" to avoid offset
     const startTimeStr = "{{ active_session.start_time.strftime('%Y-%m-%dT%H:%M:%S') }}";
-    const startTime = new Date(startTimeStr + "Z"); // Force UTC
+    const startTime = new Date(startTimeStr); // No "Z" — treated as local time
     function updateTimer() {
         const now = new Date();
-        const diff = now - startTime;
+        const diff = Math.max(0, now - startTime);
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         const s = Math.floor((diff % 60000) / 1000);
         document.getElementById('live-timer').innerText =
-            `${String(Math.max(0, h)).padStart(2, '0')}:${String(Math.max(0, m)).padStart(2, '0')}:${String(Math.max(0, s)).padStart(2, '0')}`;
+            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
     setInterval(updateTimer, 1000);
     updateTimer();
