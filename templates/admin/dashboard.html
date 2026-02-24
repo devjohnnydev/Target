@@ -334,7 +334,7 @@
                         <td class="px-8 py-6 text-right">
                             <div class="flex justify-end items-center space-x-4">
                                 {% if not student.is_approved %}
-                                <a href="{{ url_for('approve_user', user_id=student.id) }}"
+                                <a href="{{ url_for('admin_approve', user_id=student.id) }}"
                                     class="text-emerald-400 hover:text-emerald-300 font-bold text-[10px] uppercase tracking-widest">Aprovar</a>
                                 {% endif %}
                                 <button onclick="toggleReset('{{ student.id }}')"
