@@ -218,6 +218,54 @@ def admin_delete_user(user_id):
     flash(f'Usuário {name} removido com sucesso.', 'info')
     return redirect(url_for('admin_users'))
 
+@app.route('/admin/user/promote/<int:user_id>', methods=['POST'])
+@role_required('admin')
+def admin_promote_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('Você não pode alterar sua própria função.', 'warning')
+        return redirect(url_for('admin_users'))
+    new_role = request.form.get('new_role', 'admin')
+    if new_role not in ('admin', 'teacher', 'student'):
+        flash('Função inválida.', 'danger')
+        return redirect(url_for('admin_users'))
+    user.role = new_role
+    db.session.commit()
+    flash(f'Função de {user.name} alterada para {new_role}.', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/user/create', methods=['POST'])
+@role_required('admin')
+def admin_create_user():
+    from werkzeug.security import generate_password_hash
+    name     = request.form.get('name', '').strip()
+    email    = request.form.get('email', '').strip().lower()
+    password = request.form.get('password', '').strip()
+    role     = request.form.get('role', 'student')
+
+    if not name or not email or not password:
+        flash('Preencha todos os campos obrigatórios.', 'warning')
+        return redirect(url_for('admin_users'))
+    if role not in ('admin', 'teacher', 'student'):
+        flash('Função inválida.', 'danger')
+        return redirect(url_for('admin_users'))
+    if User.query.filter_by(email=email).first():
+        flash('Já existe um usuário com este e-mail.', 'danger')
+        return redirect(url_for('admin_users'))
+
+    new_user = User(
+        name=name,
+        email=email,
+        role=role,
+        is_approved=True,
+        created_at=get_now()
+    )
+    new_user.set_password(password)
+    db.session.add(new_user)
+    db.session.commit()
+    flash(f'Usuário {name} criado com sucesso como {role}.', 'success')
+    return redirect(url_for('admin_users'))
+
 @app.route('/support/send', methods=['POST'])
 @login_required
 def send_support_message():

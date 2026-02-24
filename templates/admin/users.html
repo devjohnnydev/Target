@@ -20,12 +20,36 @@
                 <span class="text-slate-500 font-bold text-[8px] uppercase tracking-[0.2em] block">Professores</span>
                 <span class="text-xl font-futuristic text-white">{{ total_teachers }}</span>
             </div>
+            <!-- Create User Button -->
+            <button onclick="document.getElementById('createUserModal').classList.remove('hidden')"
+                class="bg-blue-600 hover:bg-blue-500 text-white font-futuristic py-3 px-6 rounded-2xl text-[9px] border border-blue-500/30 transition-all uppercase tracking-widest italic flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Novo Usuário
+            </button>
             <a href="{{ url_for('admin_dashboard') }}"
                 class="bg-white/5 hover:bg-white/10 text-white font-futuristic py-4 px-6 rounded-2xl text-[9px] border border-white/10 transition-all uppercase tracking-widest italic">
                 ← Voltar Dashboard
             </a>
         </div>
     </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="space-y-2">
+        {% for category, message in messages %}
+        <div class="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest
+            {% if category == 'success' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+            {% elif category == 'danger' %}bg-rose-500/10 text-rose-400 border border-rose-500/20
+            {% else %}bg-yellow-500/10 text-yellow-400 border border-yellow-500/20{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
 
     <!-- Filters -->
     <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
@@ -108,7 +132,45 @@
                         <td class="px-8 py-6 text-[10px] text-slate-500 font-bold font-mono">{{
                             user.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td class="px-8 py-6 text-right">
-                            <div class="flex justify-end items-center space-x-3">
+                            <div class="flex justify-end items-center space-x-2">
+
+                                <!-- Change Role dropdown -->
+                                {% if user.id != current_user.id %}
+                                <div class="relative group/role">
+                                    <button type="button"
+                                        class="bg-indigo-500/10 hover:bg-indigo-500 text-indigo-400 hover:text-white p-2.5 rounded-xl transition-all border border-indigo-500/20 flex items-center gap-1"
+                                        title="Alterar Função" onclick="toggleRoleMenu({{ user.id }})">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </button>
+                                    <!-- Dropdown -->
+                                    <div id="role-menu-{{ user.id }}"
+                                        class="hidden absolute right-0 mt-2 w-44 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                                        <div
+                                            class="px-4 py-2 text-[9px] text-slate-500 uppercase tracking-widest border-b border-white/5">
+                                            Definir como</div>
+                                        {% for role_option, label, color in [('admin','Admin','rose'),
+                                        ('teacher','Professor','indigo'), ('student','Aluno','emerald')] %}
+                                        {% if user.role != role_option %}
+                                        <form action="{{ url_for('admin_promote_user', user_id=user.id) }}"
+                                            method="POST">
+                                            <input type="hidden" name="new_role" value="{{ role_option }}">
+                                            <button type="submit"
+                                                class="w-full text-left px-4 py-3 text-xs text-{{ color }}-400 hover:bg-{{ color }}-500/10 transition-colors font-bold uppercase tracking-widest"
+                                                onclick="return confirm('Alterar função de {{ user.name }} para {{ label }}?')">
+                                                → {{ label }}
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Delete -->
+                                {% if user.id != current_user.id %}
                                 <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST"
                                     onsubmit="return confirm('Tem certeza que deseja deletar este usuário? Esta ação é irreversível.')">
                                     <button type="submit"
@@ -120,6 +182,10 @@
                                         </svg>
                                     </button>
                                 </form>
+                                {% else %}
+                                <span class="text-[9px] text-slate-700 italic px-2">você</span>
+                                {% endif %}
+
                             </div>
                         </td>
                     </tr>
@@ -137,4 +203,84 @@
         </div>
     </div>
 </div>
+
+<!-- ===================== Create User Modal ===================== -->
+<div id="createUserModal"
+    class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-white/10 rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl relative">
+        <button onclick="document.getElementById('createUserModal').classList.add('hidden')"
+            class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <h2 class="text-2xl font-futuristic text-white uppercase italic tracking-tight mb-1">Criar <span
+                class="text-blue-400">Usuário</span></h2>
+        <p class="text-slate-500 text-[10px] uppercase tracking-widest mb-8">O usuário já estará aprovado e pode logar
+            imediatamente</p>
+
+        <form action="{{ url_for('admin_create_user') }}" method="POST" class="space-y-5">
+
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Nome Completo <span
+                        class="text-rose-400">*</span></label>
+                <input type="text" name="name" required placeholder="Ex: Maria Silva"
+                    class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500/40 transition-colors">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">E-mail <span
+                        class="text-rose-400">*</span></label>
+                <input type="email" name="email" required placeholder="maria@email.com"
+                    class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500/40 transition-colors">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Senha inicial <span
+                        class="text-rose-400">*</span></label>
+                <input type="password" name="password" required placeholder="Mínimo 4 caracteres"
+                    class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500/40 transition-colors">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Função</label>
+                <select name="role"
+                    class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-blue-500/40 transition-colors">
+                    <option value="student">Aluno</option>
+                    <option value="teacher">Professor</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+
+            <div class="pt-2 flex gap-3">
+                <button type="submit"
+                    class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-futuristic py-3.5 rounded-xl text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20">
+                    Criar Usuário
+                </button>
+                <button type="button" onclick="document.getElementById('createUserModal').classList.add('hidden')"
+                    class="flex-1 bg-white/5 hover:bg-white/10 text-slate-400 font-futuristic py-3.5 rounded-xl text-[10px] uppercase tracking-widest transition-all border border-white/10">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleRoleMenu(userId) {
+        const menu = document.getElementById(`role-menu-${userId}`);
+        // Close all others first
+        document.querySelectorAll('[id^="role-menu-"]').forEach(m => {
+            if (m !== menu) m.classList.add('hidden');
+        });
+        menu.classList.toggle('hidden');
+    }
+    // Close menus when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('[id^="role-menu-"]') && !e.target.closest('button[onclick^="toggleRoleMenu"]')) {
+            document.querySelectorAll('[id^="role-menu-"]').forEach(m => m.classList.add('hidden'));
+        }
+    });
+</script>
 {% endblock %}
