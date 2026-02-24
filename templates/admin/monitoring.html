@@ -21,8 +21,8 @@
             </div>
             <h1 class="text-5xl font-futuristic text-white uppercase italic tracking-tighter leading-none mb-3">
                 Bem vindo, <span class="text-neon">{{ current_user.name }}</span></h1>
-            <p class="text-slate-400 font-medium tracking-tight text-sm uppercase tracking-[0.1em]">Análise Profissional
-                de Unidades de Estudo em Tempo Real</p>
+            <p class="text-slate-400 font-medium text-sm uppercase tracking-[0.1em]">Análise Profissional de Unidades de
+                Estudo em Tempo Real</p>
         </div>
 
         <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto relative z-10">
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <!-- Main Monitoring Board (Top 3 Focus) -->
+    <!-- Main Monitoring Board -->
     <div id="monitoringBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         {% for item in monitoring_data %}
         <div class="student-card bg-slate-900/40 rounded-[3rem] p-10 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex flex-col group overflow-hidden relative backdrop-blur-sm"
@@ -85,8 +85,8 @@
                 </div>
 
                 <!-- Focus Subject -->
-                <div class="mb-10">
-                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-4 flex items-center">
+                <div class="mb-8">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] mb-3 flex items-center">
                         <svg class="w-3 h-3 mr-2 text-emerald-500" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -95,36 +95,42 @@
                         Objetivo Atual
                     </div>
                     <div
-                        class="bg-white/5 rounded-2xl p-5 border border-white/5 group-hover:border-emerald-500/10 transition-all">
+                        class="bg-white/5 rounded-2xl p-4 border border-white/5 group-hover:border-emerald-500/10 transition-all">
                         <div class="text-sm font-futuristic text-white uppercase italic tracking-widest line-clamp-1">
                             {{ item.last_activity or 'AGUARDANDO INÍCIO' }}
                         </div>
                     </div>
                 </div>
 
-                <!-- BI Metrics Grid -->
-                <div class="grid grid-cols-2 gap-6 mb-10">
+                <!-- BI Metrics: Global + Daily in h min format -->
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <!-- Total Global -->
                     <div
-                        class="bg-indigo-500/5 rounded-3xl p-6 border border-indigo-500/10 text-center relative group/metric">
-                        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-3">Total Global
+                        class="bg-indigo-500/5 rounded-3xl p-5 border border-indigo-500/10 text-center relative group/metric">
+                        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-2">Total Global
                         </div>
-                        <div class="text-5xl font-futuristic text-white transition-all group-hover/metric:text-emerald-400"
+                        <div class="font-futuristic text-white transition-all group-hover/metric:text-emerald-400"
                             id="global-hours-{{ item.student.id }}" data-base-minutes="{{ item.total_time_global }}">
-                            {{ (item.total_time_global / 60)|round(1) }}<span
-                                class="text-base text-slate-600 ml-1">h</span>
+                            <span class="text-3xl" id="g-h-{{ item.student.id }}">{{ (item.total_time_global // 60)|int
+                                }}</span><span class="text-sm text-slate-500 ml-0.5">h</span>
+                            <span class="text-xl ml-1" id="g-m-{{ item.student.id }}">{{ (item.total_time_global %
+                                60)|int }}</span><span class="text-sm text-slate-600">min</span>
                         </div>
                     </div>
+                    <!-- Total Dia -->
                     <div
-                        class="bg-emerald-500/5 rounded-3xl p-6 border border-emerald-500/10 text-center relative overflow-hidden group/daily group/metric">
+                        class="bg-emerald-500/5 rounded-3xl p-5 border border-emerald-500/10 text-center relative overflow-hidden group/daily">
                         <input type="date" value="{{ current_date }}"
                             onchange="updateStudentStats({{ item.student.id }}, this.value)"
                             class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                        <div class="text-[9px] font-bold text-emerald-500/50 uppercase tracking-[0.3em] mb-3">Total Dia
+                        <div class="text-[9px] font-bold text-emerald-500/50 uppercase tracking-[0.3em] mb-2">Total Dia
                         </div>
-                        <div class="text-4xl font-futuristic text-emerald-400" id="daily-hours-{{ item.student.id }}"
+                        <div class="font-futuristic text-emerald-400" id="daily-hours-{{ item.student.id }}"
                             data-base-minutes="{{ item.total_time_today }}">
-                            {{ (item.total_time_today / 60)|round(1) }}<span
-                                class="text-sm text-emerald-900 ml-1">h</span>
+                            <span class="text-3xl" id="d-h-{{ item.student.id }}">{{ (item.total_time_today // 60)|int
+                                }}</span><span class="text-sm text-emerald-800 ml-0.5">h</span>
+                            <span class="text-xl ml-1" id="d-m-{{ item.student.id }}">{{ (item.total_time_today %
+                                60)|int }}</span><span class="text-sm text-emerald-900">min</span>
                         </div>
                         <div
                             class="absolute bottom-2 right-2 opacity-10 group-hover/daily:opacity-30 transition-opacity">
@@ -137,7 +143,29 @@
                     </div>
                 </div>
 
-                <!-- Live Performance Timer (High Impact) -->
+                <!-- Days Converter -->
+                <div
+                    class="bg-white/[0.03] border border-white/5 rounded-2xl p-5 mb-6 flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-1">Equivalente em
+                            Dias</div>
+                        <div class="font-futuristic text-white text-xl" id="days-{{ item.student.id }}">
+                            {{ "%.1f"|format(item.total_time_global / 60 / 8) }}
+                            <span class="text-sm text-slate-500">dias</span>
+                        </div>
+                        <div class="text-[8px] text-slate-600 mt-0.5">
+                            baseado em <span id="hpd-display-{{ item.student.id }}">8</span>h/dia
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <div class="text-[9px] font-bold text-slate-600 uppercase tracking-widest">h/dia</div>
+                        <input type="number" min="1" max="24" value="8"
+                            class="w-14 bg-slate-950/50 border border-white/10 rounded-lg px-2 py-1.5 text-white text-xs text-center outline-none focus:border-emerald-500/30 font-futuristic"
+                            oninput="recalcDays({{ item.student.id }}, this.value)" id="hpd-{{ item.student.id }}">
+                    </div>
+                </div>
+
+                <!-- Live Performance Timer -->
                 <div
                     class="bg-slate-950/60 rounded-[3rem] p-10 text-center border border-white/5 relative overflow-hidden transition-all duration-500 {% if item.active_session %}border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.05)]{% endif %}">
                     {% if item.active_session %}
@@ -146,13 +174,13 @@
 
                     <div
                         class="text-[10px] font-bold {% if item.active_session %}text-emerald-500{% else %}text-slate-600{% endif %} uppercase tracking-[0.6em] mb-6">
-                        Status da Sessão</div>
+                        Status da Sessão
+                    </div>
 
-                    <div class="timer-display font-futuristic flex justify-center items-center space-x-2" {% if
+                    <div class="timer-display font-futuristic flex justify-center items-center" {% if
                         item.active_session %} id="timer-{{ item.student.id }}"
-                        data-start="{{ item.active_session.start_time.isoformat() }}Z"
+                        data-start="{{ item.active_session.start_time.strftime('%Y-%m-%dT%H:%M:%S') }}"
                         data-student-id="{{ item.student.id }}" {% endif %}>
-
                         {% if item.active_session %}
                         <div
                             class="timer text-6xl text-emerald-400 tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]">
@@ -210,54 +238,73 @@
 </style>
 
 <script>
-    // Live Timer Engine with Real-time BI Aggregation
+    // Helper: render h and min elements separately
+    function renderHM(prefix, studentId, totalMinutes) {
+        const hEl = document.getElementById(`${prefix}-h-${studentId}`);
+        const mEl = document.getElementById(`${prefix}-m-${studentId}`);
+        if (!hEl || !mEl) return;
+        hEl.innerText = Math.floor(totalMinutes / 60);
+        mEl.innerText = Math.floor(totalMinutes % 60);
+    }
+
+    // Days converter: adjustable hours-per-day input
+    function recalcDays(studentId, hPerDay) {
+        const globalEl = document.getElementById(`global-hours-${studentId}`);
+        const daysEl = document.getElementById(`days-${studentId}`);
+        const hpdDisplay = document.getElementById(`hpd-display-${studentId}`);
+        if (!globalEl || !daysEl) return;
+        const totalMins = parseFloat(globalEl.dataset.liveMinutes || globalEl.dataset.baseMinutes) || 0;
+        const hpd = Math.max(1, parseFloat(hPerDay) || 8);
+        const days = (totalMins / 60 / hpd).toFixed(1);
+        daysEl.innerHTML = `${days} <span class="text-sm text-slate-500">dias</span>`;
+        if (hpdDisplay) hpdDisplay.innerText = hpd;
+    }
+
+    // Live timer engine — no "Z", parse as local Brasília time
     function updateTimers() {
-        const timers = document.querySelectorAll('.timer-display[data-start]');
-        timers.forEach(display => {
-            const start = new Date(display.dataset.start);
+        document.querySelectorAll('.timer-display[data-start]').forEach(display => {
+            const start = new Date(display.dataset.start); // local time, no Z
             const now = new Date();
             const studentId = display.dataset.studentId;
+            const diffSec = Math.max(0, Math.floor((now - start) / 1000));
 
-            // Calculate elapsed time
-            const diffSeconds = Math.floor((now - start) / 1000);
-            if (diffSeconds < 0) return;
+            const h = Math.floor(diffSec / 3600);
+            const m = Math.floor((diffSec % 3600) / 60);
+            const s = diffSec % 60;
 
-            const h = Math.floor(diffSeconds / 3600);
-            const m = Math.floor((diffSeconds % 3600) / 60);
-            const s = diffSeconds % 60;
-
-            // Update session timer UI
             const timerEl = display.querySelector('.timer');
             if (timerEl) {
                 timerEl.innerText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
             }
 
-            // Real-time BI Aggregation: Update Daily and Global totals
-            updateLiveAggregation(studentId, diffSeconds);
+            updateLiveAggregation(studentId, diffSec);
         });
     }
 
     function updateLiveAggregation(studentId, activeSeconds) {
         const dailyEl = document.getElementById(`daily-hours-${studentId}`);
         const globalEl = document.getElementById(`global-hours-${studentId}`);
-
         if (!dailyEl || !globalEl) return;
 
-        const baseDailyMinutes = parseFloat(dailyEl.dataset.baseMinutes) || 0;
-        const baseGlobalMinutes = parseFloat(globalEl.dataset.baseMinutes) || 0;
+        const baseDailyMins = parseFloat(dailyEl.dataset.baseMinutes) || 0;
+        const baseGlobalMins = parseFloat(globalEl.dataset.baseMinutes) || 0;
+        const activeMins = activeSeconds / 60;
 
-        // Current session minutes (real-time)
-        const activeMinutes = activeSeconds / 60;
+        const totalDailyMins = baseDailyMins + activeMins;
+        const totalGlobalMins = baseGlobalMins + activeMins;
 
-        // New totals
-        const totalDailyHours = ((baseDailyMinutes + activeMinutes) / 60).toFixed(1);
-        const totalGlobalHours = ((baseGlobalMinutes + activeMinutes) / 60).toFixed(1);
+        // Store live total for days converter
+        globalEl.dataset.liveMinutes = totalGlobalMins;
 
-        dailyEl.innerHTML = `${totalDailyHours}<span class="text-sm text-emerald-900 ml-1">h</span>`;
-        globalEl.innerHTML = `${totalGlobalHours}<span class="text-sm text-slate-600 ml-1">h</span>`;
+        renderHM('d', studentId, totalDailyMins);
+        renderHM('g', studentId, totalGlobalMins);
+
+        // Update days converter in real-time
+        const hpdInput = document.getElementById(`hpd-${studentId}`);
+        recalcDays(studentId, hpdInput ? hpdInput.value : 8);
     }
 
-    // Individual Student BI Analytics Engine (AJAX)
+    // AJAX date filter for daily stats
     async function updateStudentStats(studentId, date) {
         const dailyEl = document.getElementById(`daily-hours-${studentId}`);
         const globalEl = document.getElementById(`global-hours-${studentId}`);
@@ -270,14 +317,11 @@
             const response = await fetch(`/admin/student_stats/${studentId}?date=${date}`);
             const data = await response.json();
 
-            // Update base data for real-time tracking to continue correctly from the new date context
             dailyEl.dataset.baseMinutes = data.daily_minutes;
             globalEl.dataset.baseMinutes = data.global_minutes;
 
-            // Immediate UI update (updateTimers will take over in the next tick)
             updateLiveAggregation(studentId, 0);
             dateLabel.innerText = data.date;
-
         } catch (error) {
             console.error('BI Update Failed:', error);
             dateLabel.innerText = "ERROR";
@@ -288,12 +332,5 @@
 
     setInterval(updateTimers, 1000);
     updateTimers();
-
-    // Auto-refresh logic for the whole board every 5 minutes to catch new sessions
-    // but without losing individual filters.
-    setTimeout(() => {
-        // window.location.reload(); 
-        // In a real pro BI we'd use WebSockets or more granular AJAX polling.
-    }, 300000);
 </script>
 {% endblock %}
