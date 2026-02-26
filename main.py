@@ -17,15 +17,21 @@ database_url = os.environ.get('DATABASE_URL')
 if database_url and database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///target.db'
+# Use an absolute path for the SQLite database
+basedir = os.path.abspath(os.path.dirname(__file__))
+instance_dir = os.path.join(basedir, 'instance')
+os.makedirs(instance_dir, exist_ok=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or f"sqlite:///{os.path.join(instance_dir, 'target.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Upload Configuration
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+UPLOAD_FOLDER = 'static/uploads/missions'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'zip', 'doc', 'docx'}
 
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs('static/uploads', exist_ok=True) # Ensure base upload folder exists
 os.makedirs('static/certificates', exist_ok=True)
 
 # Kuryos AI Config (Groq)
@@ -50,16 +56,60 @@ def role_required(role):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated:
+            if not current_user.is_authenticated or current_user.role != role:
+                flash(f'Acesso restrito para {role}s.', 'danger')
                 return redirect(url_for('login'))
-            if current_user.role != role:
-                flash('Acesso negado: você não tem permissão para acessar esta página.', 'danger')
-                return redirect(url_for('dashboard'))
             if not current_user.is_approved and request.endpoint != 'waiting':
                 return redirect(url_for('waiting'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+# --- API Routes for Messaging ---
+@app.route('/api/messages/<int:other_user_id>', methods=['GET'])
+@login_required
+def get_messages(other_user_id):
+    messages = DirectMessage.query.filter(
+        ((DirectMessage.sender_id == current_user.id) & (DirectMessage.receiver_id == other_user_id)) |
+        ((DirectMessage.sender_id == other_user_id) & (DirectMessage.receiver_id == current_user.id))
+    ).order_by(DirectMessage.created_at.asc()).all()
+
+    # Mark as read
+    unread = [m for m in messages if m.receiver_id == current_user.id and not m.is_read]
+    for msg in unread:
+        msg.is_read = True
+    if unread:
+        db.session.commit()
+
+    messages_data = [{
+        'id': msg.id,
+        'sender_id': msg.sender_id,
+        'content': msg.content,
+        'created_at': msg.created_at.strftime("%H:%M"),
+        'is_read': msg.is_read
+    } for msg in messages]
+
+    other_user = User.query.get(other_user_id)
+    return jsonify({
+        'messages': messages_data,
+        'other_user_name': other_user.name if other_user else 'Usuário'
+    })
+
+@app.route('/api/messages/<int:other_user_id>', methods=['POST'])
+@login_required
+def send_message(other_user_id):
+    data = request.get_json()
+    if not data or 'content' not in data:
+        return jsonify({'error': 'Conteúdo vazio'}), 400
+        
+    new_msg = DirectMessage(
+        sender_id=current_user.id,
+        receiver_id=other_user_id,
+        content=data['content']
+    )
+    db.session.add(new_msg)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Sent'})
 
 # --- Basic Routes ---
 
@@ -181,12 +231,23 @@ def admin_dashboard():
                          selected_student_ids=selected_student_ids)
 
 @app.route('/admin/student/<int:student_id>')
-@role_required('admin')
+@login_required
 def admin_student_detail(student_id):
+    if current_user.role not in ['admin', 'teacher']:
+        flash('Acesso restrito.', 'danger')
+        return redirect(url_for('dashboard'))
+
     student = User.query.get_or_404(student_id)
     if student.role != 'student':
         flash('Usuário não é um estudante.', 'warning')
         return redirect(url_for('admin_dashboard'))
+
+    # If teacher, verify mentorship
+    if current_user.role == 'teacher':
+        mentorship = Mentorship.query.filter_by(teacher_id=current_user.id, student_id=student_id, status='active').first()
+        if not mentorship:
+            flash('Você não tem permissão para visualizar este aluno.', 'danger')
+            return redirect(url_for('teacher_dashboard'))
 
     # Calculate Total Hours
     total_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
@@ -208,12 +269,43 @@ def admin_student_detail(student_id):
     # Active Session Check
     active_session = StudySession.query.filter_by(student_id=student.id, end_time=None).first()
 
+    import json
+    # --- BI Dashboards Data ---
+    # 1. Last 15 Days Study Trend
+    dates_labels = []
+    hours_data = []
+    for i in range(14, -1, -1):
+        d = today - timedelta(days=i)
+        dates_labels.append(d.strftime('%d/%m'))
+        
+        # sum hours for this day
+        day_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
+            StudySession.student_id == student_id,
+            StudySession.date == d
+        ).scalar() or 0
+        hours_data.append(round(day_minutes / 60, 2))
+        
+    # 2. Subject Breakdown
+    all_student_sessions = StudySession.query.filter_by(student_id=student_id).all()
+    subject_totals = {}
+    for s in all_student_sessions:
+        subj = s.subject or 'Geral'
+        subject_totals[subj] = subject_totals.get(subj, 0) + (s.duration_minutes or 0)
+        
+    subjects_labels = list(subject_totals.keys())
+    subject_hours_data = [round(m / 60, 2) for m in subject_totals.values()]
+
     return render_template('admin/student_detail.html', 
                            student=student, 
                            total_hours=total_hours, 
                            today_hours=today_hours, 
                            sessions=sessions,
-                           active_session=active_session)
+                           active_session=active_session,
+                           dates_json=json.dumps(dates_labels),
+                           hours_json=json.dumps(hours_data),
+                           subjects_json=json.dumps(subjects_labels),
+                           subject_hours_json=json.dumps(subject_hours_data))
+
 
 @app.route('/admin/student/<int:student_id>/export/csv')
 @role_required('admin')
@@ -453,8 +545,12 @@ def create_license():
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/monitoring')
-@role_required('admin')
+@login_required
 def admin_monitoring():
+    if current_user.role not in ['admin', 'teacher']:
+        flash('Acesso restrito.', 'danger')
+        return redirect(url_for('dashboard'))
+        
     date_filter = request.args.get('date')
     
     if date_filter:
@@ -469,6 +565,11 @@ def admin_monitoring():
         sessions = StudySession.query.filter(
             (StudySession.end_time == None) | (StudySession.date == target_date)
         ).all()
+
+    if current_user.role == 'teacher':
+        active_mentorships = Mentorship.query.filter_by(teacher_id=current_user.id, status='active').all()
+        mentored_student_ids = [m.student_id for m in active_mentorships]
+        sessions = [s for s in sessions if s.student_id in mentored_student_ids]
 
     monitoring_data = {}
     student_ids = list(set([s.student_id for s in sessions]))
@@ -559,7 +660,30 @@ def teacher_dashboard():
         (StudySession.completion_comment != None) | (StudySession.completion_file != None)
     ).order_by(StudySession.end_time.desc()).all()
     
-    return render_template('teacher/dashboard.html', students=students, tasks=tasks, submissions=submissions)
+    # Pending mentorship requests
+    pending_mentorships = Mentorship.query.filter_by(teacher_id=current_user.id, status='pending').all()
+    
+    return render_template('teacher/dashboard.html', students=students, tasks=tasks, submissions=submissions, pending_mentorships=pending_mentorships)
+
+@app.route('/teacher/mentorship/accept/<int:m_id>', methods=['POST'])
+@role_required('teacher')
+def accept_mentorship(m_id):
+    mentorship = Mentorship.query.get_or_404(m_id)
+    if mentorship.teacher_id == current_user.id:
+        mentorship.status = 'active'
+        db.session.commit()
+        flash('Mentoria aceita com sucesso!', 'success')
+    return redirect(url_for('teacher_dashboard'))
+
+@app.route('/teacher/mentorship/reject/<int:m_id>', methods=['POST'])
+@role_required('teacher')
+def reject_mentorship(m_id):
+    mentorship = Mentorship.query.get_or_404(m_id)
+    if mentorship.teacher_id == current_user.id:
+        mentorship.status = 'rejected'
+        db.session.commit()
+        flash('Mentoria rejeitada.', 'info')
+    return redirect(url_for('teacher_dashboard'))
 
 @app.route('/teacher/feedback/<int:session_id>', methods=['POST'])
 @role_required('teacher')
@@ -696,6 +820,9 @@ def student_dashboard():
     # Convert to list and sort by total time (descending)
     subject_groups_list = sorted(subject_groups.values(), key=lambda x: x['total_minutes'], reverse=True)
     
+    active_mentorship = Mentorship.query.filter_by(student_id=current_user.id, status='active').first()
+    mentor = User.query.get(active_mentorship.teacher_id) if active_mentorship else None
+    
     return render_template('student/dashboard.html', 
                          sessions=sessions, 
                          plans=plans, 
@@ -705,7 +832,8 @@ def student_dashboard():
                          certificates=certificates,
                          unique_subjects=unique_subjects,
                          subject_metrics=subject_metrics,
-                         subject_groups=subject_groups_list)
+                         subject_groups=subject_groups_list,
+                         mentor=mentor)
 
 @app.route('/study/log', methods=['POST'])
 @role_required('student')

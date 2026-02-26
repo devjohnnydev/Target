@@ -20,6 +20,49 @@
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-12">
+        <!-- Pending Mentorships block spanning full width if present -->
+        {% if pending_mentorships %}
+        <div class="xl:col-span-3 bg-indigo-500/10 border border-indigo-500/20 rounded-[2.5rem] p-8 backdrop-blur-md">
+            <h2 class="text-xl font-futuristic text-indigo-300 mb-6 uppercase tracking-widest italic flex items-center">
+                <span class="w-3 h-3 bg-indigo-500 rounded-full animate-ping mr-4"></span>
+                Novas Solicitações de Mentoria
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for req in pending_mentorships %}
+                <div
+                    class="bg-slate-900/60 border border-white/5 rounded-2xl p-6 flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-white font-futuristic uppercase text-xl shrink-0 overflow-hidden border border-white/5">
+                            {% if req.student.photo_url %}
+                            <img src="{{ req.student.photo_url if req.student.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + req.student.photo_url) }}"
+                                class="w-full h-full object-cover">
+                            {% else %}
+                            {{ req.student.name[:2] }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="font-futuristic text-sm text-white uppercase italic tracking-tight">{{
+                                req.student.name }}</div>
+                            <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Status: {{
+                                req.student.study_objective or 'Indefinido' }}</div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <form action="{{ url_for('accept_mentorship', m_id=req.id) }}" method="POST" class="flex-1">
+                            <button type="submit"
+                                class="w-full bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/30 text-emerald-400 hover:text-slate-950 font-futuristic text-[10px] py-3 rounded-xl uppercase tracking-widest transition-all">Aprovar</button>
+                        </form>
+                        <form action="{{ url_for('reject_mentorship', m_id=req.id) }}" method="POST" class="flex-1">
+                            <button type="submit"
+                                class="w-full bg-rose-500/10 hover:bg-rose-500 border border-rose-500/30 text-rose-400 hover:text-white font-futuristic text-[10px] py-3 rounded-xl uppercase tracking-widest transition-all">Recusar</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
         <!-- Students List -->
         <div class="xl:col-span-2 space-y-8">
             <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-10 backdrop-blur-sm">
@@ -65,6 +108,26 @@
                                         class="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-slate-950 font-futuristic text-[10px] py-4 rounded-xl transition-all uppercase tracking-widest border border-emerald-500/20">Atribuir
                                         Meta</button>
                                 </form>
+                                <div class="grid grid-cols-2 gap-3 mt-3">
+                                    <button onclick="openChatModal({{ student.id }}, '{{ student.name }}')"
+                                        class="w-full bg-indigo-500/10 hover:bg-indigo-500 text-indigo-400 hover:text-white font-futuristic text-[10px] py-4 rounded-xl transition-all uppercase tracking-widest border border-indigo-500/20 flex items-center justify-center">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                            </path>
+                                        </svg>
+                                        Bate-Papo
+                                    </button>
+                                    <a href="{{ url_for('admin_student_detail', student_id=student.id) }}"
+                                        class="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-slate-950 font-futuristic text-[10px] py-4 rounded-xl transition-all uppercase tracking-widest border border-emerald-500/20 flex items-center justify-center">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                            </path>
+                                        </svg>
+                                        Métricas
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -283,4 +346,145 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Teacher Chat Modal -->
+<div id="teacher-chat-modal"
+    class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+    <div
+        class="bg-slate-900 border border-white/10 w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl relative flex flex-col h-[80vh] max-h-[800px]">
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-indigo-500/10 shrink-0">
+            <h2 class="text-xl font-futuristic text-white uppercase italic flex items-center">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping mr-3"></span>
+                Chat: <span id="chat-student-name" class="ml-2 text-indigo-400">Aluno</span>
+            </h2>
+            <button onclick="closeChatModal()" class="text-slate-500 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <div id="teacher-chat-box" class="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-4 bg-slate-950/30">
+            <!-- Messages go here -->
+            <div class="text-center py-10">
+                <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest animate-pulse">Carregando
+                    histórico...</span>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-white/5 bg-slate-900 shrink-0 relative">
+            <input type="text" id="teacher-chat-input" placeholder="DIGITE SUA MENSAGEM..."
+                class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-5 py-4 text-white text-[10px] font-bold tracking-widest uppercase outline-none focus:border-indigo-500/50 pr-16"
+                onkeypress="handleTeacherChat(event)">
+            <button onclick="sendTeacherMessage()"
+                class="absolute right-8 top-1/2 -translate-y-1/2 p-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-400 transition-all shadow-lg shadow-indigo-500/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const currentUserId = {{ current_user.id }};
+    let activeStudentId = null;
+    let chatPollInterval = null;
+
+    function openChatModal(studentId, studentName) {
+        activeStudentId = studentId;
+        document.getElementById('chat-student-name').innerText = studentName;
+        document.getElementById('teacher-chat-modal').classList.remove('hidden');
+        document.getElementById('teacher-chat-input').focus();
+
+        fetchTeacherMessages();
+        if (chatPollInterval) clearInterval(chatPollInterval);
+        chatPollInterval = setInterval(fetchTeacherMessages, 3000);
+    }
+
+    function closeChatModal() {
+        document.getElementById('teacher-chat-modal').classList.add('hidden');
+        activeStudentId = null;
+        if (chatPollInterval) clearInterval(chatPollInterval);
+    }
+
+    async function fetchTeacherMessages() {
+        if (!activeStudentId) return;
+        try {
+            const response = await fetch(`/api/messages/${activeStudentId}`);
+            const data = await response.json();
+            renderTeacherMessages(data.messages, data.other_user_name);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function renderTeacherMessages(messages, studentName) {
+        const box = document.getElementById('teacher-chat-box');
+        let html = '';
+        if (messages.length === 0) {
+            html = `<div class="text-center py-10"><span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Nenhuma mensagem. Envie a primeira instrução!</span></div>`;
+        } else {
+            messages.forEach(msg => {
+                const isSelf = msg.sender_id === currentUserId;
+                if (isSelf) {
+                    html += `
+                    <div class="bg-indigo-500/10 rounded-2xl p-4 border border-indigo-500/20 ml-12">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest">Você</p>
+                            <span class="text-[8px] text-indigo-300/50">${msg.created_at}</span>
+                        </div>
+                        <p class="text-xs text-white leading-relaxed">${msg.content}</p>
+                    </div>`;
+                } else {
+                    html += `
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/5 mr-12">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">${studentName}</p>
+                            <span class="text-[8px] text-slate-600">${msg.created_at}</span>
+                        </div>
+                        <p class="text-xs text-white leading-relaxed">${msg.content}</p>
+                    </div>`;
+                }
+            });
+        }
+        const wasAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 50;
+        box.innerHTML = html;
+        if (wasAtBottom) {
+            box.scrollTop = box.scrollHeight;
+        }
+    }
+
+    function handleTeacherChat(e) {
+        if (e.key === 'Enter') sendTeacherMessage();
+    }
+
+    async function sendTeacherMessage() {
+        if (!activeStudentId) return;
+        const input = document.getElementById('teacher-chat-input');
+        const content = input.value.trim();
+        if (!content) return;
+
+        input.value = '';
+        const box = document.getElementById('teacher-chat-box');
+        const tempDiv = document.createElement('div');
+        tempDiv.className = 'bg-indigo-500/10 rounded-2xl p-4 border border-indigo-500/20 ml-12 opacity-50';
+        tempDiv.innerHTML = `<p class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest mb-1">Você</p><p class="text-xs text-white leading-relaxed">${content}</p>`;
+        box.appendChild(tempDiv);
+        box.scrollTop = box.scrollHeight;
+
+        try {
+            await fetch(`/api/messages/${activeStudentId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            });
+            fetchTeacherMessages();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+</script>
 {% endblock %}

@@ -283,7 +283,7 @@
                 <tbody class="divide-y divide-white/5">
                     {% for student in ranking %}
                     <tr class="hover:bg-white/5 transition-colors group cursor-pointer relative"
-                        onclick="window.location.href='{{ url_for(\'admin_student_detail\', student_id=student.id) }}'">
+                        onclick="window.location.href='{{ url_for('admin_student_detail', student_id=student.id) }}'">
                         <td class="px-8 py-6">
                             <div class="flex items-center space-x-4">
                                 <div

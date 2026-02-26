@@ -604,10 +604,55 @@
             </div>
         </div>
 
-        <!-- Mentorship -->
-        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8">
+        <!-- Mentorship & Human Chat -->
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 relative group">
+            {% if mentor %}
+            <div class="absolute -top-10 -left-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+            <div class="flex items-center justify-between xl:flex-col lg:flex-col 2xl:flex-row mb-6 relative z-10">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full border border-emerald-500/30 overflow-hidden shrink-0">
+                        {% if mentor.photo_url %}
+                        <img src="{{ mentor.photo_url if mentor.profile_image_type == 'url' else url_for('static', filename='uploads/profiles/' + mentor.photo_url) }}"
+                            class="w-full h-full object-cover">
+                        {% else %}
+                        <div
+                            class="w-full h-full bg-slate-800 flex items-center justify-center text-sm font-bold text-emerald-400">
+                            {{ mentor.name[:2].upper() }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h2 class="text-xs font-futuristic text-white uppercase tracking-widest">{{ mentor.name }}</h2>
+                        <span class="text-[9px] font-bold text-emerald-500 uppercase flex items-center mt-1">
+                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span> Mentor
+                            Online
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="human-chat-box" class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 mb-6"
+                data-mentor-id="{{ mentor.id }}">
+                <div class="text-center py-4">
+                    <span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Iniciando conexão
+                        segura...</span>
+                </div>
+            </div>
+
+            <div class="relative z-10">
+                <input type="text" id="human-input" placeholder="MENSAGEM PARA O MENTOR..."
+                    class="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white text-[10px] font-bold tracking-widest uppercase outline-none focus:border-emerald-500/50 pr-12"
+                    onkeypress="handleHumanChat(event)">
+                <button onclick="sendHumanMessage()" id="human-send-btn"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-emerald-500 text-slate-950 rounded-lg hover:bg-emerald-400 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </button>
+            </div>
+            {% else %}
             <h2 class="text-sm font-futuristic text-white mb-6 uppercase tracking-[0.3em] italic">Vincular Mentor</h2>
-            <form action="{{ url_for('request_mentorship') }}" method="POST" class="space-y-4">
+            <form action="{{ url_for('request_mentorship') }}" method="POST" class="space-y-4 relative z-10">
                 <select name="teacher_id" required
                     class="w-full bg-slate-950/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-[10px] font-bold tracking-widest uppercase appearance-none focus:border-emerald-500/30">
                     <option value="" disabled selected>STATUS: BUSCANDO MENTOR</option>
@@ -619,7 +664,9 @@
                     class="w-full bg-white/5 hover:bg-emerald-500 hover:text-slate-950 border border-white/10 text-white font-futuristic text-[10px] py-4 rounded-2xl transition-all uppercase tracking-widest">Solicitar
                     Vínculo</button>
             </form>
+            {% endif %}
         </div>
+
 
         <!-- Certificate Gallery -->
         <div class="bg-slate-900/60 rounded-[2.5rem] border border-white/10 p-8 shadow-2xl space-y-8">
@@ -835,9 +882,96 @@
                 card.style.transform = 'scale(0.8)';
                 setTimeout(() => card.remove(), 300);
             }
-        } catch (e) {
-            console.error('Erro ao deletar plano:', e);
+        } catch (err) {
+            console.error(err);
         }
+    }
+
+    // Human Chat Logic
+    const currentUserId = {{ current_user.id }};
+    const humanChatBox = document.getElementById('human-chat-box');
+
+    if (humanChatBox) {
+        const mentorId = humanChatBox.dataset.mentorId;
+
+        async function fetchHumanMessages() {
+            try {
+                const response = await fetch(`/api/messages/${mentorId}`);
+                const data = await response.json();
+                renderHumanMessages(data.messages, data.other_user_name);
+            } catch (error) {
+                console.error('Erro ao buscar mensagens:', error);
+            }
+        }
+
+        function renderHumanMessages(messages, partnerName) {
+            let html = '';
+            if (messages.length === 0) {
+                html = `<div class="text-center py-4"><span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Nenhuma mensagem ainda. Inicie o contato!</span></div>`;
+            } else {
+                messages.forEach(msg => {
+                    const isSelf = msg.sender_id === currentUserId;
+                    if (isSelf) {
+                        html += `
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5 ml-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Você</p>
+                                <span class="text-[8px] text-slate-600">${msg.created_at}</span>
+                            </div>
+                            <p class="text-xs text-white leading-relaxed">${msg.content}</p>
+                        </div>`;
+                    } else {
+                        html += `
+                        <div class="bg-emerald-500/10 rounded-2xl p-4 border border-emerald-500/10 mr-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">${partnerName}</p>
+                                <span class="text-[8px] text-emerald-500/50">${msg.created_at}</span>
+                            </div>
+                            <p class="text-xs text-white leading-relaxed">${msg.content}</p>
+                        </div>`;
+                    }
+                });
+            }
+            const wasAtBottom = humanChatBox.scrollHeight - humanChatBox.scrollTop <= humanChatBox.clientHeight + 50;
+            humanChatBox.innerHTML = html;
+            if (wasAtBottom) {
+                humanChatBox.scrollTop = humanChatBox.scrollHeight;
+            }
+        }
+
+        function handleHumanChat(e) {
+            if (e.key === 'Enter') sendHumanMessage();
+        }
+
+        async function sendHumanMessage() {
+            const input = document.getElementById('human-input');
+            const content = input.value.trim();
+            if (!content) return;
+
+            input.value = '';
+            // Optimistic insert
+            const tempDiv = document.createElement('div');
+            tempDiv.className = 'bg-white/5 rounded-2xl p-4 border border-white/5 ml-4 opacity-50';
+            tempDiv.innerHTML = `<p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Você</p><p class="text-xs text-white leading-relaxed">${content}</p>`;
+            humanChatBox.appendChild(tempDiv);
+            humanChatBox.scrollTop = humanChatBox.scrollHeight;
+
+            try {
+                await fetch(`/api/messages/${mentorId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content })
+                });
+                fetchHumanMessages();
+            } catch (err) {
+                console.error(err);
+                tempDiv.classList.add('border-rose-500/50');
+            }
+        }
+
+        // Poll every 3 seconds
+        fetchHumanMessages();
+        setInterval(fetchHumanMessages, 3000);
     }
 
     function startSessionFromPlan(subject) {

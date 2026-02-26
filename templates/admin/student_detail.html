@@ -84,6 +84,156 @@
         </div>
     </div>
 
+    <!-- BI Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Trend Chart -->
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 relative overflow-hidden group">
+            <h2 class="text-sm font-futuristic text-white uppercase tracking-[0.3em] italic mb-6">Tendência de Estudo
+                (15d)</h2>
+            <div class="h-[300px] w-full relative z-10">
+                <canvas id="trendChart"></canvas>
+            </div>
+            <div
+                class="absolute -bottom-20 -right-20 w-64 h-64 bg-indigo-500/5 rounded-full blur-[80px] group-hover:bg-indigo-500/10 transition-colors">
+            </div>
+        </div>
+
+        <!-- Subject Distribution Chart -->
+        <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 relative overflow-hidden group">
+            <h2 class="text-sm font-futuristic text-white uppercase tracking-[0.3em] italic mb-6">Distribuição (Horas)
+            </h2>
+            <div class="h-[300px] w-full flex items-center justify-center relative z-10">
+                <canvas id="subjectChart"></canvas>
+            </div>
+            <div
+                class="absolute -bottom-20 -left-20 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] group-hover:bg-emerald-500/10 transition-colors">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Data passed from backend
+            const datesLabels = {{ dates_json | safe
+        }};
+        const hoursData = {{ hours_json | safe }};
+        const subjectsLabels = {{ subjects_json | safe }};
+        const subjectHoursData = {{ subject_hours_json | safe }};
+
+        // Common Chart.js options for dark theme
+        Chart.defaults.color = '#64748b'; // slate-500
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // 1. Trend Chart (Line)
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+
+        // Create gradient
+        let gradient = ctxTrend.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)'); // indigo-500/40
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)'); // transparent
+
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: datesLabels,
+                datasets: [{
+                    label: 'Horas Totais',
+                    data: hoursData,
+                    borderColor: '#6366f1', // indigo-500
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4, // smooth curve
+                    pointBackgroundColor: '#020617', // body bg
+                    pointBorderColor: '#6366f1',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFont: { family: "'Orbitron', sans-serif", size: 10 },
+                        bodyFont: { family: "'Inter', sans-serif", size: 12 },
+                        padding: 12,
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function (context) { return context.parsed.y + ' hrs'; }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        border: { display: false }
+                    },
+                    x: {
+                        grid: { display: false },
+                        border: { display: false }
+                    }
+                }
+            }
+        });
+
+        // 2. Subject Chart (Doughnut)
+        const ctxSubject = document.getElementById('subjectChart').getContext('2d');
+
+        // Dynamic modern colors
+        const colors = [
+            '#10b981', // emerald-500
+            '#6366f1', // indigo-500
+            '#f59e0b', // amber-500
+            '#ec4899', // pink-500
+            '#3b82f6', // blue-500
+            '#8b5cf6', // violet-500
+            '#14b8a6', // teal-500
+        ];
+
+        new Chart(ctxSubject, {
+            type: 'doughnut',
+            data: {
+                labels: subjectsLabels,
+                datasets: [{
+                    data: subjectHoursData,
+                    backgroundColor: colors.slice(0, subjectsLabels.length),
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: { size: 10, family: "'Orbitron', sans-serif" },
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        bodyFont: { family: "'Inter', sans-serif", size: 12 },
+                        callbacks: {
+                            label: function (context) { return ' ' + context.parsed + ' hrs'; }
+                        }
+                    }
+                }
+            }
+        });
+        });
+    </script>
+
     <!-- Session History -->
     <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 overflow-hidden">
         <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center">

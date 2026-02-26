@@ -10,6 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-body: #020617;
@@ -140,7 +141,7 @@
                         Bem vindo, {{ current_user.name }}
                     </span>
                 </div>
-                {% if current_user.role == 'admin' %}
+                {% if current_user.role in ['admin', 'teacher'] %}
                 <a href="{{ url_for('admin_monitoring') }}"
                     class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-emerald-400 transition-colors">Monitoramento</a>
                 {% endif %}

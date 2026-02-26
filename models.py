@@ -155,3 +155,18 @@ class SupportMessage(db.Model):
 
     def __repr__(self):
         return f'<SupportMessage from {self.user_id}>'
+
+class DirectMessage(db.Model):
+    __tablename__ = 'direct_messages'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=get_now)
+
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', cascade="all, delete-orphan", lazy=True))
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_messages', cascade="all, delete-orphan", lazy=True))
+
+    def __repr__(self):
+        return f'<DirectMessage {self.sender_id} -> {self.receiver_id}>'
