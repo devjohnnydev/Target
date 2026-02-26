@@ -43,7 +43,7 @@
     <!-- Main Monitoring Board -->
     <div id="monitoringBoard" class="flex flex-wrap justify-center gap-6">
         {% for item in monitoring_data %}
-        <div class="student-card bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex flex-col group overflow-hidden relative backdrop-blur-sm w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)] 2xl:w-[calc(20%-1.5rem)] max-w-[400px]"
+        <div class="student-card bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex flex-col group overflow-hidden relative backdrop-blur-sm flex-grow min-w-[350px] basis-[calc(25%-1.5rem)] 2xl:basis-[calc(20%-1.5rem)] max-w-full"
             id="card-{{ item.student.id }}">
 
             <!-- Animated Scanline -->
