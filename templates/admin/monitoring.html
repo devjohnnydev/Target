@@ -41,9 +41,10 @@
     </div>
 
     <!-- Main Monitoring Board -->
-    <div id="monitoringBoard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+    <div id="monitoringBoard"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
         {% for item in monitoring_data %}
-        <div class="student-card bg-slate-900/40 rounded-[3rem] p-10 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex flex-col group overflow-hidden relative backdrop-blur-sm"
+        <div class="student-card bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex flex-col group overflow-hidden relative backdrop-blur-sm"
             id="card-{{ item.student.id }}">
 
             <!-- Animated Scanline -->
@@ -167,7 +168,7 @@
 
                 <!-- Live Performance Timer -->
                 <div
-                    class="bg-slate-950/60 rounded-[3rem] p-10 text-center border border-white/5 relative overflow-hidden transition-all duration-500 {% if item.active_session %}border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.05)]{% endif %}">
+                    class="bg-slate-950/60 rounded-[2rem] p-6 text-center border border-white/5 relative overflow-hidden transition-all duration-500 {% if item.active_session %}border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.05)]{% endif %}">
                     {% if item.active_session %}
                     <div class="absolute inset-0 bg-emerald-500/[0.02] animate-pulse pointer-events-none"></div>
                     {% endif %}
@@ -183,7 +184,7 @@
                         data-student-id="{{ item.student.id }}" {% endif %}>
                         {% if item.active_session %}
                         <div
-                            class="timer text-6xl text-emerald-400 tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                            class="timer text-5xl text-emerald-400 tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                             00:00:00</div>
                         {% else %}
                         <div class="text-4xl text-slate-800 tracking-tighter opacity-50">00:00:00</div>
