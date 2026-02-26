@@ -41,10 +41,9 @@
     </div>
 
     <!-- Main Monitoring Board -->
-    <div id="monitoringBoard"
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+    <div id="monitoringBoard" class="flex flex-wrap justify-center gap-6">
         {% for item in monitoring_data %}
-        <div class="student-card bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex flex-col group overflow-hidden relative backdrop-blur-sm"
+        <div class="student-card bg-slate-900/40 rounded-[2rem] p-8 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex flex-col group overflow-hidden relative backdrop-blur-sm w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(25%-1.5rem)] 2xl:w-[calc(20%-1.5rem)] max-w-[400px]"
             id="card-{{ item.student.id }}">
 
             <!-- Animated Scanline -->
