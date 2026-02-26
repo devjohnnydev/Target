@@ -42,15 +42,12 @@ def update_maria_eduarda():
             reference_time = pivot_session.start_time
             print(f"Atividade pivô encontrada em: {reference_time}")
 
-        # 4. Calculate Current Total
-        current_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter_by(student_id=student.id).scalar() or 0
-        minutes_to_add = target_minutes - current_minutes
+        # 4. Calculate Current Total (We want to ENSURE she gets +2650:34 legacy hours)
+        # The user wants her to have 2650:34 PLUS what she's doing now.
+        # So we insert exactly 2650:34 as new historical records.
         
-        if minutes_to_add <= 0:
-            print(f"A estudante já possui {current_minutes} minutos (Target: {target_minutes}). Nenhuma alteração necessária.")
-            return
-
-        print(f"Adicionando {minutes_to_add} minutos ({minutes_to_add/60:.2f} horas)...")
+        minutes_to_add = target_minutes 
+        print(f"Inserindo carga horária legada de {minutes_to_add} minutos ({minutes_to_add/60:.2f} horas)...")
 
         # 5. Insert Activities (balancing to reach target)
         # We will create large blocks of "Estudo Base" or "Pesquisa" to reach the quota rapidly
