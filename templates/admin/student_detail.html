@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8 pb-20 max-w-[1800px] w-full mx-auto">
+    <!-- Header -->
+    <div
+        class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900/50 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-md gap-6 relative overflow-hidden group">
+        <div
+            class="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-[100px] -mr-40 -mt-40 transition-all group-hover:bg-indigo-500/10">
+        </div>
+
+        <div class="flex items-center space-x-6 relative z-10 w-full lg:w-auto">
+            <a href="{{ url_for('admin_dashboard') }}"
+                class="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center transition-all border border-white/5 hover:border-white/20 shrink-0">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+            </a>
+
+            <div class="flex items-center space-x-5">
+                <div
+                    class="w-20 h-20 rounded-3xl border-2 border-white/5 p-1 relative overflow-hidden bg-slate-800 shadow-xl shrink-0">
+                    {% if student.photo_url %}
+                    <img src="{{ student.photo_url if (student.profile_image_type == 'url' or student.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + student.photo_url) }}"
+                        class="w-full h-full object-cover rounded-2xl">
+                    {% else %}
+                    <div
+                        class="w-full h-full bg-slate-800 flex items-center justify-center text-2xl font-futuristic text-slate-500 rounded-2xl">
+                        {{ student.name[:2].upper() }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h1 class="text-3xl font-futuristic text-white uppercase italic tracking-tighter">{{ student.name }}
+                    </h1>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ student.email }}</p>
+                    <div
+                        class="mt-2 text-xs font-bold {% if student.is_approved %}text-emerald-400{% else %}text-amber-400{% endif %} uppercase tracking-widest flex items-center">
+                        <span
+                            class="w-2 h-2 rounded-full mr-2 {% if student.is_approved %}bg-emerald-500 animate-pulse{% else %}bg-amber-500{% endif %}"></span>
+                        {% if student.is_approved %}Ativo{% else %}Pendente{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative z-10 lg:w-auto w-full flex lg:justify-end">
+            <a href="{{ url_for('admin_student_export', student_id=student.id) }}"
+                class="w-full lg:w-auto inline-flex items-center justify-center bg-indigo-500 hover:bg-indigo-400 text-slate-950 px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-colors shadow-[0_0_20px_rgba(99,102,241,0.3)] border border-indigo-400/20">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Baixar Relatório (CSV)
+            </a>
+        </div>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-indigo-500/5 rounded-[2rem] p-8 border border-indigo-500/10">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-3">Total Global</div>
+            <div class="font-futuristic text-white text-4xl">
+                {{ total_hours|int }}<span class="text-lg text-slate-500 ml-1">H</span>
+            </div>
+        </div>
+        <div class="bg-emerald-500/5 rounded-[2rem] p-8 border border-emerald-500/10">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-3">Total Hoje</div>
+            <div class="font-futuristic text-emerald-400 text-4xl">
+                {{ today_hours|int }}<span class="text-lg text-emerald-800 ml-1">H</span>
+            </div>
+        </div>
+        <div class="bg-white/5 rounded-[2rem] p-8 border border-white/5">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-3">Status Atual</div>
+            {% if active_session %}
+            <div
+                class="font-futuristic text-emerald-400 tracking-wider text-xl uppercase line-clamp-2 italic tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                Estudando: <br><span class="text-white text-sm tracking-widest">{{ active_session.subject }}</span>
+            </div>
+            {% else %}
+            <div class="font-futuristic text-slate-500 text-3xl uppercase italic tracking-tighter">Offline</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Session History -->
+    <div class="bg-slate-900/40 rounded-[2.5rem] border border-white/5 overflow-hidden">
+        <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center">
+            <h2 class="text-sm font-futuristic text-white uppercase tracking-[0.3em] italic">Histórico de Sessões</h2>
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Últimas 100</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-slate-500 uppercase text-[10px] font-bold tracking-widest border-b border-white/5">
+                        <th class="px-8 py-5">Data / Hora</th>
+                        <th class="px-8 py-5">Missão / Assunto</th>
+                        <th class="px-8 py-5">Duração</th>
+                        <th class="px-8 py-5 text-right">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for session in sessions %}
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="px-8 py-5">
+                            <div class="text-xs font-futuristic text-white">{{ session.date.strftime('%d/%m/%Y') if
+                                session.date else '-' }}</div>
+                            <div class="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">
+                                {{ session.start_time.strftime('%H:%M:%S') if session.start_time else '-' }}
+                                →
+                                {{ session.end_time.strftime('%H:%M:%S') if session.end_time else 'AGORA' }}
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="text-xs font-bold text-indigo-300 uppercase tracking-widest">{{ session.subject
+                                or 'MISSÃO GERAL' }}</div>
+                            {% if session.subtitle %}
+                            <div class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1">{{
+                                session.subtitle }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="text-lg font-futuristic text-white">
+                                {% if session.duration_minutes %}
+                                {% if session.duration_minutes >= 60 %}
+                                {{ session.duration_minutes // 60 }}h {{ session.duration_minutes % 60 }}m
+                                {% else %}
+                                {{ session.duration_minutes }}m
+                                {% endif %}
+                                {% else %}
+                                <span class="text-emerald-500 animate-pulse text-sm tracking-widest uppercase italic">Ao
+                                    Vivo</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 text-right flex justify-end">
+                            {% if session.end_time is none %}
+                            <span
+                                class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center w-max">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping mr-2"></span> Em
+                                Andamento
+                            </span>
+                            {% elif session.is_validated %}
+                            <span
+                                class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest inline-block">Concluída</span>
+                            {% else %}
+                            <span
+                                class="bg-slate-800 text-slate-400 border border-white/5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest inline-block">Abandonada/Manual</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not sessions %}
+                    <tr>
+                        <td colspan="4"
+                            class="px-8 py-16 text-center text-slate-500 font-bold text-xs uppercase tracking-widest">
+                            Nenhum registro de estudo encontrado.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

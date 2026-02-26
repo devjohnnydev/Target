@@ -180,6 +180,82 @@ def admin_dashboard():
                          current_sort=sort_order,
                          selected_student_ids=selected_student_ids)
 
+@app.route('/admin/student/<int:student_id>')
+@role_required('admin')
+def admin_student_detail(student_id):
+    student = User.query.get_or_404(student_id)
+    if student.role != 'student':
+        flash('Usuário não é um estudante.', 'warning')
+        return redirect(url_for('admin_dashboard'))
+
+    # Calculate Total Hours
+    total_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
+        StudySession.student_id == student_id
+    ).scalar() or 0
+    total_hours = round(total_minutes / 60, 1)
+
+    # Calculate Today's Hours
+    today = get_today()
+    today_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
+        StudySession.student_id == student_id,
+        StudySession.date == today
+    ).scalar() or 0
+    today_hours = round(today_minutes / 60, 1)
+
+    # Fetch Session History
+    sessions = StudySession.query.filter_by(student_id=student.id).order_by(StudySession.start_time.desc()).limit(100).all()
+
+    # Active Session Check
+    active_session = StudySession.query.filter_by(student_id=student.id, end_time=None).first()
+
+    return render_template('admin/student_detail.html', 
+                           student=student, 
+                           total_hours=total_hours, 
+                           today_hours=today_hours, 
+                           sessions=sessions,
+                           active_session=active_session)
+
+@app.route('/admin/student/<int:student_id>/export/csv')
+@role_required('admin')
+def admin_student_export(student_id):
+    student = User.query.get_or_404(student_id)
+    if student.role != 'student':
+        flash('Usuário não é um estudante.', 'warning')
+        return redirect(url_for('admin_dashboard'))
+
+    import io
+    import csv
+    from flask import Response
+
+    sessions = StudySession.query.filter_by(student_id=student.id).order_by(StudySession.start_time.desc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow(['Data', 'Inicio', 'Fim', 'Assunto', 'Subtitulo', 'Duracao (Minutos)', 'Validado', 'Comentario', 'URL Arquivo'])
+
+    for session in sessions:
+        writer.writerow([
+            session.date.strftime('%d/%m/%Y') if session.date else '',
+            session.start_time.strftime('%H:%M:%S') if session.start_time else '',
+            session.end_time.strftime('%H:%M:%S') if session.end_time else 'Em Andamento',
+            session.subject or '',
+            session.subtitle or '',
+            session.duration_minutes or 0,
+            'Sim' if session.is_validated else 'Nao',
+            session.completion_comment or '',
+            session.completion_file or ''
+        ])
+
+    csv_data = output.getvalue()
+    # Add BOM for UTF-8 Excel compatibility
+    csv_data = "\ufeff" + csv_data
+    
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-disposition": f"attachment; filename=relatorio_{student.name.replace(' ', '_')}_{get_today().strftime('%Y%m%d')}.csv"}
+    )
+
 @app.route('/admin/users')
 @role_required('admin')
 def admin_users():
