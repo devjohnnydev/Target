@@ -16,25 +16,23 @@ def fix_production():
         new_subject = "Horas Retroativas"
         
         for t in targets:
-            user = User.query.filter_by(email=t['email']).first()
-            if not user:
-                # Try finding by full name case-insensitively if email fails
-                user = User.query.filter(User.name.ilike(f"%{t['name']}%")).first()
+            user = User.query.filter((User.email == t['email']) | (User.name.ilike(f"%{t['name']}%"))).first()
             
             if user:
                 print(f"\n--- Corrigindo {user.name} (ID: {user.id}) ---")
                 
-                # Remove legacy sessions
-                deleted = StudySession.query.filter_by(
-                    student_id=user.id,
-                    subtitle=legacy_subtitle
+                # Deletar sessões que pareçam ser legado (Carga Horária Legada ou Fundamentos e Pesquisas com 480min)
+                deleted = StudySession.query.filter(
+                    StudySession.student_id == user.id,
+                    ((StudySession.subtitle == legacy_subtitle) | (StudySession.subject == "Fundamentos e Pesquisas"))
                 ).delete()
                 print(f"Sessões legadas antigas removidas: {deleted}")
                 
-                # Add 700h legacy
+                # Inserir exatamente 700h (42000 minutos)
                 minutes_to_add = 700 * 60
                 activity_count = 0
-                current_ref = get_now() - timedelta(days=1) # Start from yesterday to be safe
+                # Usar uma data de referência no passado para não chocar com o "hoje"
+                current_ref = datetime(2026, 2, 25, 18, 0) 
                 
                 while minutes_to_add > 0:
                     block_mins = min(480, minutes_to_add)
@@ -59,7 +57,7 @@ def fix_production():
                 
                 print(f"Total de {activity_count} novas sessões de 'Horas Retroativas' (700h) inseridas.")
             else:
-                print(f"\nERRO: Usuário {t['name']} ({t['email']}) não encontrado no banco de dados!")
+                print(f"\nERRO: Usuário {t['name']} ({t['email']}) não encontrado!")
 
         # 2. Cleanup "Auto-created" duplicates from previous attempt
         duplicates = User.query.filter(User.name.contains("(Auto-created)")).all()
