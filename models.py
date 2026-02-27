@@ -30,7 +30,9 @@ class User(UserMixin, db.Model):
     mentorships_as_student = db.relationship('Mentorship', backref='student', lazy=True, foreign_keys='Mentorship.student_id', cascade="all, delete-orphan")
     mentorships_as_teacher = db.relationship('Mentorship', backref='teacher', lazy=True, foreign_keys='Mentorship.teacher_id', cascade="all, delete-orphan")
     submissions = db.relationship('Submission', backref='student', lazy=True, cascade="all, delete-orphan")
-    assigned_tasks = db.relationship('AssignedTask', backref='teacher', lazy=True, foreign_keys='AssignedTask.teacher_id', cascade="all, delete-orphan")
+    assigned_tasks_created = db.relationship('AssignedTask', backref='teacher', lazy=True, foreign_keys='AssignedTask.teacher_id', cascade="all, delete-orphan")
+    assigned_tasks_received = db.relationship('AssignedTask', backref='student', lazy=True, foreign_keys='AssignedTask.student_id', cascade="all, delete-orphan")
+    study_plans_mentored = db.relationship('StudyPlan', backref='mentor', lazy=True, foreign_keys='StudyPlan.mentor_id', cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
