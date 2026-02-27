@@ -1343,6 +1343,50 @@ def ensure_db_schema():
         except Exception as e:
             print(f">>> [DB SYNC] Erro durante sincronização: {e}")
             db.session.rollback()
+        
+        # --- Temporário: Ajuste de Horas Lucas e Guilherme ---
+        try:
+            print(">>> [FIX] Verificando ajuste de horas para Lucas e Guilherme...")
+            from models import User, StudySession
+            targets = [
+                {"email": "lucgarcbeni@gmail.com", "name": "LUCAS GARCIA BENI"},
+                {"email": "fuskenji@gmail.com", "name": "GUILHERME KENJI FUSUMA"}
+            ]
+            new_subject = "Horas Retroativas"
+            legacy_subtitle = "Carga Horária Legada"
+            
+            for t in targets:
+                user = User.query.filter((User.email == t['email']) | (User.name.ilike(f"%{t['name']}%"))).first()
+                if user:
+                    has_fix = StudySession.query.filter_by(student_id=user.id, subject=new_subject).first()
+                    if not has_fix:
+                        print(f">>> [FIX] Aplicando ajuste para {user.name}...")
+                        StudySession.query.filter(
+                            StudySession.student_id == user.id,
+                            ((StudySession.subtitle == legacy_subtitle) | (StudySession.subject == "Fundamentos e Pesquisas"))
+                        ).delete()
+                        
+                        minutes_to_add = 700 * 60
+                        current_ref = datetime(2026, 2, 25, 18, 0)
+                        while minutes_to_add > 0:
+                            block_mins = min(480, minutes_to_add)
+                            start_time = current_ref - timedelta(minutes=block_mins)
+                            db.session.add(StudySession(
+                                student_id=user.id, subject=new_subject, subtitle=legacy_subtitle,
+                                date=start_time.date(), start_time=start_time, end_time=current_ref,
+                                duration_minutes=block_mins, type='free', is_validated=True
+                            ))
+                            minutes_to_add -= block_mins
+                            current_ref = start_time - timedelta(hours=16)
+                        db.session.commit()
+            
+            # Limpar duplicados criados por engano
+            duplicates = User.query.filter(User.name.contains("(Auto-created)")).all()
+            for d in duplicates:
+                db.session.delete(d)
+            db.session.commit()
+        except Exception as fix_e:
+            print(f">>> [FIX] Erro no ajuste: {fix_e}")
 
 ensure_db_schema()
 
