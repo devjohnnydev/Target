@@ -49,6 +49,10 @@
             </div>
         </div>
 
+        {% if spskills %}
+        {% include 'student/_spskills_countdown.html' %}
+        {% endif %}
+
         {% if not current_user.study_objective or not current_user.search_intent %}
         <!-- Profile Reminder (Dynamic) -->
         <div

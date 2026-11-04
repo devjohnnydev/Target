@@ -158,6 +158,24 @@ class SupportMessage(db.Model):
     def __repr__(self):
         return f'<SupportMessage from {self.user_id}>'
 
+class CheerMessage(db.Model):
+    """Mensagens de apoio enviadas pelo QR code da tela de monitoramento."""
+    __tablename__ = 'cheer_messages'
+    id = db.Column(db.Integer, primary_key=True)
+    author_name = db.Column(db.String(60), nullable=True)
+    content = db.Column(db.String(280), nullable=False)
+    is_hidden = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=get_now)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'author': self.author_name or 'Anônimo',
+            'content': self.content,
+            'created_at': self.created_at.strftime('%d/%m %H:%M') if self.created_at else '',
+        }
+
+
 class DirectMessage(db.Model):
     __tablename__ = 'direct_messages'
     id = db.Column(db.Integer, primary_key=True)

@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage, DirectMessage
+from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage, DirectMessage, CheerMessage
 from functools import wraps
 from werkzeug.utils import secure_filename
 from utils import get_now, get_today
@@ -37,6 +37,54 @@ os.makedirs('static/certificates', exist_ok=True)
 # Kuryos AI Config (Groq)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "SUA_CHAVE_AQUI")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+# --- Seletiva SP Skills 2026: contagem regressiva para competidores ---
+SPSKILLS_EVENT = {
+    'title': 'São Paulo Skills 2026',
+    'modality': '#53 Computação em Nuvem',
+    'location': 'Escola SENAI de Iracemápolis',
+    'start': '2026-11-23T08:00:00-03:00',  # horário de Brasília
+    'end': '2026-11-27T18:00:00-03:00',    # semana de competição (seg a sex)
+    'school': 'Escola SENAI Morvan Figueiredo',
+    'school_place': 'Mooca · São Paulo · 1.03',
+    'school_photo': 'img/senai-morvan.jpg',  # opcional: aparece se o arquivo existir em static/
+}
+
+def spskills_school_photo():
+    path = os.path.join(basedir, 'static', SPSKILLS_EVENT['school_photo'])
+    return SPSKILLS_EVENT['school_photo'] if os.path.exists(path) else None
+SPSKILLS_COMPETITORS = [
+    {'email': 'fuskenji@gmail.com', 'name': 'GUILHERME KENJI FUSUMA'},
+]
+
+def is_spskills_competitor(user):
+    email = (user.email or '').lower()
+    name = (user.name or '').upper()
+    return any(email == c['email'] or c['name'] in name for c in SPSKILLS_COMPETITORS)
+
+def get_spskills_competitor():
+    c = SPSKILLS_COMPETITORS[0]
+    return User.query.filter(
+        (db.func.lower(User.email) == c['email']) | (User.name.ilike(f"%{c['name']}%"))
+    ).first()
+
+# Filtro simples para o mural público (a tela fica exposta para todos)
+import re
+import time
+import unicodedata
+CHEER_BLOCKLIST = {
+    'porra', 'caralho', 'merda', 'puta', 'fdp', 'vsf', 'vtnc', 'pqp', 'buceta', 'cu', 'viado',
+    'arrombado', 'otario', 'idiota', 'burro', 'fracassado', 'desgraca', 'foda', 'lixo', 'bosta',
+}
+_cheer_last_post = {}  # ip -> timestamp (anti-flood por worker)
+
+def _normalize(text):
+    text = unicodedata.normalize('NFKD', text.lower())
+    return ''.join(ch for ch in text if not unicodedata.combining(ch))
+
+def cheer_is_offensive(text):
+    words = set(re.findall(r'[a-z0-9]+', _normalize(text)))
+    return bool(words & CHEER_BLOCKLIST)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -614,7 +662,66 @@ def admin_monitoring():
         reverse=True
     )
         
-    return render_template('admin/monitoring.html', monitoring_data=sorted_data, current_date=date_filter or target_date.strftime('%Y-%m-%d'))
+    competitor = get_spskills_competitor()
+    competitor_minutes = 0
+    if competitor:
+        competitor_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
+            StudySession.student_id == competitor.id).scalar() or 0
+
+    return render_template('admin/monitoring.html', monitoring_data=sorted_data,
+                           current_date=date_filter or target_date.strftime('%Y-%m-%d'),
+                           spskills=SPSKILLS_EVENT, competitor=competitor,
+                           competitor_hours=int(competitor_minutes // 60))
+
+# --- Torcida SP Skills (QR code público) ---
+
+@app.route('/torcida', methods=['GET'])
+def torcida():
+    competitor = get_spskills_competitor()
+    return render_template('public/torcida.html', spskills=SPSKILLS_EVENT, competitor=competitor,
+                           school_photo=spskills_school_photo())
+
+@app.route('/api/torcida', methods=['GET'])
+def torcida_list():
+    after = request.args.get('after', 0, type=int)
+    q = CheerMessage.query.filter_by(is_hidden=False)
+    if after:
+        q = q.filter(CheerMessage.id > after)
+    msgs = q.order_by(CheerMessage.id.desc()).limit(40).all()
+    total = CheerMessage.query.filter_by(is_hidden=False).count()
+    return jsonify({'messages': [m.to_dict() for m in msgs], 'total': total})
+
+@app.route('/api/torcida', methods=['POST'])
+def torcida_send():
+    data = request.get_json(silent=True) or {}
+    content = (data.get('content') or '').strip()
+    author = (data.get('author') or '').strip()[:60]
+
+    if len(content) < 2:
+        return jsonify({'error': 'Escreva uma mensagem.'}), 400
+    if len(content) > 280:
+        return jsonify({'error': 'A mensagem pode ter no máximo 280 caracteres.'}), 400
+    if cheer_is_offensive(content) or cheer_is_offensive(author):
+        return jsonify({'error': 'Mensagem não publicada. Mande só boas energias!'}), 400
+
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+    now = time.time()
+    if now - _cheer_last_post.get(ip, 0) < 20:
+        return jsonify({'error': 'Calma! Espere alguns segundos para mandar outra.'}), 429
+    _cheer_last_post[ip] = now
+
+    msg = CheerMessage(author_name=author or None, content=content)
+    db.session.add(msg)
+    db.session.commit()
+    return jsonify({'ok': True, 'message': msg.to_dict()}), 201
+
+@app.route('/admin/torcida/<int:msg_id>/hide', methods=['POST'])
+@role_required('admin')
+def torcida_hide(msg_id):
+    msg = CheerMessage.query.get_or_404(msg_id)
+    msg.is_hidden = True
+    db.session.commit()
+    return jsonify({'ok': True})
 
 @app.route('/admin/student_stats/<int:student_id>')
 @role_required('admin')
@@ -833,7 +940,10 @@ def student_dashboard():
                          unique_subjects=unique_subjects,
                          subject_metrics=subject_metrics,
                          subject_groups=subject_groups_list,
-                         mentor=mentor)
+                         mentor=mentor,
+                         spskills=SPSKILLS_EVENT if is_spskills_competitor(current_user) else None,
+                         study_days=len({s.date for s in sessions if s.date}),
+                         session_count=len(sessions))
 
 @app.route('/study/log', methods=['POST'])
 @role_required('student')

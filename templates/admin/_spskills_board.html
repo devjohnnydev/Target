@@ -1,0 +1,307 @@
+<!-- Painel "Rumo à Seletiva": contagem regressiva + QR code + mural de mensagens -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
+{% set first_name = (competitor.name.split(' ')[0]|title) if competitor else 'Guilherme' %}
+{% set full_name = (competitor.name|title) if competitor else 'Guilherme Kenji Fusuma' %}
+
+<section class="sps" id="sps-board" aria-label="Contagem regressiva São Paulo Skills">
+    <div class="sps-stripe"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--cyan)"></i></div>
+
+    <header class="sps-head">
+        <div class="sps-brand">
+            <img src="{{ url_for('static', filename='img/spskills.jpg') }}" alt="" class="sps-logo">
+            <div>
+                <div class="sps-eyebrow">Seletiva {{ spskills.title }}</div>
+                <div class="sps-modal"><span style="color:var(--yellow)">#53</span> Computação em Nuvem</div>
+            </div>
+        </div>
+        <div class="sps-where">
+            <span>23–27 Nov 2026</span>
+            <span class="sps-dot"></span>
+            <span>SENAI Iracemápolis</span>
+            <span class="sps-phase" id="sps-phase">Contagem regressiva</span>
+        </div>
+    </header>
+
+    <div class="sps-main">
+        <!-- Contador -->
+        <div class="sps-count">
+            <div class="sps-kicker" id="sps-kicker">Faltam</div>
+            <div class="sps-days-row">
+                <span class="sps-days" id="sps-days">--</span>
+                <span class="sps-days-label" id="sps-days-label">dias</span>
+            </div>
+            <div class="sps-clock">
+                <div><b id="sps-h">--</b><small>horas</small></div>
+                <span class="sps-colon">:</span>
+                <div><b id="sps-m">--</b><small>min</small></div>
+                <span class="sps-colon">:</span>
+                <div><b id="sps-s">--</b><small>seg</small></div>
+            </div>
+
+            <div class="sps-athlete">
+                {% if competitor and competitor.photo_url %}
+                <img class="sps-avatar" alt=""
+                    src="{{ competitor.photo_url if (competitor.profile_image_type == 'url' or competitor.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + competitor.photo_url) }}">
+                {% else %}
+                <div class="sps-avatar sps-avatar--empty">GK</div>
+                {% endif %}
+                <div>
+                    <div class="sps-school">Representando {{ spskills.school }} · {{ spskills.school_place }}</div>
+                    <div class="sps-name">{{ full_name }}</div>
+                    <div class="sps-sub" id="sps-line">
+                        {{ competitor_hours }} horas de preparação. A escola inteira vai com você.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR code -->
+        <aside class="sps-qr">
+            <div class="sps-qr-title">Mande sua energia<br>para o {{ first_name }}</div>
+            <div class="sps-qr-box" id="sps-qr"></div>
+            <div class="sps-qr-steps">
+                <span>1</span> Aponte a câmera do celular
+                <br><span>2</span> Escreva sua mensagem
+                <br><span>3</span> Ela aparece aqui na tela
+            </div>
+            <div class="sps-qr-url" id="sps-qr-url"></div>
+        </aside>
+    </div>
+
+    <!-- Mural -->
+    <div class="sps-wall">
+        <div class="sps-feature" id="sps-feature">
+            <div class="sps-feature-tag" id="sps-feature-tag">Mural da torcida</div>
+            <blockquote class="sps-quote" id="sps-quote">Escaneie o QR code e seja a primeira mensagem na tela.</blockquote>
+            <div class="sps-author" id="sps-author"></div>
+        </div>
+        <div class="sps-feed">
+            <div class="sps-feed-head">
+                <span>Últimas mensagens</span>
+                <span><b id="sps-total">0</b> recebidas</span>
+            </div>
+            <ol class="sps-list" id="sps-list"></ol>
+        </div>
+    </div>
+</section>
+
+<style>
+    .sps {
+        /* Paleta SP Skills 2026 */
+        --navy: #1538A5; --navy-2: #0F2B86; --ink: #FFFFFF; --muted: #B9C6EE; --line: rgba(255,255,255,.16);
+        --yellow: #F8B84E; --red: #FF4F2A; --green: #19C653; --cyan: #22CFF5;
+        position: relative; overflow: hidden; border-radius: 20px;
+        background: var(--navy); color: var(--ink);
+        font-family: 'Inter', system-ui, sans-serif;
+        border: 1px solid var(--line);
+    }
+    .sps-stripe { display: grid; grid-template-columns: repeat(4, 1fr); height: 6px; }
+    .sps-stripe i { display: block; }
+
+    .sps-head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;
+        padding: 22px 32px; border-bottom: 1px solid var(--line); }
+    .sps-brand { display: flex; align-items: center; gap: 14px; }
+    .sps-logo { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; }
+    .sps-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+    .sps-modal { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 24px; letter-spacing: .02em; text-transform: uppercase; }
+    .sps-where { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; color: var(--muted); }
+    .sps-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--muted); }
+    .sps-phase { margin-left: 8px; padding: 6px 12px; border-radius: 2px; background: var(--yellow); color: #1A1A1A;
+        font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+
+    .sps-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; border-bottom: 1px solid var(--line); }
+    .sps-count { padding: 36px 32px 32px; }
+    .sps-kicker { font-size: 13px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--yellow); }
+    .sps-days-row { display: flex; align-items: baseline; gap: 18px; margin-top: 4px; }
+    .sps-days { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: clamp(120px, 15vw, 220px);
+        line-height: .82; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .sps-days-label { font-family: 'Archivo', sans-serif; font-weight: 500; font-size: clamp(32px, 4vw, 56px);
+        text-transform: uppercase; color: var(--muted); }
+    .sps-clock { display: flex; align-items: flex-start; gap: 14px; margin-top: 18px; }
+    .sps-clock div { display: flex; flex-direction: column; align-items: center; min-width: 84px;
+        padding: 10px 12px 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--navy-2); }
+    .sps-clock b { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 52px; line-height: 1;
+        font-variant-numeric: tabular-nums; }
+    .sps-clock small { margin-top: 4px; font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+    .sps-colon { font-family: 'Archivo', sans-serif; font-size: 44px; line-height: 1.3; color: var(--muted); }
+
+    .sps-athlete { display: flex; align-items: center; gap: 16px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+    .sps-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--yellow); flex-shrink: 0; }
+    .sps-avatar--empty { display: grid; place-items: center; background: var(--navy-2); font-weight: 700; }
+    .sps-name { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 30px; text-transform: uppercase; line-height: 1.05; }
+    .sps-school { margin-bottom: 4px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--yellow); }
+    .sps-sub { margin-top: 4px; font-size: 15px; color: var(--muted); }
+
+    .sps-qr { padding: 32px 28px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; }
+    .sps-qr-title { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 30px; line-height: 1.05; text-transform: uppercase; }
+    .sps-qr-box { align-self: flex-start; padding: 14px; background: #fff; border-radius: 14px; }
+    .sps-qr-box img, .sps-qr-box canvas { display: block; width: 220px !important; height: 220px !important; }
+    .sps-qr-steps { font-size: 14px; line-height: 2; color: var(--muted); }
+    .sps-qr-steps span { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 8px; border-radius: 50%;
+        background: var(--ink); color: var(--navy); font-size: 11px; font-weight: 700; }
+    .sps-qr-url { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--yellow); word-break: break-all; }
+
+    .sps-wall { display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 260px; }
+    .sps-feature { padding: 32px; display: flex; flex-direction: column; justify-content: center; }
+    .sps-feature-tag { font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+    .sps-feature-tag.is-new { color: var(--green); }
+    .sps-quote { margin: 14px 0 0; font-family: 'Archivo', sans-serif; font-size: clamp(30px, 3.2vw, 48px);
+        line-height: 1.12; transition: opacity .5s ease, transform .5s ease; }
+    .sps-quote.is-out { opacity: 0; transform: translateY(8px); }
+    .sps-author { margin-top: 16px; font-size: 14px; font-weight: 600; color: var(--yellow); min-height: 20px; }
+
+    .sps-feed { border-left: 1px solid var(--line); display: flex; flex-direction: column; max-height: 360px; }
+    .sps-feed-head { display: flex; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--line);
+        font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+    .sps-feed-head b { color: var(--ink); }
+    .sps-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+    .sps-list li { position: relative; padding: 14px 24px; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+    .sps-list li.is-new { animation: sps-in .6s ease; }
+    .sps-list .who { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+    .sps-list .hide { position: absolute; top: 10px; right: 12px; display: none; border: 0; background: transparent;
+        color: var(--muted); font-size: 12px; cursor: pointer; }
+    .sps-list li:hover .hide { display: block; }
+    @keyframes sps-in { from { background: rgba(248,184,78,.22); } to { background: transparent; } }
+
+    @media (max-width: 1024px) {
+        .sps-main, .sps-wall { grid-template-columns: 1fr; }
+        .sps-qr, .sps-feed { border-left: 0; border-top: 1px solid var(--line); }
+        .sps-clock div { min-width: 64px; }
+        .sps-clock b { font-size: 38px; }
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function () {
+    const START = new Date("{{ spskills.start }}");
+    const END = new Date("{{ spskills.end }}");
+    const FIRST = {{ first_name|tojson }};
+    const HOURS = {{ competitor_hours|tojson }};
+    const CAN_HIDE = {{ (current_user.role == 'admin')|tojson }};
+    const $ = (id) => document.getElementById(id);
+    const pad = (n) => String(n).padStart(2, '0');
+
+    // QR code apontando para a página pública da torcida
+    const cheerUrl = location.origin + "{{ url_for('torcida') }}";
+    $('sps-qr-url').textContent = cheerUrl.replace(/^https?:\/\//, '');
+    new QRCode($('sps-qr'), { text: cheerUrl, width: 440, height: 440,
+        colorDark: '#1538A5', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+
+    // Contagem regressiva
+    const PHASES = {
+        before:   { tag: 'Contagem regressiva', kicker: 'Faltam', line: `${HOURS} horas de preparação. A escola inteira vai com você.` },
+        week:     { tag: 'Semana da competição', kicker: 'Faltam', line: `Reta final. ${HOURS} horas de estudo no tanque.` },
+        tomorrow: { tag: 'É amanhã', kicker: 'Faltam', line: 'Últimas horas antes da largada. Confia no processo.' },
+        during:   { tag: 'Competição em andamento', kicker: 'Em prova · termina em', line: `É agora, ${FIRST}! Estamos todos com você.` },
+        after:    { tag: 'Missão cumprida', kicker: 'Seletiva encerrada', line: `Orgulho, ${FIRST}. ${HOURS} horas de dedicação até o fim.` },
+    };
+    let phase = null;
+    function phaseFor(now) {
+        if (now >= END) return 'after';
+        if (now >= START) return 'during';
+        const d = START - now;
+        if (d <= 864e5) return 'tomorrow';
+        if (d <= 7 * 864e5) return 'week';
+        return 'before';
+    }
+    function tick() {
+        const now = new Date();
+        const p = phaseFor(now);
+        if (p !== phase) {
+            phase = p;
+            $('sps-phase').textContent = PHASES[p].tag;
+            $('sps-kicker').textContent = PHASES[p].kicker;
+            $('sps-line').textContent = PHASES[p].line;
+        }
+        const diff = Math.max(0, (p === 'during' ? END : START) - now);
+        const days = Math.floor(diff / 864e5);
+        $('sps-days').textContent = p === 'after' ? '✓' : days;
+        $('sps-days-label').textContent = p === 'after' ? '' : (days === 1 ? 'dia' : 'dias');
+        $('sps-h').textContent = pad(Math.floor(diff % 864e5 / 36e5));
+        $('sps-m').textContent = pad(Math.floor(diff % 36e5 / 6e4));
+        $('sps-s').textContent = pad(Math.floor(diff % 6e4 / 1e3));
+
+        const mini = p === 'during' ? 'em prova agora' : p === 'after' ? 'concluída'
+            : p === 'tomorrow' ? 'é amanhã' : `faltam ${days} ${days === 1 ? 'dia' : 'dias'}`;
+        document.querySelectorAll('.sps-mini-days').forEach(el => el.textContent = mini);
+    }
+    tick(); setInterval(tick, 1000);
+
+    // Mural de mensagens (atualiza sozinho)
+    let messages = [];      // mais recentes primeiro
+    let lastId = 0;
+    let rotateIdx = 0;
+    let pinnedNew = null;
+
+    function feature(msg, isNew) {
+        const q = $('sps-quote');
+        q.classList.add('is-out');
+        setTimeout(() => {
+            q.textContent = `“${msg.content}”`;
+            $('sps-author').textContent = `— ${msg.author}`;
+            const tag = $('sps-feature-tag');
+            tag.textContent = isNew ? 'Acabou de chegar' : 'Mural da torcida';
+            tag.classList.toggle('is-new', !!isNew);
+            q.classList.remove('is-out');
+        }, 450);
+    }
+
+    function renderList(newIds) {
+        const list = $('sps-list');
+        list.replaceChildren();
+        messages.slice(0, 25).forEach(m => {
+            const li = document.createElement('li');
+            if (newIds.has(m.id)) li.className = 'is-new';
+            li.append(document.createTextNode(m.content));
+            const who = document.createElement('span');
+            who.className = 'who';
+            who.textContent = `${m.author} · ${m.created_at}`;
+            li.append(who);
+            if (CAN_HIDE) {
+                const btn = document.createElement('button');
+                btn.className = 'hide'; btn.type = 'button'; btn.textContent = 'ocultar';
+                btn.title = 'Remover do mural';
+                btn.onclick = async () => {
+                    if (!confirm('Remover esta mensagem do mural?')) return;
+                    const r = await fetch(`/admin/torcida/${m.id}/hide`, { method: 'POST' });
+                    if (r.ok) { messages = messages.filter(x => x.id !== m.id); renderList(new Set()); }
+                };
+                li.append(btn);
+            }
+            list.append(li);
+        });
+    }
+
+    async function poll() {
+        try {
+            const r = await fetch(`/api/torcida?after=${lastId}`);
+            const data = await r.json();
+            $('sps-total').textContent = data.total;
+            if (data.messages.length) {
+                const fresh = data.messages;
+                const firstLoad = lastId === 0;
+                lastId = Math.max(lastId, ...fresh.map(m => m.id));
+                messages = fresh.concat(messages);
+                renderList(firstLoad ? new Set() : new Set(fresh.map(m => m.id)));
+                if (firstLoad) feature(messages[0], false);
+                else { pinnedNew = fresh[0]; feature(pinnedNew, true); rotateIdx = 0; }
+            }
+        } catch (e) { /* rede instável: tenta de novo no próximo ciclo */ }
+    }
+
+    function rotate() {
+        if (pinnedNew) { pinnedNew = null; return; } // deixa a nova mensagem um ciclo inteiro na tela
+        const pool = messages.slice(0, 15);
+        if (pool.length < 2) return;
+        rotateIdx = (rotateIdx + 1) % pool.length;
+        feature(pool[rotateIdx], false);
+    }
+
+    poll();
+    setInterval(poll, 6000);
+    setInterval(rotate, 10000);
+})();
+</script>

@@ -2,6 +2,10 @@
 
 {% block content %}
 <div class="space-y-12 pb-20">
+    {% if spskills %}
+    {% include 'admin/_spskills_board.html' %}
+    {% endif %}
+
     <!-- BI Header -->
     <div
         class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900/60 p-10 rounded-[3rem] border border-white/10 backdrop-blur-xl gap-8 relative overflow-hidden group">
@@ -86,6 +90,18 @@
                         </div>
                     </div>
                 </div>
+
+                {% if competitor and item.student.id == competitor.id %}
+                <div class="sps-mini mb-6 flex items-center justify-between rounded-2xl px-4 py-3"
+                    style="background:#1538A5;border:1px solid rgba(248,184,78,.45)">
+                    <div style="display:flex;gap:3px">
+                        <i style="width:14px;height:4px;background:#FF4F2A"></i><i style="width:14px;height:4px;background:#F8B84E"></i><i style="width:14px;height:4px;background:#19C653"></i><i style="width:14px;height:4px;background:#22CFF5"></i>
+                    </div>
+                    <span style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#FFFFFF">
+                        SP Skills · <span class="sps-mini-days" style="color:#F8B84E">--</span>
+                    </span>
+                </div>
+                {% endif %}
 
                 <!-- Focus Subject -->
                 <div class="mb-8">

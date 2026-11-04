@@ -1,0 +1,262 @@
+{% set first_name = (competitor.name.split(' ')[0]|title) if competitor else 'Guilherme' %}
+{% set full_name = (competitor.name|title) if competitor else 'Guilherme Kenji Fusuma' %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1538A5">
+    <title>Torcida · {{ first_name }} na SP Skills</title>
+    <meta property="og:title" content="Mande sua energia para o {{ first_name }}">
+    <meta property="og:description" content="Seletiva São Paulo Skills 2026 · Modalidade 53 Computação em Nuvem">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Paleta SP Skills 2026 */
+            --navy: #1538A5; --navy-2: #0F2B86; --paper: #F4F6FB; --card: #FFFFFF; --ink: #0B1B4F; --muted: #5A6890;
+            --line: #DCE2F0; --yellow: #F8B84E; --green: #19C653; --red: #FF4F2A; --blue: #22CFF5;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; }
+        body { background: var(--paper); color: var(--ink); font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased; }
+        .stripe { display: grid; grid-template-columns: repeat(4, 1fr); height: 6px; }
+        .stripe i { display: block; }
+
+        .hero { background: var(--navy); color: #FFFFFF; padding: 28px 20px 36px; }
+        .wrap { max-width: 520px; margin: 0 auto; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #B9C6EE; }
+        .modal { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 19px; text-transform: uppercase; letter-spacing: .02em; }
+
+        .athlete { display: flex; align-items: center; gap: 16px; margin-top: 28px; }
+        .athlete > div { min-width: 0; }
+        .athlete .school { line-height: 1.5; }
+        body { overflow-x: hidden; }
+        .avatar { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 2px solid var(--yellow); flex-shrink: 0; }
+        .avatar--empty { display: grid; place-items: center; background: var(--navy-2); font-weight: 700; }
+        h1 { margin: 0; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: clamp(30px, 9vw, 40px); line-height: .95; text-transform: uppercase; }
+        .where { margin-top: 6px; font-size: 13px; color: #B9C6EE; }
+
+        .count { display: flex; align-items: baseline; gap: 10px; margin-top: 26px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.18); }
+        .count b { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 64px; line-height: .85; font-variant-numeric: tabular-nums; }
+        .count span { font-size: 14px; color: #DCE4FA; line-height: 1.35; }
+        .count em { font-style: normal; color: var(--yellow); font-weight: 600; }
+
+        main { padding: 28px 20px 48px; }
+        h2 { margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-weight: 400; font-size: 34px; line-height: 1.05; }
+        .lead { margin: 0 0 22px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .chip { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px;
+            padding: 8px 12px; font: 500 13px 'Inter', sans-serif; cursor: pointer; }
+        .chip:active { background: var(--navy); color: #fff; }
+
+        label { display: block; margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+        textarea, input { width: 100%; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 12px;
+            padding: 14px; font: 400 16px/1.45 'Inter', sans-serif; outline: none; transition: border-color .15s; }
+        textarea { min-height: 128px; resize: vertical; }
+        textarea:focus, input:focus { border-color: var(--navy); }
+        .field { margin-bottom: 16px; }
+        .meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--muted); }
+
+        .send { width: 100%; border: 0; border-radius: 12px; padding: 16px; background: var(--navy); color: #fff;
+            font: 600 16px 'Inter', sans-serif; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .send:disabled { opacity: .55; cursor: default; }
+        .error { display: none; margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: #FDECEA; color: #8A1C12; font-size: 14px; }
+
+        .done { display: none; padding: 28px 22px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); text-align: left; }
+        .done .check { width: 44px; height: 44px; border-radius: 50%; background: var(--green); display: grid; place-items: center; margin-bottom: 14px; }
+        .done h3 { margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-weight: 400; font-size: 30px; }
+        .done p { margin: 0 0 18px; color: var(--muted); line-height: 1.5; }
+        .ghost { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 12px; padding: 12px 16px; font: 600 14px 'Inter', sans-serif; cursor: pointer; }
+
+        .school { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--yellow); }
+        .school-card { margin: 40px 0 0; border-radius: 16px; overflow: hidden; background: var(--navy); color: #fff; }
+        .school-card img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+        .school-card figcaption { padding: 18px 20px; display: flex; flex-direction: column; gap: 2px; }
+        .school-card strong { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 20px; }
+        .school-card figcaption span:last-child { font-size: 13px; color: #B9C6EE; }
+        .wall { margin-top: 40px; }
+        .wall-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+            font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+        .wall ol { list-style: none; margin: 0; padding: 0; }
+        .wall li { padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.5; }
+        .wall .who { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+        .empty { padding: 16px 0; color: var(--muted); font-size: 14px; }
+        footer { padding: 0 20px 32px; text-align: center; font-size: 12px; color: var(--muted); }
+    </style>
+</head>
+<body>
+    <div class="stripe"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i></div>
+
+    <header class="hero">
+        <div class="wrap">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='img/spskills.jpg') }}" alt="São Paulo Skills">
+                <div>
+                    <div class="eyebrow">Seletiva {{ spskills.title }}</div>
+                    <div class="modal"><span style="color:var(--yellow)">#53</span> Computação em Nuvem</div>
+                </div>
+            </div>
+
+            <div class="athlete">
+                {% if competitor and competitor.photo_url %}
+                <img class="avatar" alt="{{ full_name }}"
+                    src="{{ competitor.photo_url if (competitor.profile_image_type == 'url' or competitor.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + competitor.photo_url) }}">
+                {% else %}
+                <div class="avatar avatar--empty">GK</div>
+                {% endif %}
+                <div>
+                    <div class="school">Representando {{ spskills.school }}</div>
+                    <h1>{{ full_name }}</h1>
+                    <div class="where">23 a 27 de novembro · SENAI Iracemápolis</div>
+                </div>
+            </div>
+
+            <div class="count">
+                <b id="days">--</b>
+                <span id="count-text">dias para a competição.<br><em>Cada mensagem conta.</em></span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="wrap">
+            <section id="form-area">
+                <h2>Mande sua energia para o {{ first_name }}</h2>
+                <p class="lead">Sua mensagem aparece na hora no telão do monitoramento, onde ele treina todos os dias.</p>
+
+                <div class="chips" aria-label="Sugestões">
+                    <button class="chip" type="button">Vai com tudo, {{ first_name }}!</button>
+                    <button class="chip" type="button">Todo esse estudo vai valer a pena</button>
+                    <button class="chip" type="button">Orgulho de você!</button>
+                    <button class="chip" type="button">A nuvem é sua 🚀</button>
+                </div>
+
+                <form id="cheer-form" novalidate>
+                    <div class="field">
+                        <label for="content">Sua mensagem</label>
+                        <textarea id="content" maxlength="280" placeholder="Escreva algo que vai dar força para ele…" required></textarea>
+                        <div class="meta"><span>Seja gentil, aparece num telão 🙂</span><span><span id="len">0</span>/280</span></div>
+                    </div>
+                    <div class="field">
+                        <label for="author">Seu nome <span style="text-transform:none;letter-spacing:0;font-weight:400">(opcional)</span></label>
+                        <input id="author" maxlength="60" autocomplete="given-name" placeholder="Ex.: Prof. Johnny, turma DS-2B">
+                    </div>
+                    <button class="send" id="send" type="submit">Enviar para o telão</button>
+                    <div class="error" id="error" role="alert"></div>
+                </form>
+            </section>
+
+            <section class="done" id="done" aria-live="polite">
+                <div class="check"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+                <h3>Mensagem no telão!</h3>
+                <p>Obrigado por torcer pelo {{ first_name }}. Ela já está aparecendo na tela de monitoramento.</p>
+                <button class="ghost" id="again" type="button">Mandar outra mensagem</button>
+            </section>
+
+            <figure class="school-card">
+                {% if school_photo %}
+                <img src="{{ url_for('static', filename=school_photo) }}" alt="Fachada da {{ spskills.school }}">
+                {% endif %}
+                <figcaption>
+                    <span class="school">Nossa casa</span>
+                    <strong>{{ spskills.school }}</strong>
+                    <span>{{ spskills.school_place }}</span>
+                </figcaption>
+            </figure>
+
+            <section class="wall">
+                <div class="wall-head"><span>Mural da torcida</span><span id="total"></span></div>
+                <ol id="wall"></ol>
+            </section>
+        </div>
+    </main>
+
+    <footer>Target · Foco Total</footer>
+
+<script>
+(function () {
+    const START = new Date("{{ spskills.start }}");
+    const END = new Date("{{ spskills.end }}");
+    const $ = (id) => document.getElementById(id);
+
+    function tick() {
+        const now = new Date();
+        if (now >= END) { $('days').textContent = '✓'; $('count-text').innerHTML = 'Seletiva concluída.<br><em>Obrigado, torcida!</em>'; return; }
+        if (now >= START) { $('days').textContent = 'Já'; $('count-text').innerHTML = 'está competindo agora.<br><em>Manda força!</em>'; return; }
+        const d = Math.floor((START - now) / 864e5);  // mesmo critério do telão
+        $('days').textContent = d;
+        $('count-text').innerHTML = (d === 1 ? 'dia' : 'dias') + ' para a competição.<br><em>Cada mensagem conta.</em>';
+    }
+    tick(); setInterval(tick, 60000);
+
+    const content = $('content');
+    content.addEventListener('input', () => $('len').textContent = content.value.length);
+    document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+        content.value = c.textContent; $('len').textContent = content.value.length; content.focus();
+    }));
+
+    function showError(msg) { const e = $('error'); e.textContent = msg; e.style.display = msg ? 'block' : 'none'; }
+
+    $('cheer-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        showError('');
+        const text = content.value.trim();
+        if (text.length < 2) return showError('Escreva uma mensagem antes de enviar.');
+        const btn = $('send');
+        btn.disabled = true; btn.textContent = 'Enviando…';
+        try {
+            const r = await fetch("{{ url_for('torcida_send') }}", {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: text, author: $('author').value.trim() }),
+            });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(data.error || 'Não foi possível enviar agora.');
+            content.value = ''; $('len').textContent = '0';
+            $('form-area').style.display = 'none';
+            $('done').style.display = 'block';
+            loadWall();
+        } catch (err) {
+            showError(err.message);
+        } finally {
+            btn.disabled = false; btn.textContent = 'Enviar para o telão';
+        }
+    });
+
+    $('again').addEventListener('click', () => {
+        $('done').style.display = 'none';
+        $('form-area').style.display = 'block';
+        content.focus();
+    });
+
+    async function loadWall() {
+        try {
+            const r = await fetch("{{ url_for('torcida_list') }}");
+            const data = await r.json();
+            $('total').textContent = data.total ? `${data.total} ${data.total === 1 ? 'mensagem' : 'mensagens'}` : '';
+            const ol = $('wall');
+            ol.replaceChildren();
+            if (!data.messages.length) {
+                const li = document.createElement('li'); li.className = 'empty';
+                li.textContent = 'Ainda não há mensagens. Seja a primeira pessoa a torcer!';
+                ol.append(li); return;
+            }
+            data.messages.slice(0, 12).forEach(m => {
+                const li = document.createElement('li');
+                li.append(document.createTextNode(m.content));
+                const who = document.createElement('span'); who.className = 'who';
+                who.textContent = `${m.author} · ${m.created_at}`;
+                li.append(who); ol.append(li);
+            });
+        } catch (e) {}
+    }
+    loadWall(); setInterval(loadWall, 15000);
+})();
+</script>
+</body>
+</html>
