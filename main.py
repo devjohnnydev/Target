@@ -701,14 +701,20 @@ def admin_monitoring():
         
     competitor = get_spskills_competitor()
     competitor_minutes = 0
+    competitor_active_start = None
     if competitor:
         competitor_minutes = db.session.query(db.func.sum(StudySession.duration_minutes)).filter(
             StudySession.student_id == competitor.id).scalar() or 0
+        active = StudySession.query.filter_by(student_id=competitor.id, end_time=None).first()
+        if active:
+            competitor_active_start = active.start_time.strftime('%Y-%m-%dT%H:%M:%S')
 
     return render_template('admin/monitoring.html', monitoring_data=sorted_data,
                            current_date=date_filter or target_date.strftime('%Y-%m-%d'),
                            spskills=SPSKILLS_EVENT, competitor=competitor,
                            competitor_hours=int(competitor_minutes // 60),
+                           competitor_minutes=int(competitor_minutes),
+                           competitor_active_start=competitor_active_start,
                            arena_audio=arena_audio_url(),
                            moments=spskills_moments(),
                            school_photo=spskills_school_photo())
@@ -754,6 +760,14 @@ def torcida_send():
     db.session.add(msg)
     db.session.commit()
     return jsonify({'ok': True, 'message': msg.to_dict()}), 201
+
+@app.route('/admin/torcida/clear', methods=['POST'])
+@role_required('admin')
+def torcida_clear():
+    """Apaga todas as mensagens do mural (recomeçar do zero)."""
+    removed = CheerMessage.query.delete()
+    db.session.commit()
+    return jsonify({'ok': True, 'removed': removed})
 
 @app.route('/admin/torcida/<int:msg_id>/hide', methods=['POST'])
 @role_required('admin')

@@ -27,6 +27,10 @@
         <nav class="tv-dots" id="tv-dots" aria-label="Slides"></nav>
         <div class="tv-head-right">
             <span class="tv-phase" id="sps-phase">Treino do samurai</span>
+            <button type="button" class="tv-full" id="tv-full" title="Tela cheia (Esc para sair)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+                <span data-full-label>Tela cheia</span>
+            </button>
             <button type="button" class="tv-music" id="ar-music" aria-pressed="false">
                 <span class="tv-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                 <span data-label>Tocar trilha do samurai</span>
@@ -82,7 +86,7 @@
                         <h2 class="athlete-name">{{ full_name }}</h2>
                         <div class="athlete-school">{{ spskills.school }} · {{ spskills.school_place }}</div>
                         <div class="stats">
-                            <div style="--c:#F8B84E"><b>{{ competitor_hours }}h</b><small>de treino</small></div>
+                            <div style="--c:#F8B84E"><b class="js-hours">{{ competitor_hours }}h</b><small>de treino</small></div>
                             <div style="--c:#22CFF5"><b>#53</b><small>Computação em Nuvem</small></div>
                         </div>
                         <div class="hachimaki">
@@ -144,9 +148,25 @@
                 </div>
             </div>
             <div class="rail-feed" id="sps-feed" aria-live="polite"></div>
-            <div class="rail-foot"><b id="sps-total">0</b> gritos · com nome ou anônimos</div>
+            <div class="rail-foot">
+                <span><b id="sps-total">0</b> gritos · com nome ou anônimos</span>
+                {% if current_user.role == 'admin' %}<button type="button" id="sps-clear" class="rail-clear">Zerar mural</button>{% endif %}
+            </div>
         </aside>
     </div>
+
+    <!-- Destaque fixo: sempre visível, em qualquer slide -->
+    <footer class="score">
+        <div class="score-block score-days">
+            <span class="score-num" id="score-days">--</span>
+            <span class="score-txt"><b id="score-days-unit">dias</b> para a competição<small>23 de novembro · SENAI Iracemápolis</small></span>
+        </div>
+        <div class="score-sep"><i style="background:#FF4F2A"></i><i style="background:#F8B84E"></i><i style="background:#19C653"></i><i style="background:#22CFF5"></i></div>
+        <div class="score-block score-hours">
+            <span class="score-num"><span id="score-h">{{ competitor_minutes // 60 }}</span><em>h</em><span id="score-m" class="score-min">{{ '%02d'|format(competitor_minutes % 60) }}</span><em>min</em></span>
+            <span class="score-txt"><b>de treino</b> do {{ first_name }}<small id="score-live">{% if competitor_active_start %}Estudando agora{% else %}Preparação acumulada{% endif %}</small></span>
+        </div>
+    </footer>
 </section>
 
 <style>
@@ -163,11 +183,14 @@
     .tv-logo { height: 46px; width: auto; }
     .tv-modal { font-weight: 800; font-stretch: 112%; font-size: 20px; text-transform: uppercase; white-space: nowrap; }
     .tv-modal span { color: var(--yellow); }
-    .tv-dots { flex: 1; display: flex; justify-content: center; gap: 8px; }
-    .tv-dots button { border: 0; cursor: pointer; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.08);
+    .tv-dots { flex: 1; min-width: 0; display: flex; justify-content: center; gap: 6px; overflow: hidden; }
+    .tv-dots button { white-space: nowrap; border: 0; cursor: pointer; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.08);
         color: var(--muted); font: 700 11px 'Archivo', sans-serif; letter-spacing: .1em; text-transform: uppercase; }
     .tv-dots button.is-on { background: var(--white); color: var(--royal); }
     .tv-head-right { display: flex; align-items: center; gap: 10px; }
+    @media (max-width: 1700px) { .tv:not(.is-full) .tv-dots { display: none; } }
+    .tv.is-full { position: fixed; inset: 0; z-index: 100; }
+    .tv:fullscreen { position: relative; }
     .tv-phase { padding: 7px 12px; background: var(--yellow); color: #1C1407; font-size: 11px; font-weight: 800;
         letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
     .tv-music { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; cursor: pointer; white-space: nowrap;
@@ -183,7 +206,37 @@
     @keyframes tv-eq { 0%, 100% { height: 4px; } 50% { height: 14px; } }
 
     /* Palco */
-    .tv-stage { display: grid; grid-template-columns: minmax(0, 1fr) 400px; height: clamp(620px, 74vh, 860px); }
+    .tv-stage { display: grid; grid-template-columns: minmax(0, 1fr) 400px; height: clamp(560px, 66vh, 780px); }
+
+    /* Tela cheia: ocupa o monitor inteiro; Esc volta ao layout normal */
+    .tv:fullscreen, .tv.is-full { width: 100vw; height: 100vh; border-radius: 0; display: flex; flex-direction: column; }
+    .tv.is-full .tv-stage, .tv:fullscreen .tv-stage { flex: 1; height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr) clamp(380px, 24vw, 520px); }
+    .tv.is-full .score, .tv:fullscreen .score { padding: 1.6vh 32px; }
+    .tv.is-full .score-num, .tv:fullscreen .score-num { font-size: clamp(64px, 7vh, 120px); }
+    .tv.is-full .cheer p, .tv:fullscreen .cheer p { font-size: clamp(21px, 1.4vw, 30px); }
+    .tv-full { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; white-space: nowrap;
+        border: 2px solid rgba(255,255,255,.35); background: transparent; color: var(--white);
+        font: 800 11px 'Archivo', sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    .tv-full:hover { border-color: var(--white); }
+
+    /* Faixa de destaque: dias e horas */
+    .score { display: flex; align-items: center; gap: 28px; padding: 14px 28px; background: var(--black); border-top: 6px solid var(--yellow); }
+    .score-block { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .score-num { font-weight: 900; font-stretch: 125%; font-size: 68px; line-height: .9; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .score-num em { font-style: normal; font-size: .45em; margin: 0 6px 0 2px; color: var(--muted); }
+    .score-min { font-size: .7em; }
+    .score-days .score-num { color: var(--yellow); }
+    .score-hours .score-num { color: var(--green); }
+    .score-txt { font-weight: 800; font-stretch: 110%; font-size: 20px; line-height: 1.1; text-transform: uppercase; }
+    .score-txt b { color: var(--white); }
+    .score-txt small { display: block; margin-top: 6px; font-weight: 700; font-stretch: 100%; font-size: 12px; letter-spacing: .14em; color: var(--muted); }
+    .score-hours.is-live small { color: var(--green); }
+    .score-hours.is-live small::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%;
+        background: var(--green); animation: live 1.2s ease-in-out infinite; }
+    @keyframes live { 50% { opacity: .25; } }
+    .score-sep { display: flex; flex-direction: column; gap: 4px; }
+    .score-sep i { display: block; width: 8px; height: 12px; }
+    .score-hours { margin-left: auto; }
     .tv-viewport { position: relative; overflow: hidden; }
     .tv-track { display: flex; height: 100%; transition: transform 1s cubic-bezier(.7, 0, .2, 1); }
     .tv-slide { position: relative; flex: 0 0 100%; height: 100%; overflow: hidden; }
@@ -296,11 +349,16 @@
     .cheer:hover .hide { display: block; }
     @keyframes rise { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: none; } }
     .rail-empty { color: var(--muted); font-size: 18px; font-weight: 600; line-height: 1.4; }
-    .rail-foot { padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: var(--royal-2); }
+    .rail-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: var(--royal-2); }
     .rail-foot b { color: var(--white); }
+    .rail-clear { border: 1px solid rgba(255,79,42,.6); background: transparent; color: #FFB4A5; padding: 4px 10px; cursor: pointer;
+        font: 800 10px 'Archivo', sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    .rail-clear:hover { background: var(--red); color: #fff; }
 
     @media (max-width: 1200px) {
         .tv-stage { grid-template-columns: 1fr; height: auto; }
+        .score { flex-wrap: wrap; gap: 16px; } .score-sep { display: none; } .score-hours { margin-left: 0; }
+        .score-num { font-size: 48px; }
         .tv-viewport { height: 640px; }
         .rail { border-left: 0; border-top: 6px solid var(--yellow); height: 520px; }
         .tv-dots { display: none; }
@@ -427,7 +485,53 @@
             : p === 'tomorrow' ? 'batalha amanhã' : `batalha em ${days} ${days === 1 ? 'dia' : 'dias'}`;
         document.querySelectorAll('.sps-mini-days').forEach(el => el.textContent = mini);
     }
+    /* ---------- Faixa de destaque: dias + horas de treino (ao vivo se estiver estudando) ---------- */
+    const BASE_MIN = {{ competitor_minutes|tojson }};
+    const ACTIVE_START = {{ competitor_active_start|tojson }};   // horário de Brasília, sem "Z"
+    function score() {
+        const now = new Date();
+        const p = phaseFor(now);
+        const d = Math.max(0, Math.floor((START - now) / 864e5));
+        $('score-days').textContent = p === 'during' ? 'JÁ' : p === 'after' ? '✓' : d;
+        $('score-days-unit').textContent = p === 'during' ? 'em' : p === 'after' ? 'seletiva' : (d === 1 ? 'dia' : 'dias');
+        let mins = BASE_MIN;
+        if (ACTIVE_START) mins += Math.max(0, (now - new Date(ACTIVE_START)) / 6e4);
+        const h = Math.floor(mins / 60), m = Math.floor(mins % 60);
+        $('score-h').textContent = h;
+        $('score-m').textContent = pad(m);
+        document.querySelectorAll('.js-hours').forEach(el => el.textContent = h + 'h');
+        document.querySelector('.score-hours').classList.toggle('is-live', !!ACTIVE_START);
+    }
     tick(); setInterval(tick, 1000);
+    score(); setInterval(score, 1000);
+
+    /* ---------- Tela cheia: primeiro clique/tecla ocupa o monitor; Esc volta ---------- */
+    const board = $('sps-board');
+    const fullBtn = $('tv-full');
+    const fsLabel = fullBtn.querySelector('[data-full-label]');
+    const isFull = () => document.fullscreenElement === board;
+    async function enterFull() {
+        if (isFull() || !board.requestFullscreen) return;
+        try { await board.requestFullscreen({ navigationUI: 'hide' }); } catch (e) {}
+    }
+    fullBtn.addEventListener('click', () => isFull() ? document.exitFullscreen() : enterFull());
+    document.addEventListener('fullscreenchange', () => {
+        fsLabel.textContent = isFull() ? 'Sair (Esc)' : 'Tela cheia';
+        board.classList.toggle('is-full', isFull());
+    });
+    if (new URLSearchParams(location.search).get('fs') === '1') board.classList.add('is-full');  // prévia do layout
+    // O navegador só permite tela cheia após um gesto: o primeiro clique ou tecla já entra
+    let autoDone = false;
+    const autoFull = (ev) => {
+        if (autoDone) return;
+        if (ev.type === 'keydown' && ev.key === 'Escape') return;
+        if (ev.target.closest && ev.target.closest('#tv-full, .hide, #sps-clear, a, input')) return;
+        autoDone = true;
+        enterFull();
+    };
+    document.addEventListener('pointerdown', autoFull);
+    document.addEventListener('keydown', autoFull);
+    document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') isFull() ? document.exitFullscreen() : enterFull(); });
 
     /* ---------- Gritos subindo de baixo para cima ---------- */
     const feed = $('sps-feed');
@@ -478,6 +582,11 @@
             const r = await fetch(`/api/torcida?after=${lastId}`);
             const data = await r.json();
             $('sps-total').textContent = data.total;
+            if (data.total < all.length) {          // mural zerado ou mensagem ocultada em outro telão
+                all = []; queue = []; lastId = 0; cycleIdx = 0;
+                feed.replaceChildren();
+                if (data.total > 0) return poll();
+            }
             if (!data.messages.length) {
                 if (!all.length && !feed.children.length) {
                     const e = document.createElement('div'); e.className = 'rail-empty';
@@ -498,6 +607,14 @@
             }
         } catch (e) { /* rede instável: tenta de novo */ }
     }
+
+    const clearBtn = $('sps-clear');
+    if (clearBtn) clearBtn.addEventListener('click', async () => {
+        if (!confirm('Apagar TODOS os comentários do mural? Isso não pode ser desfeito.')) return;
+        const r = await fetch('/admin/torcida/clear', { method: 'POST' });
+        if (r.ok) { all = []; queue = []; cycleIdx = 0; feed.replaceChildren(); $('sps-total').textContent = '0'; poll(); }
+        else alert('Não foi possível zerar o mural agora.');
+    });
 
     poll();
     setInterval(poll, 5000);
