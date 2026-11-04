@@ -53,6 +53,12 @@ SPSKILLS_EVENT = {
 def spskills_school_photo():
     path = os.path.join(basedir, 'static', SPSKILLS_EVENT['school_photo'])
     return SPSKILLS_EVENT['school_photo'] if os.path.exists(path) else None
+
+def arena_audio_url():
+    """Se existir static/audio/arena.mp3, o telão toca esse arquivo; senão usa a trilha gerada."""
+    if os.path.exists(os.path.join(basedir, 'static', 'audio', 'arena.mp3')):
+        return url_for('static', filename='audio/arena.mp3')
+    return None
 SPSKILLS_COMPETITORS = [
     {'email': 'fuskenji@gmail.com', 'name': 'GUILHERME KENJI FUSUMA'},
 ]
@@ -671,7 +677,8 @@ def admin_monitoring():
     return render_template('admin/monitoring.html', monitoring_data=sorted_data,
                            current_date=date_filter or target_date.strftime('%Y-%m-%d'),
                            spskills=SPSKILLS_EVENT, competitor=competitor,
-                           competitor_hours=int(competitor_minutes // 60))
+                           competitor_hours=int(competitor_minutes // 60),
+                           arena_audio=arena_audio_url())
 
 # --- Torcida SP Skills (QR code público) ---
 
@@ -942,6 +949,7 @@ def student_dashboard():
                          subject_groups=subject_groups_list,
                          mentor=mentor,
                          spskills=SPSKILLS_EVENT if is_spskills_competitor(current_user) else None,
+                         arena_audio=arena_audio_url(),
                          study_days=len({s.date for s in sessions if s.date}),
                          session_count=len(sessions))
 

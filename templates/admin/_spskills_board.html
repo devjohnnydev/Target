@@ -1,179 +1,212 @@
-<!-- Painel "Rumo à Seletiva": contagem regressiva + QR code + mural de mensagens -->
+<!-- Painel "Caminho do Samurai": contagem regressiva + QR code + gritos da arquibancada + trilha -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Yuji+Syuku&display=swap" rel="stylesheet">
 
 {% set first_name = (competitor.name.split(' ')[0]|title) if competitor else 'Guilherme' %}
-{% set full_name = (competitor.name|title) if competitor else 'Guilherme Kenji Fusuma' %}
+{% set full_name = competitor.name if competitor else 'Guilherme Kenji Fusuma' %}
 
-<section class="sps" id="sps-board" aria-label="Contagem regressiva São Paulo Skills">
-    <div class="sps-stripe"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--cyan)"></i></div>
+<section class="sm" id="sps-board" aria-label="Contagem regressiva São Paulo Skills: o samurai da Morvan">
+    <div class="sm-stripe"><i style="background:#FF4F2A"></i><i style="background:#F8B84E"></i><i style="background:#19C653"></i><i style="background:#22CFF5"></i></div>
 
-    <header class="sps-head">
-        <div class="sps-brand">
-            <img src="{{ url_for('static', filename='img/spskills.jpg') }}" alt="" class="sps-logo">
+    <header class="sm-head">
+        <div class="sm-brand">
+            <img src="{{ url_for('static', filename='img/spskills.jpg') }}" alt="" class="sm-logo">
             <div>
-                <div class="sps-eyebrow">Seletiva {{ spskills.title }}</div>
-                <div class="sps-modal"><span style="color:var(--yellow)">#53</span> Computação em Nuvem</div>
+                <div class="sm-eyebrow">Seletiva {{ spskills.title }} · 23–27 Nov · SENAI Iracemápolis</div>
+                <div class="sm-modal"><span>#53</span> Computação em Nuvem</div>
             </div>
         </div>
-        <div class="sps-where">
-            <span>23–27 Nov 2026</span>
-            <span class="sps-dot"></span>
-            <span>SENAI Iracemápolis</span>
-            <span class="sps-phase" id="sps-phase">Contagem regressiva</span>
+        <div class="sm-head-right">
+            <span class="sm-phase" id="sps-phase">Treino do samurai</span>
+            <button type="button" class="sm-music" id="ar-music" aria-pressed="false">
+                <span class="sm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <span data-label>Tocar trilha do samurai</span>
+            </button>
         </div>
     </header>
 
-    <div class="sps-main">
-        <!-- Contador -->
-        <div class="sps-count">
-            <div class="sps-kicker" id="sps-kicker">Faltam</div>
-            <div class="sps-days-row">
-                <span class="sps-days" id="sps-days">--</span>
-                <span class="sps-days-label" id="sps-days-label">dias</span>
+    <div class="sm-main">
+        <div class="sm-count">
+            <!-- Sol vermelho com o kanji de samurai -->
+            <div class="sm-sun" aria-hidden="true"><span>侍</span></div>
+
+            <div class="sm-kicker" id="sps-kicker">O samurai da Morvan parte para a batalha em</div>
+            <div class="sm-days-row">
+                <span class="sm-days" id="sps-days">--</span>
+                <span class="sm-days-label" id="sps-days-label">dias</span>
             </div>
-            <div class="sps-clock">
+            <div class="sm-jp" id="sps-jp" lang="ja">&nbsp;</div>
+
+            <div class="sm-clock">
                 <div><b id="sps-h">--</b><small>horas</small></div>
-                <span class="sps-colon">:</span>
-                <div><b id="sps-m">--</b><small>min</small></div>
-                <span class="sps-colon">:</span>
-                <div><b id="sps-s">--</b><small>seg</small></div>
+                <div><b id="sps-m">--</b><small>minutos</small></div>
+                <div><b id="sps-s">--</b><small>segundos</small></div>
             </div>
 
-            <div class="sps-athlete">
-                {% if competitor and competitor.photo_url %}
-                <img class="sps-avatar" alt=""
-                    src="{{ competitor.photo_url if (competitor.profile_image_type == 'url' or competitor.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + competitor.photo_url) }}">
-                {% else %}
-                <div class="sps-avatar sps-avatar--empty">GK</div>
-                {% endif %}
+            <!-- Hachimaki: a faixa que estudantes japoneses usam antes de provas -->
+            <div class="sm-hachimaki">
+                <span class="sm-hm-sun"></span>
+                <span class="sm-hm-kanji" lang="ja">必勝</span>
+                <span class="sm-hm-text">Hisshō · vitória certa</span>
+                <span class="sm-hm-tail"></span>
+            </div>
+
+            <div class="sm-athlete">
+                <div class="sm-crest">
+                    {% if competitor and competitor.photo_url %}
+                    <img class="sm-avatar" alt=""
+                        src="{{ competitor.photo_url if (competitor.profile_image_type == 'url' or competitor.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + competitor.photo_url) }}">
+                    {% else %}
+                    <div class="sm-avatar sm-avatar--empty">GK</div>
+                    {% endif %}
+                </div>
                 <div>
-                    <div class="sps-school">Representando {{ spskills.school }} · {{ spskills.school_place }}</div>
-                    <div class="sps-name">{{ full_name }}</div>
-                    <div class="sps-sub" id="sps-line">
-                        {{ competitor_hours }} horas de preparação. A escola inteira vai com você.
-                    </div>
+                    <div class="sm-school">Defendendo a {{ spskills.school }} · {{ spskills.school_place }}</div>
+                    <div class="sm-name">{{ full_name }}</div>
+                    <div class="sm-sub" id="sps-line">{{ competitor_hours }} horas de treino. Assim se forja uma katana.</div>
                 </div>
             </div>
         </div>
 
-        <!-- QR code -->
-        <aside class="sps-qr">
-            <div class="sps-qr-title">Mande sua energia<br>para o {{ first_name }}</div>
-            <div class="sps-qr-box" id="sps-qr"></div>
-            <div class="sps-qr-steps">
-                <span>1</span> Aponte a câmera do celular
-                <br><span>2</span> Escreva sua mensagem
-                <br><span>3</span> Ela aparece aqui na tela
-            </div>
-            <div class="sps-qr-url" id="sps-qr-url"></div>
+        <aside class="sm-qr">
+            <div class="sm-qr-jp" lang="ja">頑張れ!</div>
+            <div class="sm-qr-title">Grite da arquibancada</div>
+            <p class="sm-qr-lead">Escaneie e mande sua força para o {{ first_name }}. Ela aparece aqui no telão.</p>
+            <div class="sm-qr-box" id="sps-qr"></div>
+            <div class="sm-qr-url" id="sps-qr-url"></div>
         </aside>
     </div>
 
-    <!-- Mural -->
-    <div class="sps-wall">
-        <div class="sps-feature" id="sps-feature">
-            <div class="sps-feature-tag" id="sps-feature-tag">Mural da torcida</div>
-            <blockquote class="sps-quote" id="sps-quote">Escaneie o QR code e seja a primeira mensagem na tela.</blockquote>
-            <div class="sps-author" id="sps-author"></div>
+    <div class="sm-wall">
+        <div class="sm-feature">
+            <div class="sm-feature-tag" id="sps-feature-tag">Gritos da arquibancada</div>
+            <blockquote class="sm-quote" id="sps-quote">Escaneie o QR code e solte o primeiro grito da arquibancada.</blockquote>
+            <div class="sm-author" id="sps-author"></div>
         </div>
-        <div class="sps-feed">
-            <div class="sps-feed-head">
-                <span>Últimas mensagens</span>
-                <span><b id="sps-total">0</b> recebidas</span>
-            </div>
-            <ol class="sps-list" id="sps-list"></ol>
+        <div class="sm-feed">
+            <div class="sm-feed-head"><span>Arquibancada</span><span><b id="sps-total">0</b> gritos</span></div>
+            <ol class="sm-list" id="sps-list"></ol>
         </div>
     </div>
 </section>
 
 <style>
-    .sps {
-        /* Paleta SP Skills 2026 */
-        --navy: #1538A5; --navy-2: #0F2B86; --ink: #FFFFFF; --muted: #B9C6EE; --line: rgba(255,255,255,.16);
-        --yellow: #F8B84E; --red: #FF4F2A; --green: #19C653; --cyan: #22CFF5;
-        position: relative; overflow: hidden; border-radius: 20px;
-        background: var(--navy); color: var(--ink);
-        font-family: 'Inter', system-ui, sans-serif;
-        border: 1px solid var(--line);
+    .sm {
+        /* Índigo (ai-zome) + paleta SP Skills */
+        --ink: #0B1030; --ink-2: #111A4A; --royal: #1538A5; --paper: #F5F1E8; --text: #FFFFFF; --muted: #AEB8DD;
+        --line: rgba(255, 255, 255, .12); --sun: #E8341C; --gold: #F8B84E;
+        position: relative; overflow: hidden; border-radius: 18px; color: var(--text);
+        background: var(--ink); border: 1px solid var(--line); font-family: 'Inter', system-ui, sans-serif;
     }
-    .sps-stripe { display: grid; grid-template-columns: repeat(4, 1fr); height: 6px; }
-    .sps-stripe i { display: block; }
+    .sm-stripe { display: grid; grid-template-columns: repeat(4, 1fr); height: 6px; }
+    .sm-stripe i { display: block; }
 
-    .sps-head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;
-        padding: 22px 32px; border-bottom: 1px solid var(--line); }
-    .sps-brand { display: flex; align-items: center; gap: 14px; }
-    .sps-logo { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; }
-    .sps-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
-    .sps-modal { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 24px; letter-spacing: .02em; text-transform: uppercase; }
-    .sps-where { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; color: var(--muted); }
-    .sps-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--muted); }
-    .sps-phase { margin-left: 8px; padding: 6px 12px; border-radius: 2px; background: var(--yellow); color: #1A1A1A;
-        font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .sm-head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;
+        padding: 20px 32px; border-bottom: 1px solid var(--line); position: relative; z-index: 2; }
+    .sm-brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .sm-logo { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; }
+    .sm-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+    .sm-modal { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 22px; text-transform: uppercase; }
+    .sm-modal span { color: var(--gold); }
+    .sm-head-right { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .sm-phase { padding: 7px 12px; border-radius: 2px; background: var(--paper); color: var(--ink);
+        font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; border-left: 4px solid var(--sun); }
 
-    .sps-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; border-bottom: 1px solid var(--line); }
-    .sps-count { padding: 36px 32px 32px; }
-    .sps-kicker { font-size: 13px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--yellow); }
-    .sps-days-row { display: flex; align-items: baseline; gap: 18px; margin-top: 4px; }
-    .sps-days { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: clamp(120px, 15vw, 220px);
-        line-height: .82; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-    .sps-days-label { font-family: 'Archivo', sans-serif; font-weight: 500; font-size: clamp(32px, 4vw, 56px);
-        text-transform: uppercase; color: var(--muted); }
-    .sps-clock { display: flex; align-items: flex-start; gap: 14px; margin-top: 18px; }
-    .sps-clock div { display: flex; flex-direction: column; align-items: center; min-width: 84px;
-        padding: 10px 12px 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--navy-2); }
-    .sps-clock b { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 52px; line-height: 1;
-        font-variant-numeric: tabular-nums; }
-    .sps-clock small { margin-top: 4px; font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
-    .sps-colon { font-family: 'Archivo', sans-serif; font-size: 44px; line-height: 1.3; color: var(--muted); }
+    .sm-music { display: inline-flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 2px; cursor: pointer;
+        border: 1px solid var(--sun); background: transparent; color: var(--text);
+        font: 700 11px 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+    .sm-music:hover { background: rgba(232, 52, 28, .14); }
+    .sm-music.is-playing { background: var(--sun); }
+    .sm-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+    .sm-eq i { width: 3px; height: 4px; background: currentColor; }
+    .sm-music.is-playing .sm-eq i { animation: sm-eq .9s ease-in-out infinite; }
+    .sm-music.is-playing .sm-eq i:nth-child(2) { animation-delay: .15s; }
+    .sm-music.is-playing .sm-eq i:nth-child(3) { animation-delay: .3s; }
+    .sm-music.is-playing .sm-eq i:nth-child(4) { animation-delay: .45s; }
+    @keyframes sm-eq { 0%, 100% { height: 4px; } 50% { height: 14px; } }
 
-    .sps-athlete { display: flex; align-items: center; gap: 16px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
-    .sps-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--yellow); flex-shrink: 0; }
-    .sps-avatar--empty { display: grid; place-items: center; background: var(--navy-2); font-weight: 700; }
-    .sps-name { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 30px; text-transform: uppercase; line-height: 1.05; }
-    .sps-school { margin-bottom: 4px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--yellow); }
-    .sps-sub { margin-top: 4px; font-size: 15px; color: var(--muted); }
+    .sm-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; border-bottom: 1px solid var(--line); }
+    .sm-count { position: relative; padding: 36px 32px 32px; overflow: hidden; }
+    .sm-count > *:not(.sm-sun) { position: relative; z-index: 1; }
 
-    .sps-qr { padding: 32px 28px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; }
-    .sps-qr-title { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 30px; line-height: 1.05; text-transform: uppercase; }
-    .sps-qr-box { align-self: flex-start; padding: 14px; background: #fff; border-radius: 14px; }
-    .sps-qr-box img, .sps-qr-box canvas { display: block; width: 220px !important; height: 220px !important; }
-    .sps-qr-steps { font-size: 14px; line-height: 2; color: var(--muted); }
-    .sps-qr-steps span { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 8px; border-radius: 50%;
-        background: var(--ink); color: var(--navy); font-size: 11px; font-weight: 700; }
-    .sps-qr-url { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--yellow); word-break: break-all; }
+    .sm-sun { position: absolute; z-index: 0; right: 6%; top: 34px; width: min(34vw, 400px); aspect-ratio: 1;
+        border-radius: 50%; background: var(--sun); display: grid; place-items: center; }
+    .sm-sun span { font-family: 'Yuji Syuku', serif; font-size: min(22vw, 260px); line-height: 1; color: var(--paper); transform: translateY(-4%); }
 
-    .sps-wall { display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 260px; }
-    .sps-feature { padding: 32px; display: flex; flex-direction: column; justify-content: center; }
-    .sps-feature-tag { font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
-    .sps-feature-tag.is-new { color: var(--green); }
-    .sps-quote { margin: 14px 0 0; font-family: 'Archivo', sans-serif; font-size: clamp(30px, 3.2vw, 48px);
+    .sm-kicker { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: .04em; color: var(--gold); text-transform: uppercase; }
+    .sm-days-row { display: flex; align-items: baseline; gap: 16px; margin-top: 4px; }
+    .sm-days { font-family: 'Archivo', sans-serif; font-weight: 900; font-size: clamp(120px, 14vw, 210px); line-height: .82;
+        letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+    .sm-days-label { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: clamp(32px, 3.6vw, 54px); text-transform: uppercase; color: var(--muted); }
+    .sm-jp { margin-top: 10px; font-family: 'Yuji Syuku', serif; font-size: 30px; color: var(--paper); }
+
+    .sm-clock { display: flex; gap: 12px; margin-top: 18px; }
+    .sm-clock div { min-width: 104px; padding: 12px 14px 10px; text-align: center; background: var(--royal);
+        border-top: 3px solid var(--sun); }
+    .sm-clock b { display: block; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 48px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .sm-clock small { display: block; margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: #D7DEF6; }
+
+    .sm-hachimaki { display: flex; align-items: center; gap: 18px; margin-top: 30px; padding: 10px 22px; background: var(--paper);
+        color: var(--ink); max-width: 640px; clip-path: polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%); }
+    .sm-hm-sun { width: 34px; height: 34px; border-radius: 50%; background: var(--sun); flex-shrink: 0; }
+    .sm-hm-kanji { font-family: 'Yuji Syuku', serif; font-size: 40px; line-height: 1; color: #141414; }
+    .sm-hm-text { font-size: 12px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--sun); }
+    .sm-hm-tail { flex: 1; }
+
+    .sm-athlete { display: flex; align-items: center; gap: 18px; margin-top: 26px; }
+    .sm-crest { width: 86px; height: 86px; flex-shrink: 0; border-radius: 50%; padding: 4px;
+        background: var(--ink); box-shadow: 0 0 0 3px var(--sun), 0 0 0 6px var(--ink), 0 0 0 7px var(--gold); }
+    .sm-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .sm-avatar--empty { display: grid; place-items: center; background: var(--royal); font-weight: 800; }
+    .sm-school { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+    .sm-name { margin-top: 2px; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.05; text-transform: uppercase; }
+    .sm-sub { margin-top: 4px; font-size: 15px; color: var(--muted); }
+
+    .sm-qr { padding: 30px 28px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; background: var(--ink-2); }
+    .sm-qr-jp { font-family: 'Yuji Syuku', serif; font-size: 44px; line-height: 1; color: var(--sun); }
+    .sm-qr-title { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.05; text-transform: uppercase; }
+    .sm-qr-lead { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+    .sm-qr-box { align-self: flex-start; padding: 14px; background: #fff; border-left: 6px solid var(--sun); }
+    .sm-qr-box img, .sm-qr-box canvas { display: block; width: 220px !important; height: 220px !important; }
+    .sm-qr-url { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--gold); word-break: break-all; }
+
+    .sm-wall { display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 250px; }
+    .sm-feature { padding: 32px; display: flex; flex-direction: column; justify-content: center; }
+    .sm-feature-tag { font-size: 11px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+    .sm-feature-tag.is-new { color: var(--sun); }
+    .sm-quote { margin: 14px 0 0; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: clamp(28px, 3vw, 46px);
         line-height: 1.12; transition: opacity .5s ease, transform .5s ease; }
-    .sps-quote.is-out { opacity: 0; transform: translateY(8px); }
-    .sps-author { margin-top: 16px; font-size: 14px; font-weight: 600; color: var(--yellow); min-height: 20px; }
+    .sm-quote.is-out { opacity: 0; transform: translateY(8px); }
+    .sm-author { margin-top: 16px; font-size: 14px; font-weight: 700; color: var(--gold); min-height: 20px; }
 
-    .sps-feed { border-left: 1px solid var(--line); display: flex; flex-direction: column; max-height: 360px; }
-    .sps-feed-head { display: flex; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--line);
-        font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-    .sps-feed-head b { color: var(--ink); }
-    .sps-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
-    .sps-list li { position: relative; padding: 14px 24px; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
-    .sps-list li.is-new { animation: sps-in .6s ease; }
-    .sps-list .who { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
-    .sps-list .hide { position: absolute; top: 10px; right: 12px; display: none; border: 0; background: transparent;
+    .sm-feed { border-left: 1px solid var(--line); display: flex; flex-direction: column; max-height: 360px; }
+    .sm-feed-head { display: flex; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--line);
+        font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+    .sm-feed-head b { color: var(--text); }
+    .sm-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+    .sm-list li { position: relative; padding: 14px 24px; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
+    .sm-list li.is-new { animation: sm-in .8s ease; }
+    .sm-list .who { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+    .sm-list .hide { position: absolute; top: 10px; right: 12px; display: none; border: 0; background: transparent;
         color: var(--muted); font-size: 12px; cursor: pointer; }
-    .sps-list li:hover .hide { display: block; }
-    @keyframes sps-in { from { background: rgba(248,184,78,.22); } to { background: transparent; } }
+    .sm-list li:hover .hide { display: block; }
+    @keyframes sm-in { from { background: rgba(232, 52, 28, .28); } to { background: transparent; } }
 
     @media (max-width: 1024px) {
-        .sps-main, .sps-wall { grid-template-columns: 1fr; }
-        .sps-qr, .sps-feed { border-left: 0; border-top: 1px solid var(--line); }
-        .sps-clock div { min-width: 64px; }
-        .sps-clock b { font-size: 38px; }
+        .sm-main, .sm-wall { grid-template-columns: 1fr; }
+        .sm-qr, .sm-feed { border-left: 0; border-top: 1px solid var(--line); }
+        .sm-sun { width: 240px; right: -40px; top: 20px; opacity: .9; }
+        .sm-sun span { font-size: 150px; }
+        .sm-clock div { min-width: 0; flex: 1; }
+        .sm-clock b { font-size: 36px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .sm-quote, .sm-list li.is-new, .sm-music.is-playing .sm-eq i { transition: none; animation: none; }
     }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="{{ url_for('static', filename='js/arena-theme.js') }}"></script>
 <script>
 (function () {
     const START = new Date("{{ spskills.start }}");
@@ -184,19 +217,24 @@
     const $ = (id) => document.getElementById(id);
     const pad = (n) => String(n).padStart(2, '0');
 
-    // QR code apontando para a página pública da torcida
+    // Trilha (arquivo próprio, se existir; senão a trilha gerada de taiko, koto e shakuhachi)
+    ArenaTheme.attach($('ar-music'), {
+        audioSrc: {{ arena_audio|tojson }},
+        label: { on: 'Trilha do samurai tocando', off: 'Tocar trilha do samurai' },
+    });
+
+    // QR code para a página pública
     const cheerUrl = location.origin + "{{ url_for('torcida') }}";
     $('sps-qr-url').textContent = cheerUrl.replace(/^https?:\/\//, '');
     new QRCode($('sps-qr'), { text: cheerUrl, width: 440, height: 440,
-        colorDark: '#1538A5', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+        colorDark: '#0B1030', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
 
-    // Contagem regressiva
     const PHASES = {
-        before:   { tag: 'Contagem regressiva', kicker: 'Faltam', line: `${HOURS} horas de preparação. A escola inteira vai com você.` },
-        week:     { tag: 'Semana da competição', kicker: 'Faltam', line: `Reta final. ${HOURS} horas de estudo no tanque.` },
-        tomorrow: { tag: 'É amanhã', kicker: 'Faltam', line: 'Últimas horas antes da largada. Confia no processo.' },
-        during:   { tag: 'Competição em andamento', kicker: 'Em prova · termina em', line: `É agora, ${FIRST}! Estamos todos com você.` },
-        after:    { tag: 'Missão cumprida', kicker: 'Seletiva encerrada', line: `Orgulho, ${FIRST}. ${HOURS} horas de dedicação até o fim.` },
+        before:   { tag: 'Treino do samurai',  kicker: 'O samurai da Morvan parte para a batalha em', line: `${HOURS} horas de treino. Assim se forja uma katana.` },
+        week:     { tag: 'Semana da batalha',  kicker: 'A lâmina está afiada. A batalha começa em',   line: `${HOURS} horas de treino. Agora é confiar no caminho.` },
+        tomorrow: { tag: 'Amanhã: batalha',    kicker: 'O samurai entra em campo em',                 line: 'Descanso do guerreiro. Amanhã ele luta pela Morvan.' },
+        during:   { tag: 'Em batalha',         kicker: 'Em batalha · a seletiva termina em',          line: `頑張れ, ${FIRST}! A Morvan inteira está com você.` },
+        after:    { tag: 'Honra conquistada',  kicker: 'A batalha terminou',                          line: `${FIRST} lutou com honra até o fim. Orgulho da Morvan.` },
     };
     let phase = null;
     function phaseFor(now) {
@@ -220,21 +258,20 @@
         const days = Math.floor(diff / 864e5);
         $('sps-days').textContent = p === 'after' ? '✓' : days;
         $('sps-days-label').textContent = p === 'after' ? '' : (days === 1 ? 'dia' : 'dias');
+        // あと N 日 = "faltam N dias" | 勝負 = "a disputa" | 完 = "fim"
+        $('sps-jp').textContent = p === 'after' ? '完' : p === 'during' ? '勝負!' : `あと ${days} 日`;
         $('sps-h').textContent = pad(Math.floor(diff % 864e5 / 36e5));
         $('sps-m').textContent = pad(Math.floor(diff % 36e5 / 6e4));
         $('sps-s').textContent = pad(Math.floor(diff % 6e4 / 1e3));
 
-        const mini = p === 'during' ? 'em prova agora' : p === 'after' ? 'concluída'
-            : p === 'tomorrow' ? 'é amanhã' : `faltam ${days} ${days === 1 ? 'dia' : 'dias'}`;
+        const mini = p === 'during' ? 'em batalha agora' : p === 'after' ? 'honra conquistada'
+            : p === 'tomorrow' ? 'batalha amanhã' : `batalha em ${days} ${days === 1 ? 'dia' : 'dias'}`;
         document.querySelectorAll('.sps-mini-days').forEach(el => el.textContent = mini);
     }
     tick(); setInterval(tick, 1000);
 
-    // Mural de mensagens (atualiza sozinho)
-    let messages = [];      // mais recentes primeiro
-    let lastId = 0;
-    let rotateIdx = 0;
-    let pinnedNew = null;
+    // Gritos da arquibancada (atualiza sozinho)
+    let messages = [], lastId = 0, rotateIdx = 0, pinnedNew = null;
 
     function feature(msg, isNew) {
         const q = $('sps-quote');
@@ -243,7 +280,7 @@
             q.textContent = `“${msg.content}”`;
             $('sps-author').textContent = `— ${msg.author}`;
             const tag = $('sps-feature-tag');
-            tag.textContent = isNew ? 'Acabou de chegar' : 'Mural da torcida';
+            tag.textContent = isNew ? 'Grito novo na arquibancada' : 'Gritos da arquibancada';
             tag.classList.toggle('is-new', !!isNew);
             q.classList.remove('is-out');
         }, 450);
@@ -293,7 +330,7 @@
     }
 
     function rotate() {
-        if (pinnedNew) { pinnedNew = null; return; } // deixa a nova mensagem um ciclo inteiro na tela
+        if (pinnedNew) { pinnedNew = null; return; }
         const pool = messages.slice(0, 15);
         if (pool.length < 2) return;
         rotateIdx = (rotateIdx + 1) % pool.length;

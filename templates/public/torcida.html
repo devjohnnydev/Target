@@ -6,12 +6,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#1538A5">
-    <title>Torcida · {{ first_name }} na SP Skills</title>
-    <meta property="og:title" content="Mande sua energia para o {{ first_name }}">
+    <title>頑張れ, {{ first_name }}! · Torcida SP Skills</title>
+    <meta property="og:title" content="Grite da arquibancada para o {{ first_name }}">
     <meta property="og:description" content="Seletiva São Paulo Skills 2026 · Modalidade 53 Computação em Nuvem">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Yuji+Syuku&display=swap" rel="stylesheet">
     <style>
         :root {
             /* Paleta SP Skills 2026 */
@@ -46,8 +46,12 @@
         .count span { font-size: 14px; color: #DCE4FA; line-height: 1.35; }
         .count em { font-style: normal; color: var(--yellow); font-weight: 600; }
 
+        .sun { position: absolute; right: 0; top: -2px; width: 56px; height: 56px; border-radius: 50%; background: var(--red);
+            display: grid; place-items: center; font-family: 'Yuji Syuku', serif; font-size: 34px; color: #F5F1E8; }
+        .brand { padding-right: 68px; }
         main { padding: 28px 20px 48px; }
         h2 { margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-weight: 400; font-size: 34px; line-height: 1.05; }
+        .jp { font-family: 'Yuji Syuku', serif; font-size: 34px; line-height: 1; color: var(--red); margin-bottom: 8px; }
         .lead { margin: 0 0 22px; color: var(--muted); font-size: 15px; line-height: 1.5; }
 
         .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
@@ -94,7 +98,8 @@
     <div class="stripe"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i></div>
 
     <header class="hero">
-        <div class="wrap">
+        <div class="wrap" style="position:relative">
+            <div class="sun" aria-hidden="true">侍</div>
             <div class="brand">
                 <img src="{{ url_for('static', filename='img/spskills.jpg') }}" alt="São Paulo Skills">
                 <div>
@@ -127,14 +132,15 @@
     <main>
         <div class="wrap">
             <section id="form-area">
-                <h2>Mande sua energia para o {{ first_name }}</h2>
+                <div class="jp" lang="ja">頑張れ!</div>
+                <h2>Grite da arquibancada para o {{ first_name }}</h2>
                 <p class="lead">Sua mensagem aparece na hora no telão do monitoramento, onde ele treina todos os dias.</p>
 
                 <div class="chips" aria-label="Sugestões">
                     <button class="chip" type="button">Vai com tudo, {{ first_name }}!</button>
                     <button class="chip" type="button">Todo esse estudo vai valer a pena</button>
-                    <button class="chip" type="button">Orgulho de você!</button>
-                    <button class="chip" type="button">A nuvem é sua 🚀</button>
+                    <button class="chip" type="button">必勝! Vitória certa!</button>
+                    <button class="chip" type="button">Força, samurai da Morvan!</button>
                 </div>
 
                 <form id="cheer-form" novalidate>
@@ -171,7 +177,7 @@
             </figure>
 
             <section class="wall">
-                <div class="wall-head"><span>Mural da torcida</span><span id="total"></span></div>
+                <div class="wall-head"><span>Gritos da arquibancada</span><span id="total"></span></div>
                 <ol id="wall"></ol>
             </section>
         </div>
