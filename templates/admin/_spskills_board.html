@@ -1,207 +1,319 @@
-<!-- Painel "Caminho do Samurai": contagem regressiva + QR code + gritos da arquibancada + trilha -->
+<!-- Telão SP Skills: slides que passam para o lado + coluna de gritos subindo de baixo para cima -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Yuji+Syuku&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Yuji+Syuku&display=swap" rel="stylesheet">
 
 {% set first_name = (competitor.name.split(' ')[0]|title) if competitor else 'Guilherme' %}
 {% set full_name = competitor.name if competitor else 'Guilherme Kenji Fusuma' %}
+{% set ns = namespace(hero=(moments.photos[0].url if moments.photos else None)) %}
+{% for p in moments.photos %}{% if 'team-brazil' in p.url %}{% set ns.hero = p.url %}{% endif %}{% endfor %}
+{% set hero_photo = ns.hero %}
 
-<section class="sm" id="sps-board" aria-label="Contagem regressiva São Paulo Skills: o samurai da Morvan">
-    <div class="sm-stripe"><i style="background:#FF4F2A"></i><i style="background:#F8B84E"></i><i style="background:#19C653"></i><i style="background:#22CFF5"></i></div>
+<!-- Pinceladas desenhadas à mão (originais), reutilizadas nos slides -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+        <symbol id="brush" viewBox="0 0 600 90" preserveAspectRatio="none">
+            <path d="M6 40 L16 30 L11 24 L30 22 L26 14 L52 16 L70 9 L140 10 L260 6 L400 9 L520 16 L578 24 L596 34 L588 46 L560 56 L470 66 L340 74 L220 78 L120 76 L74 82 L56 72 L34 76 L40 64 L18 62 L24 52 Z"/>
+            <path d="M70 34 L330 28 M90 52 L380 46 M140 64 L300 62" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/>
+        </symbol>
+    </defs>
+</svg>
 
-    <header class="sm-head">
-        <div class="sm-brand">
-            <img src="{{ url_for('static', filename='img/spskills.jpg') }}" alt="" class="sm-logo">
-            <div>
-                <div class="sm-eyebrow">Seletiva {{ spskills.title }} · 23–27 Nov · SENAI Iracemápolis</div>
-                <div class="sm-modal"><span>#53</span> Computação em Nuvem</div>
-            </div>
+<section class="tv" id="sps-board" aria-label="Telão São Paulo Skills: Guilherme Kenji Fusuma">
+    <header class="tv-head">
+        <div class="tv-brand">
+            <img src="{{ url_for('static', filename='img/spskills-logo.png') }}" alt="São Paulo Skills" class="tv-logo">
+            <div class="tv-modal"><span>#53</span> Computação em Nuvem</div>
         </div>
-        <div class="sm-head-right">
-            <span class="sm-phase" id="sps-phase">Treino do samurai</span>
-            <button type="button" class="sm-music" id="ar-music" aria-pressed="false">
-                <span class="sm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <nav class="tv-dots" id="tv-dots" aria-label="Slides"></nav>
+        <div class="tv-head-right">
+            <span class="tv-phase" id="sps-phase">Treino do samurai</span>
+            <button type="button" class="tv-music" id="ar-music" aria-pressed="false">
+                <span class="tv-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                 <span data-label>Tocar trilha do samurai</span>
             </button>
         </div>
     </header>
 
-    <div class="sm-main">
-        <div class="sm-count">
-            <!-- Sol vermelho com o kanji de samurai -->
-            <div class="sm-sun" aria-hidden="true"><span>侍</span></div>
+    <div class="tv-stage">
+        <!-- ===== Slides ===== -->
+        <div class="tv-viewport">
+            <div class="tv-track" id="tv-track">
 
-            <div class="sm-kicker" id="sps-kicker">O samurai da Morvan parte para a batalha em</div>
-            <div class="sm-days-row">
-                <span class="sm-days" id="sps-days">--</span>
-                <span class="sm-days-label" id="sps-days-label">dias</span>
-            </div>
-            <div class="sm-jp" id="sps-jp" lang="ja">&nbsp;</div>
+                <!-- 1. Contagem -->
+                <article class="tv-slide s-count" data-title="Contagem">
+                    <div class="brushes" aria-hidden="true">
+                        <svg class="b b-yellow"><use href="#brush"/></svg>
+                        <svg class="b b-green"><use href="#brush"/></svg>
+                        <svg class="b b-cyan"><use href="#brush"/></svg>
+                        <svg class="b b-red"><use href="#brush"/></svg>
+                        <svg class="b b-black"><use href="#brush"/></svg>
+                    </div>
+                    <div class="sun" aria-hidden="true"><span>侍</span></div>
 
-            <div class="sm-clock">
-                <div><b id="sps-h">--</b><small>horas</small></div>
-                <div><b id="sps-m">--</b><small>minutos</small></div>
-                <div><b id="sps-s">--</b><small>segundos</small></div>
-            </div>
+                    <div class="s-count-body">
+                        <span class="tag">Seletiva {{ spskills.title }}</span>
+                        <div class="kicker" id="sps-kicker">O samurai da Morvan parte para a batalha em</div>
+                        <div class="days-row">
+                            <span class="days" id="sps-days">--</span>
+                            <span class="days-label" id="sps-days-label">dias</span>
+                        </div>
+                        <div class="jp" id="sps-jp" lang="ja">&nbsp;</div>
+                        <div class="clock">
+                            <div style="--c:#FF4F2A"><b id="sps-h">--</b><small>horas</small></div>
+                            <div style="--c:#F8B84E"><b id="sps-m">--</b><small>minutos</small></div>
+                            <div style="--c:#19C653"><b id="sps-s">--</b><small>segundos</small></div>
+                        </div>
+                        <div class="dashes"><i style="background:#FF4F2A"></i><i style="background:#F8B84E"></i><i style="background:#19C653"></i><i style="background:#22CFF5"></i></div>
+                        <div class="where">23 a 27 de novembro · Escola SENAI de Iracemápolis</div>
+                    </div>
+                </article>
 
-            <!-- Hachimaki: a faixa que estudantes japoneses usam antes de provas -->
-            <div class="sm-hachimaki">
-                <span class="sm-hm-sun"></span>
-                <span class="sm-hm-kanji" lang="ja">必勝</span>
-                <span class="sm-hm-text">Hisshō · vitória certa</span>
-                <span class="sm-hm-tail"></span>
-            </div>
+                <!-- 2. O competidor -->
+                <article class="tv-slide s-athlete" data-title="O competidor">
+                    <div class="s-athlete-photo">
+                        {% if hero_photo %}
+                        <img src="{{ hero_photo }}" alt="{{ full_name }} na estação de prova" class="kenburns">
+                        {% elif competitor and competitor.photo_url %}
+                        <img alt="" class="kenburns" src="{{ competitor.photo_url if (competitor.profile_image_type == 'url' or competitor.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + competitor.photo_url) }}">
+                        {% endif %}
+                    </div>
+                    <div class="s-athlete-body">
+                        <span class="tag tag-red">Quem vai representar a Morvan</span>
+                        <h2 class="athlete-name">{{ full_name }}</h2>
+                        <div class="athlete-school">{{ spskills.school }} · {{ spskills.school_place }}</div>
+                        <div class="stats">
+                            <div style="--c:#F8B84E"><b>{{ competitor_hours }}h</b><small>de treino</small></div>
+                            <div style="--c:#22CFF5"><b>#53</b><small>Computação em Nuvem</small></div>
+                        </div>
+                        <div class="hachimaki">
+                            <span class="hm-sun"></span>
+                            <span class="hm-kanji" lang="ja">必勝</span>
+                            <span class="hm-text">Hisshō · vitória certa</span>
+                        </div>
+                        <p class="athlete-line" id="sps-line">{{ competitor_hours }} horas de treino. Assim se forja uma katana.</p>
+                    </div>
+                </article>
 
-            <div class="sm-athlete">
-                <div class="sm-crest">
-                    {% if competitor and competitor.photo_url %}
-                    <img class="sm-avatar" alt=""
-                        src="{{ competitor.photo_url if (competitor.profile_image_type == 'url' or competitor.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + competitor.photo_url) }}">
-                    {% else %}
-                    <div class="sm-avatar sm-avatar--empty">GK</div>
+                <!-- 3. Momentos do preparatório -->
+                {% if moments.photos or moments.video %}
+                <article class="tv-slide s-moments" data-title="Momentos">
+                    {% if moments.video %}
+                    <div class="phone">
+                        <video id="moments-video" src="{{ moments.video.url }}" {% if moments.video.poster %}poster="{{ moments.video.poster }}"{% endif %}
+                            muted loop playsinline preload="metadata"></video>
+                    </div>
                     {% endif %}
-                </div>
+                    <div class="gallery">
+                        <span class="tag tag-green">Momentos do preparatório</span>
+                        <div class="gallery-frame" id="gallery">
+                            {% for p in moments.photos %}
+                            <figure class="g-item{% if loop.first %} is-on{% endif %}">
+                                <img src="{{ p.url }}" alt="{{ p.caption }}" loading="lazy">
+                                <figcaption><span class="g-num">{{ '%02d'|format(loop.index) }} / {{ '%02d'|format(moments.photos|length) }}</span>{{ p.caption }}</figcaption>
+                            </figure>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </article>
+                {% endif %}
+
+                <!-- 4. Nossa casa -->
+                <article class="tv-slide s-school" data-title="Nossa escola">
+                    {% if school_photo %}
+                    <img class="school-bg kenburns" src="{{ url_for('static', filename=school_photo) }}" alt="">
+                    {% endif %}
+                    <div class="school-body">
+                        <span class="tag">Nossa casa</span>
+                        <h2 class="school-name">{{ spskills.school }}</h2>
+                        <div class="school-place">{{ spskills.school_place }}</div>
+                        <p class="school-line">De onde sai o competidor da modalidade #53. A Mooca inteira vai junto para Iracemápolis.</p>
+                    </div>
+                </article>
+            </div>
+            <div class="tv-progress"><i id="tv-progress"></i></div>
+        </div>
+
+        <!-- ===== Gritos da arquibancada (sempre visível) ===== -->
+        <aside class="rail">
+            <div class="rail-top">
+                <div class="rail-qr" id="sps-qr"></div>
                 <div>
-                    <div class="sm-school">Defendendo a {{ spskills.school }} · {{ spskills.school_place }}</div>
-                    <div class="sm-name">{{ full_name }}</div>
-                    <div class="sm-sub" id="sps-line">{{ competitor_hours }} horas de treino. Assim se forja uma katana.</div>
+                    <div class="rail-jp" lang="ja">頑張れ!</div>
+                    <div class="rail-title">Grite da arquibancada</div>
+                    <div class="rail-url" id="sps-qr-url"></div>
                 </div>
             </div>
-        </div>
-
-        <aside class="sm-qr">
-            <div class="sm-qr-jp" lang="ja">頑張れ!</div>
-            <div class="sm-qr-title">Grite da arquibancada</div>
-            <p class="sm-qr-lead">Escaneie e mande sua força para o {{ first_name }}. Ela aparece aqui no telão.</p>
-            <div class="sm-qr-box" id="sps-qr"></div>
-            <div class="sm-qr-url" id="sps-qr-url"></div>
+            <div class="rail-feed" id="sps-feed" aria-live="polite"></div>
+            <div class="rail-foot"><b id="sps-total">0</b> gritos · com nome ou anônimos</div>
         </aside>
-    </div>
-
-    <div class="sm-wall">
-        <div class="sm-feature">
-            <div class="sm-feature-tag" id="sps-feature-tag">Gritos da arquibancada</div>
-            <blockquote class="sm-quote" id="sps-quote">Escaneie o QR code e solte o primeiro grito da arquibancada.</blockquote>
-            <div class="sm-author" id="sps-author"></div>
-        </div>
-        <div class="sm-feed">
-            <div class="sm-feed-head"><span>Arquibancada</span><span><b id="sps-total">0</b> gritos</span></div>
-            <ol class="sm-list" id="sps-list"></ol>
-        </div>
     </div>
 </section>
 
 <style>
-    .sm {
-        /* Índigo (ai-zome) + paleta SP Skills */
-        --ink: #0B1030; --ink-2: #111A4A; --royal: #1538A5; --paper: #F5F1E8; --text: #FFFFFF; --muted: #AEB8DD;
-        --line: rgba(255, 255, 255, .12); --sun: #E8341C; --gold: #F8B84E;
-        position: relative; overflow: hidden; border-radius: 18px; color: var(--text);
-        background: var(--ink); border: 1px solid var(--line); font-family: 'Inter', system-ui, sans-serif;
+    .tv {
+        --royal: #1538A5; --royal-2: #0F2B86; --deep: #0A1A5C; --white: #FFFFFF; --muted: #C9D3F5;
+        --yellow: #F8B84E; --red: #FF4F2A; --green: #19C653; --cyan: #22CFF5; --black: #0B0B10; --paper: #F5F1E8;
+        position: relative; overflow: hidden; border-radius: 18px; color: var(--white);
+        background: var(--royal); font-family: 'Archivo', 'Inter', system-ui, sans-serif;
     }
-    .sm-stripe { display: grid; grid-template-columns: repeat(4, 1fr); height: 6px; }
-    .sm-stripe i { display: block; }
 
-    .sm-head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;
-        padding: 20px 32px; border-bottom: 1px solid var(--line); position: relative; z-index: 2; }
-    .sm-brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
-    .sm-logo { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; }
-    .sm-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-    .sm-modal { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 22px; text-transform: uppercase; }
-    .sm-modal span { color: var(--gold); }
-    .sm-head-right { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-    .sm-phase { padding: 7px 12px; border-radius: 2px; background: var(--paper); color: var(--ink);
-        font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; border-left: 4px solid var(--sun); }
+    /* Cabeçalho */
+    .tv-head { display: flex; align-items: center; gap: 18px; padding: 14px 24px; background: var(--deep); position: relative; z-index: 3; }
+    .tv-brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .tv-logo { height: 46px; width: auto; }
+    .tv-modal { font-weight: 800; font-stretch: 112%; font-size: 20px; text-transform: uppercase; white-space: nowrap; }
+    .tv-modal span { color: var(--yellow); }
+    .tv-dots { flex: 1; display: flex; justify-content: center; gap: 8px; }
+    .tv-dots button { border: 0; cursor: pointer; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.08);
+        color: var(--muted); font: 700 11px 'Archivo', sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .tv-dots button.is-on { background: var(--white); color: var(--royal); }
+    .tv-head-right { display: flex; align-items: center; gap: 10px; }
+    .tv-phase { padding: 7px 12px; background: var(--yellow); color: #1C1407; font-size: 11px; font-weight: 800;
+        letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+    .tv-music { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; cursor: pointer; white-space: nowrap;
+        border: 2px solid var(--red); background: transparent; color: var(--white);
+        font: 800 11px 'Archivo', sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    .tv-music.is-playing { background: var(--red); }
+    .tv-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+    .tv-eq i { width: 3px; height: 4px; background: currentColor; }
+    .tv-music.is-playing .tv-eq i { animation: tv-eq .9s ease-in-out infinite; }
+    .tv-music.is-playing .tv-eq i:nth-child(2) { animation-delay: .15s; }
+    .tv-music.is-playing .tv-eq i:nth-child(3) { animation-delay: .3s; }
+    .tv-music.is-playing .tv-eq i:nth-child(4) { animation-delay: .45s; }
+    @keyframes tv-eq { 0%, 100% { height: 4px; } 50% { height: 14px; } }
 
-    .sm-music { display: inline-flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 2px; cursor: pointer;
-        border: 1px solid var(--sun); background: transparent; color: var(--text);
-        font: 700 11px 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; }
-    .sm-music:hover { background: rgba(232, 52, 28, .14); }
-    .sm-music.is-playing { background: var(--sun); }
-    .sm-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
-    .sm-eq i { width: 3px; height: 4px; background: currentColor; }
-    .sm-music.is-playing .sm-eq i { animation: sm-eq .9s ease-in-out infinite; }
-    .sm-music.is-playing .sm-eq i:nth-child(2) { animation-delay: .15s; }
-    .sm-music.is-playing .sm-eq i:nth-child(3) { animation-delay: .3s; }
-    .sm-music.is-playing .sm-eq i:nth-child(4) { animation-delay: .45s; }
-    @keyframes sm-eq { 0%, 100% { height: 4px; } 50% { height: 14px; } }
+    /* Palco */
+    .tv-stage { display: grid; grid-template-columns: minmax(0, 1fr) 400px; height: clamp(620px, 74vh, 860px); }
+    .tv-viewport { position: relative; overflow: hidden; }
+    .tv-track { display: flex; height: 100%; transition: transform 1s cubic-bezier(.7, 0, .2, 1); }
+    .tv-slide { position: relative; flex: 0 0 100%; height: 100%; overflow: hidden; }
+    .tv-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: rgba(0,0,0,.2); z-index: 5; }
+    .tv-progress i { display: block; height: 100%; width: 0;
+        background: linear-gradient(90deg, var(--red) 0 25%, var(--yellow) 25% 50%, var(--green) 50% 75%, var(--cyan) 75% 100%); }
 
-    .sm-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; border-bottom: 1px solid var(--line); }
-    .sm-count { position: relative; padding: 36px 32px 32px; overflow: hidden; }
-    .sm-count > *:not(.sm-sun) { position: relative; z-index: 1; }
+    .tag { align-self: flex-start; display: inline-block; padding: 8px 14px; background: var(--yellow); color: #1C1407; font-weight: 800;
+        font-size: 13px; letter-spacing: .2em; text-transform: uppercase; }
+    .tag-red { background: var(--red); color: #fff; }
+    .tag-green { background: var(--green); color: #052810; }
 
-    .sm-sun { position: absolute; z-index: 0; right: 6%; top: 34px; width: min(34vw, 400px); aspect-ratio: 1;
-        border-radius: 50%; background: var(--sun); display: grid; place-items: center; }
-    .sm-sun span { font-family: 'Yuji Syuku', serif; font-size: min(22vw, 260px); line-height: 1; color: var(--paper); transform: translateY(-4%); }
+    /* Slide 1 · Contagem */
+    .s-count { background: var(--royal); }
+    .brushes { position: absolute; inset: 0; pointer-events: none; }
+    .brushes .b { position: absolute; fill: currentColor; transform: rotate(17deg); transform-origin: left center;
+        animation: brush-in 1.1s cubic-bezier(.2,.8,.2,1) both; }
+    .b-cyan   { color: var(--cyan);   left: 86%; top: -2%;  width: 34%; height: 58px; animation-delay: .1s; }
+    .b-green  { color: var(--green);  left: 70%; top: 2%;   width: 48%; height: 76px; animation-delay: .25s; }
+    .b-yellow { color: var(--yellow); left: 52%; top: 9%;   width: 66%; height: 104px; animation-delay: .4s; }
+    .b-red    { color: var(--red);    left: 50%; top: 27%;  width: 64%; height: 78px; animation-delay: .55s; }
+    .b-black  { color: var(--black);  left: 64%; top: 46%;  width: 48%; height: 62px; animation-delay: .7s; }
+    @keyframes brush-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+    .sun { position: absolute; right: 7%; bottom: 8%; width: 190px; aspect-ratio: 1; border-radius: 50%; background: var(--red);
+        display: grid; place-items: center; box-shadow: 0 0 0 10px var(--royal), 0 0 0 12px var(--yellow); }
+    .sun span { font-family: 'Yuji Syuku', serif; font-size: 120px; color: var(--paper); line-height: 1; }
 
-    .sm-kicker { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: .04em; color: var(--gold); text-transform: uppercase; }
-    .sm-days-row { display: flex; align-items: baseline; gap: 16px; margin-top: 4px; }
-    .sm-days { font-family: 'Archivo', sans-serif; font-weight: 900; font-size: clamp(120px, 14vw, 210px); line-height: .82;
-        letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-    .sm-days-label { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: clamp(32px, 3.6vw, 54px); text-transform: uppercase; color: var(--muted); }
-    .sm-jp { margin-top: 10px; font-family: 'Yuji Syuku', serif; font-size: 30px; color: var(--paper); }
+    .s-count-body { position: relative; z-index: 2; padding: 44px 48px; }
+    .kicker { margin-top: 22px; max-width: 560px; font-weight: 800; font-stretch: 110%; font-size: 26px; line-height: 1.1; text-transform: uppercase; }
+    .days-row { display: flex; align-items: baseline; gap: 18px; margin-top: 6px; }
+    .days { font-weight: 900; font-stretch: 125%; font-size: clamp(150px, 15vw, 250px); line-height: .82; color: var(--yellow);
+        letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .days-label { font-weight: 900; font-stretch: 125%; font-size: clamp(44px, 4.6vw, 78px); text-transform: uppercase; }
+    .jp { margin-top: 12px; font-family: 'Yuji Syuku', serif; font-size: 36px; }
+    .clock { display: flex; gap: 12px; margin-top: 18px; }
+    .clock div { min-width: 118px; padding: 12px 16px 10px; text-align: center; background: var(--royal-2); border-top: 5px solid var(--c); }
+    .clock b { display: block; font-weight: 800; font-stretch: 112%; font-size: 54px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .clock small { display: block; margin-top: 6px; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+    .dashes { display: flex; gap: 10px; margin-top: 28px; }
+    .dashes i { width: 64px; height: 7px; display: block; }
+    .where { margin-top: 12px; font-weight: 700; font-size: 18px; color: var(--muted); }
 
-    .sm-clock { display: flex; gap: 12px; margin-top: 18px; }
-    .sm-clock div { min-width: 104px; padding: 12px 14px 10px; text-align: center; background: var(--royal);
-        border-top: 3px solid var(--sun); }
-    .sm-clock b { display: block; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 48px; line-height: 1; font-variant-numeric: tabular-nums; }
-    .sm-clock small { display: block; margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: #D7DEF6; }
+    /* Slide 2 · Competidor */
+    .s-athlete { display: grid; grid-template-columns: 46% 1fr; background: var(--deep); }
+    .s-athlete-photo { position: relative; overflow: hidden; background: var(--royal-2); }
+    .s-athlete-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 88%; }
+    .s-athlete-photo::after { content: ''; position: absolute; inset: 0 0 0 auto; width: 12px;
+        background: linear-gradient(180deg, var(--red) 0 25%, var(--yellow) 25% 50%, var(--green) 50% 75%, var(--cyan) 75%); }
+    .s-athlete-body { padding: 44px 40px; display: flex; flex-direction: column; justify-content: center; }
+    .athlete-name { margin: 18px 0 0; font-weight: 900; font-stretch: 118%; font-size: clamp(46px, 4.6vw, 76px); line-height: .95; text-transform: uppercase; }
+    .athlete-school { margin-top: 12px; font-weight: 700; font-size: 16px; letter-spacing: .08em; text-transform: uppercase; color: var(--yellow); }
+    .stats { display: flex; gap: 12px; margin-top: 24px; }
+    .stats div { padding: 12px 16px; background: rgba(255,255,255,.06); border-left: 5px solid var(--c); }
+    .stats b { display: block; font-weight: 900; font-stretch: 115%; font-size: 40px; line-height: 1; }
+    .stats small { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .hachimaki { display: flex; align-items: center; gap: 16px; margin-top: 26px; padding: 10px 22px; background: var(--paper); color: #141414;
+        clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%); max-width: 520px; }
+    .hm-sun { width: 34px; height: 34px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+    .hm-kanji { font-family: 'Yuji Syuku', serif; font-size: 40px; line-height: 1; }
+    .hm-text { font-size: 12px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--red); }
+    .athlete-line { margin: 18px 0 0; font-size: 19px; font-weight: 500; color: var(--muted); }
 
-    .sm-hachimaki { display: flex; align-items: center; gap: 18px; margin-top: 30px; padding: 10px 22px; background: var(--paper);
-        color: var(--ink); max-width: 640px; clip-path: polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%); }
-    .sm-hm-sun { width: 34px; height: 34px; border-radius: 50%; background: var(--sun); flex-shrink: 0; }
-    .sm-hm-kanji { font-family: 'Yuji Syuku', serif; font-size: 40px; line-height: 1; color: #141414; }
-    .sm-hm-text { font-size: 12px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--sun); }
-    .sm-hm-tail { flex: 1; }
+    /* Slide 3 · Momentos */
+    .s-moments { display: flex; gap: 32px; align-items: center; padding: 36px 40px; background: var(--royal); }
+    .phone { flex: 0 0 auto; height: 92%; aspect-ratio: 9 / 16.6; border-radius: 28px; overflow: hidden; background: #000;
+        border: 6px solid var(--black); box-shadow: 14px 14px 0 var(--yellow); }
+    .phone video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery { flex: 1; min-width: 0; height: 92%; display: flex; flex-direction: column; gap: 14px; }
+    .gallery .tag { align-self: flex-start; }
+    .gallery-frame { position: relative; flex: 1; overflow: hidden; background: var(--deep); box-shadow: -14px 14px 0 var(--green); }
+    .g-item { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1.2s ease; }
+    .g-item.is-on { opacity: 1; }
+    .g-item img { width: 100%; height: 100%; object-fit: cover; }
+    .g-item.is-on img { animation: kb 9s ease-out both; }
+    .g-item figcaption { position: absolute; left: 0; bottom: 0; padding: 14px 20px; background: var(--black); color: #fff;
+        font-weight: 800; font-stretch: 110%; font-size: 22px; text-transform: uppercase; }
+    .g-num { margin-right: 14px; color: var(--yellow); font-variant-numeric: tabular-nums; }
 
-    .sm-athlete { display: flex; align-items: center; gap: 18px; margin-top: 26px; }
-    .sm-crest { width: 86px; height: 86px; flex-shrink: 0; border-radius: 50%; padding: 4px;
-        background: var(--ink); box-shadow: 0 0 0 3px var(--sun), 0 0 0 6px var(--ink), 0 0 0 7px var(--gold); }
-    .sm-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-    .sm-avatar--empty { display: grid; place-items: center; background: var(--royal); font-weight: 800; }
-    .sm-school { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
-    .sm-name { margin-top: 2px; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 32px; line-height: 1.05; text-transform: uppercase; }
-    .sm-sub { margin-top: 4px; font-size: 15px; color: var(--muted); }
+    /* Slide 4 · Escola */
+    .s-school { background: var(--deep); }
+    .school-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .s-school::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,26,92,.95) 0%, rgba(10,26,92,.75) 45%, rgba(10,26,92,.1) 100%); }
+    .school-body { position: relative; z-index: 2; height: 100%; padding: 48px; display: flex; flex-direction: column; justify-content: flex-end; max-width: 760px; }
+    .school-name { margin: 18px 0 0; font-weight: 900; font-stretch: 118%; font-size: clamp(44px, 4.4vw, 72px); line-height: .95; text-transform: uppercase; }
+    .school-place { margin-top: 10px; font-weight: 800; font-size: 20px; letter-spacing: .1em; text-transform: uppercase; color: var(--yellow); }
+    .school-line { margin: 16px 0 0; font-size: 20px; line-height: 1.4; color: var(--muted); }
 
-    .sm-qr { padding: 30px 28px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; background: var(--ink-2); }
-    .sm-qr-jp { font-family: 'Yuji Syuku', serif; font-size: 44px; line-height: 1; color: var(--sun); }
-    .sm-qr-title { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 26px; line-height: 1.05; text-transform: uppercase; }
-    .sm-qr-lead { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
-    .sm-qr-box { align-self: flex-start; padding: 14px; background: #fff; border-left: 6px solid var(--sun); }
-    .sm-qr-box img, .sm-qr-box canvas { display: block; width: 220px !important; height: 220px !important; }
-    .sm-qr-url { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--gold); word-break: break-all; }
+    .kenburns { animation: kb 16s ease-out both; }
+    @keyframes kb { from { transform: scale(1.12); } to { transform: scale(1); } }
 
-    .sm-wall { display: grid; grid-template-columns: minmax(0, 1fr) 340px; min-height: 250px; }
-    .sm-feature { padding: 32px; display: flex; flex-direction: column; justify-content: center; }
-    .sm-feature-tag { font-size: 11px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
-    .sm-feature-tag.is-new { color: var(--sun); }
-    .sm-quote { margin: 14px 0 0; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: clamp(28px, 3vw, 46px);
-        line-height: 1.12; transition: opacity .5s ease, transform .5s ease; }
-    .sm-quote.is-out { opacity: 0; transform: translateY(8px); }
-    .sm-author { margin-top: 16px; font-size: 14px; font-weight: 700; color: var(--gold); min-height: 20px; }
+    /* Coluna de gritos */
+    .rail { display: flex; flex-direction: column; min-height: 0; background: var(--deep); border-left: 6px solid var(--yellow); }
+    .rail-top { display: flex; gap: 14px; align-items: center; padding: 16px 18px; background: var(--royal-2); }
+    .rail-qr { flex-shrink: 0; padding: 8px; background: #fff; }
+    .rail-qr img, .rail-qr canvas { display: block; width: 116px !important; height: 116px !important; }
+    .rail-jp { font-family: 'Yuji Syuku', serif; font-size: 30px; line-height: 1; color: var(--yellow); }
+    .rail-title { margin-top: 4px; font-weight: 900; font-stretch: 112%; font-size: 21px; line-height: 1.05; text-transform: uppercase; }
+    .rail-url { margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--cyan); word-break: break-all; }
+    .rail-feed { position: relative; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
+        gap: 12px; padding: 16px 18px;
+        -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%); mask-image: linear-gradient(180deg, transparent 0, #000 22%); }
+    .cheer { position: relative; flex-shrink: 0; padding: 14px 16px 12px; background: rgba(255,255,255,.07); border-left: 6px solid var(--c);
+        animation: rise .8s cubic-bezier(.2,.8,.2,1) both; }
+    .cheer.is-new { background: rgba(255,255,255,.16); }
+    .cheer p { margin: 0; font-weight: 700; font-size: 21px; line-height: 1.25; overflow-wrap: anywhere; }
+    .cheer .who { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; font-weight: 800; letter-spacing: .06em; color: var(--c); text-transform: uppercase; }
+    .cheer .who em { font-style: normal; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
+    .cheer .badge-new { margin-left: auto; padding: 2px 8px; background: var(--red); color: #fff; font-size: 10px; letter-spacing: .12em; }
+    .cheer .hide { position: absolute; top: 6px; right: 8px; display: none; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; }
+    .cheer:hover .hide { display: block; }
+    @keyframes rise { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: none; } }
+    .rail-empty { color: var(--muted); font-size: 18px; font-weight: 600; line-height: 1.4; }
+    .rail-foot { padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: var(--royal-2); }
+    .rail-foot b { color: var(--white); }
 
-    .sm-feed { border-left: 1px solid var(--line); display: flex; flex-direction: column; max-height: 360px; }
-    .sm-feed-head { display: flex; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--line);
-        font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-    .sm-feed-head b { color: var(--text); }
-    .sm-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
-    .sm-list li { position: relative; padding: 14px 24px; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.45; }
-    .sm-list li.is-new { animation: sm-in .8s ease; }
-    .sm-list .who { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
-    .sm-list .hide { position: absolute; top: 10px; right: 12px; display: none; border: 0; background: transparent;
-        color: var(--muted); font-size: 12px; cursor: pointer; }
-    .sm-list li:hover .hide { display: block; }
-    @keyframes sm-in { from { background: rgba(232, 52, 28, .28); } to { background: transparent; } }
-
-    @media (max-width: 1024px) {
-        .sm-main, .sm-wall { grid-template-columns: 1fr; }
-        .sm-qr, .sm-feed { border-left: 0; border-top: 1px solid var(--line); }
-        .sm-sun { width: 240px; right: -40px; top: 20px; opacity: .9; }
-        .sm-sun span { font-size: 150px; }
-        .sm-clock div { min-width: 0; flex: 1; }
-        .sm-clock b { font-size: 36px; }
+    @media (max-width: 1200px) {
+        .tv-stage { grid-template-columns: 1fr; height: auto; }
+        .tv-viewport { height: 640px; }
+        .rail { border-left: 0; border-top: 6px solid var(--yellow); height: 520px; }
+        .tv-dots { display: none; }
+        .s-athlete { grid-template-columns: 1fr; grid-template-rows: 40% 1fr; }
+        .s-athlete-body { padding: 24px; }
+        .sun { width: 130px; } .sun span { font-size: 80px; }
+        .s-count-body { padding: 28px 24px; }
+        .clock div { min-width: 0; flex: 1; } .clock b { font-size: 40px; }
+        .phone { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
-        .sm-quote, .sm-list li.is-new, .sm-music.is-playing .sm-eq i { transition: none; animation: none; }
+        .tv-track { transition: none; }
+        .kenburns, .g-item.is-on img, .cheer, .brushes .b, .tv-music.is-playing .tv-eq i { animation: none; }
     }
 </style>
 
@@ -214,27 +326,76 @@
     const FIRST = {{ first_name|tojson }};
     const HOURS = {{ competitor_hours|tojson }};
     const CAN_HIDE = {{ (current_user.role == 'admin')|tojson }};
+    const PALETTE = ['#F8B84E', '#19C653', '#22CFF5', '#FF4F2A', '#FFFFFF'];
     const $ = (id) => document.getElementById(id);
     const pad = (n) => String(n).padStart(2, '0');
 
-    // Trilha (arquivo próprio, se existir; senão a trilha gerada de taiko, koto e shakuhachi)
     ArenaTheme.attach($('ar-music'), {
         audioSrc: {{ arena_audio|tojson }},
         label: { on: 'Trilha do samurai tocando', off: 'Tocar trilha do samurai' },
     });
 
-    // QR code para a página pública
+    /* ---------- Slides passando para o lado ---------- */
+    const track = $('tv-track');
+    const slides = Array.from(track.children);
+    const SLIDE_MS = 15000;
+    let current = 0, slideStart = performance.now();
+    const dots = slides.map((s, i) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = s.dataset.title;
+        b.onclick = () => go(i);
+        $('tv-dots').append(b);
+        return b;
+    });
+    const video = $('moments-video');
+
+    function restartAnimations(slide) {
+        slide.querySelectorAll('.kenburns, .brushes .b').forEach(el => {
+            el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+        });
+    }
+    function go(i) {
+        current = (i + slides.length) % slides.length;
+        track.style.transform = `translateX(-${current * 100}%)`;
+        dots.forEach((d, j) => d.classList.toggle('is-on', j === current));
+        restartAnimations(slides[current]);
+        if (video) { slides[current].contains(video) ? video.play().catch(() => {}) : video.pause(); }
+        slideStart = performance.now();
+    }
+    function frame(now) {
+        const p = Math.min(1, (now - slideStart) / SLIDE_MS);
+        $('tv-progress').style.width = (p * 100) + '%';
+        if (p >= 1) go(current + 1);
+        requestAnimationFrame(frame);
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') go(current + 1);
+        if (e.key === 'ArrowLeft') go(current - 1);
+    });
+    go(parseInt(new URLSearchParams(location.search).get('slide') || '1', 10) - 1);  // ?slide=2 abre no 2º
+    requestAnimationFrame(frame);
+
+    /* Galeria de momentos: troca de foto a cada 5 s */
+    const gItems = Array.from(document.querySelectorAll('#gallery .g-item'));
+    let gi = 0;
+    if (gItems.length > 1) setInterval(() => {
+        gItems[gi].classList.remove('is-on');
+        gi = (gi + 1) % gItems.length;
+        gItems[gi].classList.add('is-on');
+    }, 5000);
+
+    /* ---------- Contagem ---------- */
     const cheerUrl = location.origin + "{{ url_for('torcida') }}";
     $('sps-qr-url').textContent = cheerUrl.replace(/^https?:\/\//, '');
-    new QRCode($('sps-qr'), { text: cheerUrl, width: 440, height: 440,
-        colorDark: '#0B1030', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    new QRCode($('sps-qr'), { text: cheerUrl, width: 300, height: 300,
+        colorDark: '#0A1A5C', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
 
     const PHASES = {
-        before:   { tag: 'Treino do samurai',  kicker: 'O samurai da Morvan parte para a batalha em', line: `${HOURS} horas de treino. Assim se forja uma katana.` },
-        week:     { tag: 'Semana da batalha',  kicker: 'A lâmina está afiada. A batalha começa em',   line: `${HOURS} horas de treino. Agora é confiar no caminho.` },
-        tomorrow: { tag: 'Amanhã: batalha',    kicker: 'O samurai entra em campo em',                 line: 'Descanso do guerreiro. Amanhã ele luta pela Morvan.' },
-        during:   { tag: 'Em batalha',         kicker: 'Em batalha · a seletiva termina em',          line: `頑張れ, ${FIRST}! A Morvan inteira está com você.` },
-        after:    { tag: 'Honra conquistada',  kicker: 'A batalha terminou',                          line: `${FIRST} lutou com honra até o fim. Orgulho da Morvan.` },
+        before:   { tag: 'Treino do samurai', kicker: 'O samurai da Morvan parte para a batalha em', line: `${HOURS} horas de treino. Assim se forja uma katana.` },
+        week:     { tag: 'Semana da batalha', kicker: 'A lâmina está afiada. A batalha começa em', line: `${HOURS} horas de treino. Agora é confiar no caminho.` },
+        tomorrow: { tag: 'Amanhã: batalha',   kicker: 'O samurai entra em campo em', line: 'Descanso do guerreiro. Amanhã ele luta pela Morvan.' },
+        during:   { tag: 'Em batalha',        kicker: 'Em batalha · a seletiva termina em', line: `頑張れ, ${FIRST}! A Morvan inteira está com você.` },
+        after:    { tag: 'Honra conquistada', kicker: 'A batalha terminou', line: `${FIRST} lutou com honra até o fim. Orgulho da Morvan.` },
     };
     let phase = null;
     function phaseFor(now) {
@@ -258,58 +419,58 @@
         const days = Math.floor(diff / 864e5);
         $('sps-days').textContent = p === 'after' ? '✓' : days;
         $('sps-days-label').textContent = p === 'after' ? '' : (days === 1 ? 'dia' : 'dias');
-        // あと N 日 = "faltam N dias" | 勝負 = "a disputa" | 完 = "fim"
         $('sps-jp').textContent = p === 'after' ? '完' : p === 'during' ? '勝負!' : `あと ${days} 日`;
         $('sps-h').textContent = pad(Math.floor(diff % 864e5 / 36e5));
         $('sps-m').textContent = pad(Math.floor(diff % 36e5 / 6e4));
         $('sps-s').textContent = pad(Math.floor(diff % 6e4 / 1e3));
-
         const mini = p === 'during' ? 'em batalha agora' : p === 'after' ? 'honra conquistada'
             : p === 'tomorrow' ? 'batalha amanhã' : `batalha em ${days} ${days === 1 ? 'dia' : 'dias'}`;
         document.querySelectorAll('.sps-mini-days').forEach(el => el.textContent = mini);
     }
     tick(); setInterval(tick, 1000);
 
-    // Gritos da arquibancada (atualiza sozinho)
-    let messages = [], lastId = 0, rotateIdx = 0, pinnedNew = null;
+    /* ---------- Gritos subindo de baixo para cima ---------- */
+    const feed = $('sps-feed');
+    const MAX_VISIBLE = 7;
+    let all = [];          // todas as mensagens conhecidas (mais recentes primeiro)
+    let queue = [];        // novas, ainda não exibidas
+    let lastId = 0, cycleIdx = 0, colorIdx = 0;
 
-    function feature(msg, isNew) {
-        const q = $('sps-quote');
-        q.classList.add('is-out');
-        setTimeout(() => {
-            q.textContent = `“${msg.content}”`;
-            $('sps-author').textContent = `— ${msg.author}`;
-            const tag = $('sps-feature-tag');
-            tag.textContent = isNew ? 'Grito novo na arquibancada' : 'Gritos da arquibancada';
-            tag.classList.toggle('is-new', !!isNew);
-            q.classList.remove('is-out');
-        }, 450);
+    function card(m, isNew) {
+        const el = document.createElement('div');
+        el.className = 'cheer' + (isNew ? ' is-new' : '');
+        el.style.setProperty('--c', PALETTE[colorIdx++ % PALETTE.length]);
+        const p = document.createElement('p'); p.textContent = m.content;
+        const who = document.createElement('div'); who.className = 'who';
+        const name = document.createElement('span'); name.textContent = m.author || 'Anônimo';
+        const when = document.createElement('em'); when.textContent = m.created_at;
+        who.append(name, when);
+        if (isNew) { const b = document.createElement('span'); b.className = 'badge-new'; b.textContent = 'Novo'; who.append(b); }
+        el.append(p, who);
+        if (CAN_HIDE) {
+            const h = document.createElement('button');
+            h.className = 'hide'; h.type = 'button'; h.textContent = 'ocultar';
+            h.onclick = async () => {
+                if (!confirm('Remover esta mensagem do mural?')) return;
+                const r = await fetch(`/admin/torcida/${m.id}/hide`, { method: 'POST' });
+                if (r.ok) { all = all.filter(x => x.id !== m.id); feed.querySelectorAll(`[data-id="${m.id}"]`).forEach(n => n.remove()); }
+            };
+            el.append(h);
+        }
+        el.dataset.id = m.id;
+        return el;
     }
 
-    function renderList(newIds) {
-        const list = $('sps-list');
-        list.replaceChildren();
-        messages.slice(0, 25).forEach(m => {
-            const li = document.createElement('li');
-            if (newIds.has(m.id)) li.className = 'is-new';
-            li.append(document.createTextNode(m.content));
-            const who = document.createElement('span');
-            who.className = 'who';
-            who.textContent = `${m.author} · ${m.created_at}`;
-            li.append(who);
-            if (CAN_HIDE) {
-                const btn = document.createElement('button');
-                btn.className = 'hide'; btn.type = 'button'; btn.textContent = 'ocultar';
-                btn.title = 'Remover do mural';
-                btn.onclick = async () => {
-                    if (!confirm('Remover esta mensagem do mural?')) return;
-                    const r = await fetch(`/admin/torcida/${m.id}/hide`, { method: 'POST' });
-                    if (r.ok) { messages = messages.filter(x => x.id !== m.id); renderList(new Set()); }
-                };
-                li.append(btn);
-            }
-            list.append(li);
-        });
+    function push(m, isNew) {
+        const empty = feed.querySelector('.rail-empty');
+        if (empty) empty.remove();
+        feed.append(card(m, isNew));
+        while (feed.children.length > MAX_VISIBLE) feed.firstElementChild.remove();
+    }
+
+    function step() {
+        if (queue.length) return push(queue.shift(), true);      // novas primeiro
+        if (all.length) { push(all[cycleIdx % all.length], false); cycleIdx++; }   // depois, as antigas em ciclo
     }
 
     async function poll() {
@@ -317,28 +478,29 @@
             const r = await fetch(`/api/torcida?after=${lastId}`);
             const data = await r.json();
             $('sps-total').textContent = data.total;
-            if (data.messages.length) {
-                const fresh = data.messages;
-                const firstLoad = lastId === 0;
-                lastId = Math.max(lastId, ...fresh.map(m => m.id));
-                messages = fresh.concat(messages);
-                renderList(firstLoad ? new Set() : new Set(fresh.map(m => m.id)));
-                if (firstLoad) feature(messages[0], false);
-                else { pinnedNew = fresh[0]; feature(pinnedNew, true); rotateIdx = 0; }
+            if (!data.messages.length) {
+                if (!all.length && !feed.children.length) {
+                    const e = document.createElement('div'); e.className = 'rail-empty';
+                    e.textContent = 'Escaneie o QR code e solte o primeiro grito da arquibancada!';
+                    feed.append(e);
+                }
+                return;
             }
-        } catch (e) { /* rede instável: tenta de novo no próximo ciclo */ }
-    }
-
-    function rotate() {
-        if (pinnedNew) { pinnedNew = null; return; }
-        const pool = messages.slice(0, 15);
-        if (pool.length < 2) return;
-        rotateIdx = (rotateIdx + 1) % pool.length;
-        feature(pool[rotateIdx], false);
+            const firstLoad = lastId === 0;
+            lastId = Math.max(lastId, ...data.messages.map(m => m.id));
+            all = data.messages.concat(all);
+            if (firstLoad) {
+                data.messages.slice(0, 4).reverse().forEach(m => push(m, false));
+                cycleIdx = 4;
+            } else {
+                queue.push(...data.messages.slice().reverse());   // em ordem de chegada
+                step();
+            }
+        } catch (e) { /* rede instável: tenta de novo */ }
     }
 
     poll();
-    setInterval(poll, 6000);
-    setInterval(rotate, 10000);
+    setInterval(poll, 5000);
+    setInterval(step, 4500);
 })();
 </script>

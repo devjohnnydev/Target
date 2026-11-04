@@ -57,6 +57,34 @@ def spskills_school_photo():
     path = os.path.join(basedir, 'static', SPSKILLS_EVENT['school_photo'])
     return SPSKILLS_EVENT['school_photo'] if os.path.exists(path) else None
 
+MOMENT_CAPTIONS = {
+    '01-na-estacao': 'Na estação de prova',
+    '02-team-brazil': 'Vestindo a camisa do Brasil',
+    '03-estacao-08': 'Estação 08 · Computação em Nuvem',
+    '04-foco': 'Foco total no desafio',
+    '05-seletiva-maio': 'Seletiva de maio · SENAI São Caetano do Sul',
+}
+
+def spskills_moments():
+    """Fotos e vídeo do preparatório em static/media/momentos (ordem pelo nome do arquivo)."""
+    folder = os.path.join(basedir, 'static', 'media', 'momentos')
+    photos, video = [], None
+    if os.path.isdir(folder):
+        for name in sorted(os.listdir(folder)):
+            stem, ext = os.path.splitext(name)
+            ext = ext.lower()
+            if stem.endswith('-poster'):
+                continue
+            url = url_for('static', filename=f'media/momentos/{name}')
+            if ext in ('.jpg', '.jpeg', '.png', '.webp'):
+                caption = MOMENT_CAPTIONS.get(stem) or re.sub(r'^\d+[-_ ]*', '', stem).replace('-', ' ').capitalize()
+                photos.append({'url': url, 'caption': caption})
+            elif ext in ('.mp4', '.webm') and not video:
+                poster = os.path.join(folder, f'{stem}-poster.jpg')
+                video = {'url': url,
+                         'poster': url_for('static', filename=f'media/momentos/{stem}-poster.jpg') if os.path.exists(poster) else None}
+    return {'photos': photos, 'video': video}
+
 def arena_audio_url():
     """Se existir static/audio/arena.mp3, o telão toca esse arquivo; senão usa a trilha gerada."""
     if os.path.exists(os.path.join(basedir, 'static', 'audio', 'arena.mp3')):
@@ -681,7 +709,9 @@ def admin_monitoring():
                            current_date=date_filter or target_date.strftime('%Y-%m-%d'),
                            spskills=SPSKILLS_EVENT, competitor=competitor,
                            competitor_hours=int(competitor_minutes // 60),
-                           arena_audio=arena_audio_url())
+                           arena_audio=arena_audio_url(),
+                           moments=spskills_moments(),
+                           school_photo=spskills_school_photo())
 
 # --- Torcida SP Skills (QR code público) ---
 

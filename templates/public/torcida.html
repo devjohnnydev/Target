@@ -65,6 +65,8 @@
         textarea { min-height: 128px; resize: vertical; }
         textarea:focus, input:focus { border-color: var(--navy); }
         .field { margin-bottom: 16px; }
+        .anon { display: flex; align-items: center; gap: 10px; margin-top: 10px; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; }
+        .anon input { width: 20px; height: 20px; accent-color: var(--navy); }
         .meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--muted); }
 
         .send { width: 100%; border: 0; border-radius: 12px; padding: 16px; background: var(--navy); color: #fff;
@@ -152,6 +154,7 @@
                     <div class="field">
                         <label for="author">Seu nome <span style="text-transform:none;letter-spacing:0;font-weight:400">(opcional)</span></label>
                         <input id="author" maxlength="60" autocomplete="given-name" placeholder="Ex.: Prof. Johnny, turma DS-2B">
+                        <label class="anon"><input type="checkbox" id="anon"> Enviar como <strong>anônimo</strong></label>
                     </div>
                     <button class="send" id="send" type="submit">Enviar para o telão</button>
                     <div class="error" id="error" role="alert"></div>
@@ -202,6 +205,7 @@
     tick(); setInterval(tick, 60000);
 
     const content = $('content');
+    $('anon').addEventListener('change', e => { $('author').disabled = e.target.checked; $('author').style.opacity = e.target.checked ? .4 : 1; });
     content.addEventListener('input', () => $('len').textContent = content.value.length);
     document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
         content.value = c.textContent; $('len').textContent = content.value.length; content.focus();
@@ -219,7 +223,7 @@
         try {
             const r = await fetch("{{ url_for('torcida_send') }}", {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: text, author: $('author').value.trim() }),
+                body: JSON.stringify({ content: text, author: $('anon').checked ? '' : $('author').value.trim() }),
             });
             const data = await r.json().catch(() => ({}));
             if (!r.ok) throw new Error(data.error || 'Não foi possível enviar agora.');
