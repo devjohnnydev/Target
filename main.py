@@ -16,6 +16,9 @@ app.config['SECRET_KEY'] = 'target-saas-secret-key'
 database_url = os.environ.get('DATABASE_URL')
 if database_url and database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
+# SQLAlchemy 2.1 passou a usar o driver "psycopg" (v3) por padrão; o projeto usa psycopg2
+if database_url and database_url.startswith('postgresql://'):
+    database_url = database_url.replace('postgresql://', 'postgresql+psycopg2://', 1)
 
 # Use an absolute path for the SQLite database
 basedir = os.path.abspath(os.path.dirname(__file__))
