@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telão · SP Skills #53</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+    <style>
+        html, body { margin: 0; height: 100%; background: #0A1A5C; overflow: hidden; font-family: 'Archivo', system-ui, sans-serif; }
+        .frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: #0A1A5C; }
+        .frame.is-loading { visibility: hidden; }
+
+        /* Tela de início: um clique entra em tela cheia e liga a trilha */
+        .start { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; cursor: pointer;
+            background: rgba(10, 26, 92, .82); color: #fff; text-align: center; }
+        .start.is-hidden { display: none; }
+        .start b { display: block; font-weight: 900; font-stretch: 120%; font-size: clamp(36px, 5vw, 72px); text-transform: uppercase; }
+        .start span { display: block; margin-top: 14px; font-weight: 700; font-size: 18px; letter-spacing: .12em; text-transform: uppercase; color: #F8B84E; }
+        .start small { display: block; margin-top: 24px; font-size: 14px; color: #C9D3F5; }
+        .stripe { display: flex; justify-content: center; gap: 10px; margin-top: 26px; }
+        .stripe i { width: 64px; height: 7px; display: block; }
+
+        /* Botão discreto para voltar à tela cheia depois do Esc */
+        .refull { position: fixed; right: 16px; bottom: 16px; z-index: 9; display: none; padding: 10px 14px; border: 2px solid #fff;
+            background: #0A1A5C; color: #fff; font: 800 12px 'Archivo', sans-serif; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+        body:not(.is-full) .refull.ready { display: block; }
+
+        .toast { position: fixed; left: 50%; top: 18px; z-index: 11; transform: translateX(-50%); padding: 10px 16px; background: #19C653; color: #052810;
+            font: 800 13px 'Archivo', sans-serif; letter-spacing: .1em; text-transform: uppercase; opacity: 0; transition: opacity .4s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <iframe class="frame" id="frame" src="{{ url_for('telao_frame') }}" allow="autoplay; fullscreen" title="Telão SP Skills"></iframe>
+
+    <div class="start" id="start" role="button" tabindex="0">
+        <div>
+            <b>Iniciar telão</b>
+            <span>Clique em qualquer lugar</span>
+            <small>Entra em tela cheia e liga a trilha do samurai · Esc sai da tela cheia</small>
+            <div class="stripe"><i style="background:#FF4F2A"></i><i style="background:#F8B84E"></i><i style="background:#19C653"></i><i style="background:#22CFF5"></i></div>
+        </div>
+    </div>
+    <button class="refull" id="refull" type="button">Tela cheia</button>
+    <div class="toast" id="toast">Telão atualizado</div>
+
+    <!-- A trilha toca aqui na moldura: continua sem interrupção quando o conteúdo é atualizado -->
+    <button id="music" type="button" hidden><span data-label></span></button>
+
+<script src="{{ url_for('static', filename='js/arena-theme.js') }}"></script>
+<script>
+(function () {
+    const $ = (id) => document.getElementById(id);
+    let version = {{ version|tojson }};
+    const FRAME_URL = "{{ url_for('telao_frame') }}";
+    const VERSION_URL = "{{ url_for('telao_version') }}";
+
+    /* ---------- Música ---------- */
+    const musicBtn = $('music');
+    ArenaTheme.attach(musicBtn, { audioSrc: {{ arena_audio|tojson }} });
+    const musicOn = () => musicBtn.getAttribute('aria-pressed') === 'true';
+    function tellFrame() {
+        const f = $('frame');
+        if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'music-state', playing: musicOn() }, location.origin);
+    }
+    new MutationObserver(tellFrame).observe(musicBtn, { attributes: true, attributeFilter: ['aria-pressed'] });
+    window.addEventListener('message', (e) => {
+        if (e.origin !== location.origin || !e.data) return;
+        if (e.data.type === 'music-toggle') musicBtn.click();
+        if (e.data.type === 'frame-ready') tellFrame();
+    });
+
+    /* ---------- Tela cheia ---------- */
+    async function enterFull() {
+        try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); } catch (e) {}
+    }
+    document.addEventListener('fullscreenchange', () => document.body.classList.toggle('is-full', !!document.fullscreenElement));
+    $('start').addEventListener('click', () => {
+        enterFull();
+        if (!musicOn()) musicBtn.click();
+        $('start').classList.add('is-hidden');
+        $('refull').classList.add('ready');
+    });
+    $('refull').addEventListener('click', enterFull);
+
+    /* ---------- Atualização remota: troca só o conteúdo, sem sair da tela cheia ---------- */
+    function swapFrame() {
+        const old = $('frame');
+        const next = document.createElement('iframe');
+        next.className = 'frame is-loading';
+        next.allow = 'autoplay; fullscreen';
+        next.title = old.title;
+        next.src = FRAME_URL + '?v=' + encodeURIComponent(version);
+        next.addEventListener('load', () => {
+            // Sessão expirada (caiu no login): mantém o conteúdo antigo na tela
+            if (!next.contentDocument || !next.contentDocument.getElementById('sps-board')) { next.remove(); return; }
+            next.classList.remove('is-loading');
+            old.remove();
+            next.id = 'frame';
+            tellFrame();
+            const t = $('toast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500);
+        }, { once: true });
+        document.body.insertBefore(next, old.nextSibling);
+    }
+
+    async function checkVersion() {
+        try {
+            const r = await fetch(VERSION_URL, { cache: 'no-store' });
+            if (!r.ok) return;
+            const data = await r.json();
+            if (data.version && data.version !== version) { version = data.version; swapFrame(); }
+        } catch (e) { /* sem rede ou sessão expirada: tenta de novo depois */ }
+    }
+    setInterval(checkVersion, 15000);
+})();
+</script>
+</body>
+</html>

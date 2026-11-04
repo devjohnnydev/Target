@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage, DirectMessage, CheerMessage
+from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage, DirectMessage, CheerMessage, AppSetting
 from functools import wraps
 from werkzeug.utils import secure_filename
 from utils import get_now, get_today
@@ -699,6 +699,13 @@ def admin_monitoring():
         reverse=True
     )
         
+    return render_template('admin/monitoring.html', monitoring_data=sorted_data,
+                           current_date=date_filter or target_date.strftime('%Y-%m-%d'),
+                           **spskills_board_context())
+
+
+def spskills_board_context(embed=False):
+    """Dados do painel SP Skills (usado no monitoramento e no telão)."""
     competitor = get_spskills_competitor()
     competitor_minutes = 0
     competitor_active_start = None
@@ -708,16 +715,71 @@ def admin_monitoring():
         active = StudySession.query.filter_by(student_id=competitor.id, end_time=None).first()
         if active:
             competitor_active_start = active.start_time.strftime('%Y-%m-%dT%H:%M:%S')
+    return dict(spskills=SPSKILLS_EVENT, competitor=competitor,
+                competitor_hours=int(competitor_minutes // 60),
+                competitor_minutes=int(competitor_minutes),
+                competitor_active_start=competitor_active_start,
+                arena_audio=arena_audio_url(),
+                moments=spskills_moments(),
+                school_photo=spskills_school_photo(),
+                embed=embed)
 
-    return render_template('admin/monitoring.html', monitoring_data=sorted_data,
-                           current_date=date_filter or target_date.strftime('%Y-%m-%d'),
-                           spskills=SPSKILLS_EVENT, competitor=competitor,
-                           competitor_hours=int(competitor_minutes // 60),
-                           competitor_minutes=int(competitor_minutes),
-                           competitor_active_start=competitor_active_start,
-                           arena_audio=arena_audio_url(),
-                           moments=spskills_moments(),
-                           school_photo=spskills_school_photo())
+
+# --- Telão: moldura em tela cheia que recarrega o conteúdo sob comando ---
+
+def _build_version():
+    """Muda a cada deploy (igual em todos os workers)."""
+    sha = os.environ.get('RAILWAY_GIT_COMMIT_SHA')
+    if sha:
+        return sha[:12]
+    import hashlib
+    h = hashlib.sha1()
+    for rel in ('main.py', 'models.py', 'templates/admin/_spskills_board.html', 'static/js/arena-theme.js'):
+        try:
+            with open(os.path.join(basedir, rel), 'rb') as fh:
+                h.update(fh.read())
+        except OSError:
+            pass
+    return h.hexdigest()[:12]
+
+BUILD_VERSION = _build_version()
+
+def _screen_reload_token():
+    setting = AppSetting.query.get('screen_reload')
+    return setting.value if setting else '0'
+
+def _staff_only():
+    return current_user.is_authenticated and current_user.role in ('admin', 'teacher') and current_user.is_approved
+
+@app.route('/admin/telao')
+@login_required
+def telao():
+    if not _staff_only():
+        return redirect(url_for('dashboard'))
+    return render_template('admin/telao.html', version=f'{BUILD_VERSION}:{_screen_reload_token()}',
+                           arena_audio=arena_audio_url())
+
+@app.route('/admin/telao/conteudo')
+@login_required
+def telao_frame():
+    if not _staff_only():
+        return redirect(url_for('dashboard'))
+    return render_template('admin/telao_frame.html', **spskills_board_context(embed=True))
+
+@app.route('/api/telao/version')
+@login_required
+def telao_version():
+    return jsonify({'version': f'{BUILD_VERSION}:{_screen_reload_token()}'})
+
+@app.route('/admin/telao/atualizar', methods=['POST'])
+@role_required('admin')
+def telao_reload_all():
+    """Envia o comando: todos os telões abertos recarregam o conteúdo (sem sair da tela cheia)."""
+    setting = AppSetting.query.get('screen_reload') or AppSetting(key='screen_reload')
+    setting.value = uuid.uuid4().hex[:10]
+    db.session.add(setting)
+    db.session.commit()
+    return jsonify({'ok': True, 'version': f'{BUILD_VERSION}:{setting.value}'})
 
 # --- Torcida SP Skills (QR code público) ---
 

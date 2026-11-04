@@ -158,6 +158,14 @@ class SupportMessage(db.Model):
     def __repr__(self):
         return f'<SupportMessage from {self.user_id}>'
 
+class AppSetting(db.Model):
+    """Pares chave/valor compartilhados entre os workers (ex.: sinal para recarregar os telões)."""
+    __tablename__ = 'app_settings'
+    key = db.Column(db.String(64), primary_key=True)
+    value = db.Column(db.String(255), nullable=True)
+    updated_at = db.Column(db.DateTime, default=get_now, onupdate=get_now)
+
+
 class CheerMessage(db.Model):
     """Mensagens de apoio enviadas pelo QR code da tela de monitoramento."""
     __tablename__ = 'cheer_messages'
