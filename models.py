@@ -166,6 +166,23 @@ class AppSetting(db.Model):
     updated_at = db.Column(db.DateTime, default=get_now, onupdate=get_now)
 
 
+class LivePost(db.Model):
+    """Atualizações e vídeos publicados na página /ao-vivo."""
+    __tablename__ = 'live_posts'
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(10), nullable=False, default='update')  # 'update' ou 'video'
+    title = db.Column(db.String(140), nullable=True)
+    body = db.Column(db.Text, nullable=True)
+    video_url = db.Column(db.String(300), nullable=True)
+    created_at = db.Column(db.DateTime, default=get_now)
+
+    def to_dict(self, embed=None):
+        return {
+            'id': self.id, 'kind': self.kind, 'title': self.title or '', 'body': self.body or '',
+            'video': embed, 'created_at': self.created_at.strftime('%d/%m %H:%M') if self.created_at else '',
+        }
+
+
 class CheerMessage(db.Model):
     """Mensagens de apoio enviadas pelo QR code da tela de monitoramento."""
     __tablename__ = 'cheer_messages'

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .lv { --royal: #1538A5; --deep: #0A1A5C; --yellow: #F8B84E; --red: #FF4F2A; --green: #19C653; --cyan: #22CFF5; }
+    .lv-card { background: #0E1E66; border-top: 5px solid var(--c, var(--yellow)); padding: 24px; }
+    .lv-card h2 { font-family: 'Archivo', 'Inter', sans-serif; font-weight: 900; font-size: 20px; text-transform: uppercase; color: #fff; margin: 0 0 4px; }
+    .lv-card p.hint { color: #B9C6EE; font-size: 13px; margin: 0 0 16px; line-height: 1.5; }
+    .lv input[type=text], .lv input[type=url], .lv textarea { width: 100%; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.15); color: #fff; padding: 10px 12px; font-size: 15px; outline: none; }
+    .lv input:focus, .lv textarea:focus { border-color: var(--yellow); }
+    .lv label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #B9C6EE; margin: 12px 0 6px; }
+    .lv-btn { display: inline-block; padding: 11px 18px; border: 0; cursor: pointer; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; }
+    .lv-btn-y { background: var(--yellow); color: #1C1407; } .lv-btn-r { background: var(--red); color: #fff; } .lv-btn-g { background: var(--green); color: #052810; }
+    .lv-btn-o { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.3); }
+    .lv-live { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; font-weight: 800; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+    .lv-live.on { background: var(--red); color: #fff; } .lv-live.off { background: rgba(255,255,255,.1); color: #B9C6EE; }
+    .lv-post { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .lv-post img { width: 120px; aspect-ratio: 16/9; object-fit: cover; flex-shrink: 0; }
+    .lv-post .kind { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .lv-steps { color: #DCE4FA; font-size: 14px; line-height: 1.7; padding-left: 18px; margin: 0; }
+</style>
+
+<div class="lv space-y-8 pb-20">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl text-white" style="font-family:'Archivo','Inter',sans-serif;font-weight:900;text-transform:uppercase">Ao vivo · SP Skills #53</h1>
+            <p class="text-slate-400 text-sm mt-1">Transmissão, diário da competição e vídeos da página pública.</p>
+        </div>
+        <div class="flex flex-wrap gap-3 items-center">
+            <span class="lv-live {{ 'on' if live.on else 'off' }}">{{ '● No ar' if live.on else 'Fora do ar' }}</span>
+            <a class="lv-btn lv-btn-o" href="{{ url_for('ao_vivo') }}" target="_blank" rel="noopener">Abrir página pública ↗</a>
+            <a class="lv-btn lv-btn-o" href="{{ url_for('telao') }}" target="_blank" rel="noopener">Modo telão ↗</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Transmissão -->
+        <div class="lv-card" style="--c:var(--red)">
+            <h2>Transmissão ao vivo</h2>
+            <p class="hint">Cole o link da live do YouTube (ou do canal da Twitch). A página <b>/ao-vivo</b> e os telões passam a mostrar o vídeo em até 15 segundos.</p>
+            <form method="POST">
+                <label for="live_url">Link da transmissão</label>
+                <input type="text" id="live_url" name="live_url" value="{{ live.url }}" placeholder="https://youtube.com/live/XXXXXXXXXXX">
+                <label for="live_title">Título (aparece embaixo do vídeo)</label>
+                <input type="text" id="live_title" name="live_title" maxlength="140" value="{{ live.title }}">
+                <div class="flex flex-wrap gap-3 mt-5">
+                    <button class="lv-btn lv-btn-r" name="action" value="live_on">{{ 'Atualizar transmissão' if live.on else 'Entrar ao vivo' }}</button>
+                    {% if live.on %}<button class="lv-btn lv-btn-o" name="action" value="live_off" onclick="return confirm('Encerrar a transmissão na página e nos telões?')">Encerrar transmissão</button>{% endif %}
+                </div>
+            </form>
+            {% if live.on and live.embed %}
+            <div class="mt-5" style="aspect-ratio:16/9;background:#000"><iframe src="{{ live.embed.embed }}&mute=1" style="width:100%;height:100%;border:0" allow="autoplay; encrypted-media" title="Prévia"></iframe></div>
+            {% endif %}
+            <details class="mt-5 text-sm" style="color:#B9C6EE">
+                <summary class="cursor-pointer font-bold text-white">Como transmitir pelo celular (YouTube)</summary>
+                <ol class="lv-steps mt-3">
+                    <li>No app do YouTube, toque em <b>+</b> → <b>Transmitir ao vivo</b> (a conta precisa estar liberada para lives; a liberação pode levar até 24 h, então faça antes do dia 23).</li>
+                    <li>Visibilidade <b>Pública</b> ou <b>Não listada</b> (as duas funcionam aqui).</li>
+                    <li>Depois de iniciar, toque em <b>Compartilhar</b> → <b>Copiar link</b> e cole acima.</li>
+                    <li>Confirme com a organização da SP Skills se é permitido filmar dentro da área de prova.</li>
+                </ol>
+            </details>
+        </div>
+
+        <!-- Nova atualização -->
+        <div class="lv-card" style="--c:var(--yellow)">
+            <h2>Diário da competição</h2>
+            <p class="hint">Publique o que está acontecendo: início de módulo, intervalo, resultado. Aparece na hora para todo mundo em /ao-vivo.</p>
+            <form method="POST">
+                <label for="title">Título (opcional)</label>
+                <input type="text" id="title" name="title" maxlength="140" placeholder="Ex.: Dia 1 · Módulo A começou">
+                <label for="body">Texto</label>
+                <textarea id="body" name="body" rows="4" placeholder="Ex.: Guilherme já está na estação 08. Primeiro desafio: arquitetura de alta disponibilidade."></textarea>
+                <div class="mt-5"><button class="lv-btn lv-btn-y" name="action" value="post_update">Publicar atualização</button></div>
+            </form>
+        </div>
+
+        <!-- Novo vídeo -->
+        <div class="lv-card" style="--c:var(--green)">
+            <h2>Adicionar vídeo</h2>
+            <p class="hint">Suba o vídeo no YouTube (pode ser <b>Não listado</b>) e cole o link. O servidor do site não guarda vídeos enviados: eles se perdem a cada atualização.</p>
+            <form method="POST">
+                <label for="video_url">Link do vídeo no YouTube</label>
+                <input type="text" id="video_url" name="video_url" placeholder="https://youtu.be/XXXXXXXXXXX">
+                <label for="vtitle">Título</label>
+                <input type="text" id="vtitle" name="title" maxlength="140" placeholder="Ex.: Guilherme chegando em Iracemápolis">
+                <label for="vbody">Descrição (opcional)</label>
+                <input type="text" id="vbody" name="body" maxlength="200">
+                <div class="mt-5"><button class="lv-btn lv-btn-g" name="action" value="post_video">Publicar vídeo</button></div>
+            </form>
+        </div>
+
+        <!-- Publicações -->
+        <div class="lv-card" style="--c:var(--cyan)">
+            <h2>Publicações ({{ posts|length }})</h2>
+            <p class="hint">Mais recentes primeiro.</p>
+            {% for p in posts %}
+            {% set e = video_embed(p.video_url) if p.video_url else None %}
+            <div class="lv-post">
+                {% if e and e.thumb %}<img src="{{ e.thumb }}" alt="">{% endif %}
+                <div class="flex-1 min-w-0">
+                    <div class="kind" style="color:{{ '#19C653' if p.kind == 'video' else '#F8B84E' }}">{{ 'Vídeo' if p.kind == 'video' else 'Atualização' }} · {{ p.created_at.strftime('%d/%m %H:%M') }}</div>
+                    {% if p.title %}<div class="text-white font-bold">{{ p.title }}</div>{% endif %}
+                    {% if p.body %}<div class="text-slate-400 text-sm" style="white-space:pre-line">{{ p.body }}</div>{% endif %}
+                </div>
+                <form method="POST" onsubmit="return confirm('Remover esta publicação?')">
+                    <input type="hidden" name="post_id" value="{{ p.id }}">
+                    <button class="lv-btn lv-btn-o" style="padding:6px 10px;font-size:11px" name="action" value="delete_post">Remover</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-slate-400 text-sm">Nada publicado ainda.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 from flask import Flask, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage, DirectMessage, CheerMessage, AppSetting
+from models import db, User, License, StudySession, StudyPlan, Mentorship, Certificate, Submission, AssignedTask, SupportMessage, DirectMessage, CheerMessage, AppSetting, LivePost
 from functools import wraps
 from werkzeug.utils import secure_filename
 from utils import get_now, get_today
@@ -722,6 +722,7 @@ def spskills_board_context(embed=False):
                 arena_audio=arena_audio_url(),
                 moments=spskills_moments(),
                 school_photo=spskills_school_photo(),
+                live=live_state(muted=True),
                 embed=embed)
 
 
@@ -775,11 +776,132 @@ def telao_version():
 @role_required('admin')
 def telao_reload_all():
     """Envia o comando: todos os telões abertos recarregam o conteúdo (sem sair da tela cheia)."""
-    setting = AppSetting.query.get('screen_reload') or AppSetting(key='screen_reload')
-    setting.value = uuid.uuid4().hex[:10]
-    db.session.add(setting)
+    token = bump_screens()
+    return jsonify({'ok': True, 'version': f'{BUILD_VERSION}:{token}'})
+
+def _setting(key, default=None):
+    s = AppSetting.query.get(key)
+    return s.value if s and s.value is not None else default
+
+def _set_setting(key, value):
+    s = AppSetting.query.get(key) or AppSetting(key=key)
+    s.value = value
+    db.session.add(s)
+
+def bump_screens():
+    """Muda o sinal observado pelos telões; eles trocam o conteúdo em até 15 s."""
+    token = uuid.uuid4().hex[:10]
+    _set_setting('screen_reload', token)
     db.session.commit()
-    return jsonify({'ok': True, 'version': f'{BUILD_VERSION}:{setting.value}'})
+    return token
+
+
+# --- Ao vivo: transmissão (YouTube/Twitch), diário da competição e vídeos ---
+
+_YT_PATTERNS = [
+    r'(?:youtube\.com/watch\?(?:.*&)?v=)([A-Za-z0-9_-]{11})',
+    r'(?:youtu\.be/)([A-Za-z0-9_-]{11})',
+    r'(?:youtube\.com/(?:live|shorts|embed)/)([A-Za-z0-9_-]{11})',
+]
+
+def video_embed(url, autoplay=False, muted=False):
+    """Converte um link do YouTube ou da Twitch em dados de player. Retorna None se não reconhecer."""
+    url = (url or '').strip()
+    if not url:
+        return None
+    for pat in _YT_PATTERNS:
+        m = re.search(pat, url)
+        if m:
+            vid = m.group(1)
+            params = 'rel=0&modestbranding=1&playsinline=1'
+            if autoplay:
+                params += '&autoplay=1'
+            if muted:
+                params += '&mute=1'
+            return {'provider': 'youtube', 'id': vid,
+                    'embed': f'https://www.youtube-nocookie.com/embed/{vid}?{params}',
+                    'thumb': f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg',
+                    'watch': f'https://www.youtube.com/watch?v={vid}'}
+    m = re.search(r'twitch\.tv/([A-Za-z0-9_]{3,25})/?$', url)
+    if m:
+        channel = m.group(1)
+        host = request.host.split(':')[0] if request else 'localhost'
+        return {'provider': 'twitch', 'id': channel,
+                'embed': f'https://player.twitch.tv/?channel={channel}&parent={host}&muted={"true" if muted else "false"}',
+                'thumb': None, 'watch': f'https://www.twitch.tv/{channel}'}
+    return None
+
+def live_state(muted=False):
+    url = _setting('live_url', '')
+    on = _setting('live_on', '0') == '1'
+    embed = video_embed(url, autoplay=True, muted=muted) if on else None
+    return {'on': bool(on and embed), 'title': _setting('live_title', '') or 'Seletiva São Paulo Skills · #53 Computação em Nuvem',
+            'url': url, 'embed': embed}
+
+def live_posts_payload(limit=60):
+    posts = LivePost.query.order_by(LivePost.id.desc()).limit(limit).all()
+    return [p.to_dict(embed=video_embed(p.video_url) if p.video_url else None) for p in posts]
+
+@app.route('/ao-vivo')
+def ao_vivo():
+    return render_template('public/ao_vivo.html', spskills=SPSKILLS_EVENT, competitor=get_spskills_competitor(),
+                           live=live_state(muted=True), moments=spskills_moments(),
+                           school_photo=spskills_school_photo())
+
+@app.route('/api/ao-vivo')
+def ao_vivo_api():
+    live = live_state(muted=True)
+    return jsonify({'live': {'on': live['on'], 'title': live['title'],
+                             'embed': live['embed']['embed'] if live['embed'] else None,
+                             'watch': live['embed']['watch'] if live['embed'] else None},
+                    'posts': live_posts_payload()})
+
+@app.route('/admin/ao-vivo', methods=['GET', 'POST'])
+@role_required('admin')
+def admin_ao_vivo():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'live_on':
+            url = request.form.get('live_url', '').strip()
+            if not video_embed(url):
+                flash('Link não reconhecido. Use um link do YouTube (youtube.com/live/..., youtu.be/..., watch?v=...) ou da Twitch.', 'danger')
+                return redirect(url_for('admin_ao_vivo'))
+            _set_setting('live_url', url)
+            _set_setting('live_title', request.form.get('live_title', '').strip()[:140])
+            _set_setting('live_on', '1')
+            bump_screens()
+            flash('Transmissão no ar! A página /ao-vivo e os telões já mostram o vídeo.', 'success')
+        elif action == 'live_off':
+            _set_setting('live_on', '0')
+            bump_screens()
+            flash('Transmissão encerrada.', 'info')
+        elif action == 'post_update':
+            body = request.form.get('body', '').strip()
+            if not body:
+                flash('Escreva o texto da atualização.', 'warning')
+            else:
+                db.session.add(LivePost(kind='update', title=request.form.get('title', '').strip()[:140] or None, body=body))
+                db.session.commit()
+                flash('Atualização publicada no diário da competição.', 'success')
+        elif action == 'post_video':
+            url = request.form.get('video_url', '').strip()
+            if not video_embed(url):
+                flash('Link de vídeo não reconhecido. Use um link do YouTube.', 'danger')
+            else:
+                db.session.add(LivePost(kind='video', title=request.form.get('title', '').strip()[:140] or 'Vídeo',
+                                        body=request.form.get('body', '').strip() or None, video_url=url))
+                db.session.commit()
+                flash('Vídeo publicado.', 'success')
+        elif action == 'delete_post':
+            post = LivePost.query.get(request.form.get('post_id', type=int))
+            if post:
+                db.session.delete(post)
+                db.session.commit()
+                flash('Publicação removida.', 'info')
+        return redirect(url_for('admin_ao_vivo'))
+
+    posts = LivePost.query.order_by(LivePost.id.desc()).all()
+    return render_template('admin/ao_vivo.html', live=live_state(), posts=posts, video_embed=video_embed)
 
 # --- Torcida SP Skills (QR code público) ---
 

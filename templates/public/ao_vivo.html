@@ -1,0 +1,380 @@
+{% set first_name = (competitor.name.split(' ')[0]|title) if competitor else 'Guilherme' %}
+{% set full_name = competitor.name if competitor else 'Guilherme Kenji Fusuma' %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0A1A5C">
+    <title>Ao vivo · {{ first_name }} na Seletiva SP Skills #53</title>
+    <meta name="description" content="Acompanhe ao vivo {{ full_name }}, da {{ spskills.school }}, na Seletiva São Paulo Skills 2026 · Computação em Nuvem. Mande sua mensagem de força!">
+    <meta property="og:title" content="Ao vivo: {{ first_name }} na Seletiva SP Skills #53">
+    <meta property="og:description" content="Assista, torça e mande sua mensagem de força para o competidor da {{ spskills.school }}.">
+    {% if moments.photos %}<meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ moments.photos[0].url }}">{% endif %}
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400;500;600;700&family=Yuji+Syuku&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08113D; --panel: #0E1E66; --panel-2: #12257A; --royal: #1538A5; --line: rgba(255,255,255,.12);
+            --text: #FFFFFF; --muted: #B9C6EE; --yellow: #F8B84E; --red: #FF4F2A; --green: #19C653; --cyan: #22CFF5;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+        a { color: inherit; }
+        .stripe { display: grid; grid-template-columns: repeat(4, 1fr); height: 6px; }
+        .stripe i { display: block; }
+        .wrap { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+        .display { font-family: 'Archivo', sans-serif; font-stretch: 115%; font-weight: 900; text-transform: uppercase; }
+
+        /* Topo */
+        .top { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 16px 0; }
+        .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .brand img { height: 42px; width: auto; }
+        .brand b { font-family: 'Archivo', sans-serif; font-stretch: 112%; font-weight: 800; font-size: 18px; text-transform: uppercase; }
+        .brand b span { color: var(--yellow); }
+        .status { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel-2);
+            font: 800 12px 'Archivo', sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+        .status.is-live { background: var(--red); }
+        .status.is-live::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: pulse 1.2s infinite; }
+        @keyframes pulse { 50% { opacity: .3; } }
+        .share { display: flex; gap: 8px; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 2px solid var(--line); background: transparent; color: var(--text);
+            font: 800 12px 'Archivo', sans-serif; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; cursor: pointer; }
+        .btn:hover { border-color: #fff; }
+        .btn-wa { background: #19C653; border-color: #19C653; color: #052810; }
+
+        /* Palco: player + torcida */
+        .stage { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; }
+        .player { position: relative; aspect-ratio: 16 / 9; background: #000; overflow: hidden; box-shadow: 10px 10px 0 var(--yellow); }
+        .player iframe, .player video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; }
+        .offline { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 28px;
+            background: linear-gradient(0deg, rgba(8,17,61,.95) 0%, rgba(8,17,61,.4) 55%, rgba(8,17,61,.1) 100%); }
+        .offline .k { font: 800 13px 'Archivo', sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--yellow); }
+        .offline .big { margin-top: 6px; font-size: clamp(34px, 5vw, 70px); line-height: .95; }
+        .offline .big span { color: var(--yellow); }
+        .offline p { margin: 10px 0 0; max-width: 620px; color: var(--muted); font-size: 16px; line-height: 1.5; }
+        .live-title { margin: 22px 0 0; font-size: clamp(22px, 2.4vw, 34px); line-height: 1.05; }
+
+        .athlete { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 18px; padding: 16px; background: var(--panel); }
+        .athlete img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px var(--red), 0 0 0 6px var(--panel), 0 0 0 7px var(--yellow); }
+        .athlete .who b { display: block; font-family: 'Archivo', sans-serif; font-stretch: 115%; font-weight: 900; font-size: 22px; text-transform: uppercase; }
+        .athlete .who span { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--yellow); }
+        .nums { margin-left: auto; display: flex; gap: 12px; }
+        .nums div { padding: 8px 14px; background: rgba(0,0,0,.25); border-top: 4px solid var(--c); text-align: center; }
+        .nums b { display: block; font-family: 'Archivo', sans-serif; font-stretch: 120%; font-weight: 900; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+        .nums small { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+        /* Torcida ao vivo */
+        .chat { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-top: 6px solid var(--yellow); contain: size; min-height: 560px; }
+        .chat-head { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+        .chat-head b { font-family: 'Archivo', sans-serif; font-stretch: 112%; font-weight: 900; font-size: 18px; text-transform: uppercase; }
+        .chat-head .jp { font-family: 'Yuji Syuku', serif; color: var(--yellow); font-size: 20px; margin-right: 8px; }
+        .chat-head small { color: var(--muted); font-size: 12px; font-weight: 700; }
+        .feed { flex: 1; min-height: 220px; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 12px; background: rgba(255,255,255,.06); border-left: 4px solid var(--c); animation: in .5s ease both; }
+        .msg p { margin: 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+        .msg span { display: block; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--c); }
+        .msg span em { font-style: normal; font-weight: 500; color: var(--muted); margin-left: 6px; }
+        @keyframes in { from { opacity: 0; transform: translateY(12px); } }
+        .empty { color: var(--muted); font-size: 14px; }
+        .form { padding: 12px 16px 16px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+        .form textarea, .form input[type=text] { width: 100%; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: #fff; padding: 10px 12px;
+            font: 400 15px/1.4 'Inter', sans-serif; outline: none; resize: none; }
+        .form textarea:focus, .form input[type=text]:focus { border-color: var(--yellow); }
+        .form-row { display: flex; gap: 8px; align-items: center; }
+        .anon { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; cursor: pointer; }
+        .send { border: 0; padding: 12px; background: var(--yellow); color: #1C1407; font: 900 14px 'Archivo', sans-serif; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+        .send:disabled { opacity: .6; }
+        .form-msg { min-height: 18px; font-size: 13px; color: var(--muted); }
+        .form-msg.err { color: #FFB4A5; }
+
+        /* Seções */
+        section.block { margin-top: 48px; }
+        .sec-title { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; font-size: clamp(24px, 2.6vw, 36px); }
+        .sec-title::before { content: ''; width: 10px; height: 34px; background: var(--c, var(--yellow)); }
+        .timeline { display: grid; gap: 12px; }
+        .post { padding: 16px 18px; background: var(--panel); border-left: 6px solid var(--c); }
+        .post time { font: 800 12px 'Archivo', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--c); }
+        .post h3 { margin: 6px 0 0; font-family: 'Archivo', sans-serif; font-stretch: 110%; font-weight: 800; font-size: 20px; }
+        .post p { margin: 6px 0 0; color: var(--muted); font-size: 16px; line-height: 1.5; white-space: pre-line; }
+        .videos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .video { background: var(--panel); }
+        .video .thumb { position: relative; aspect-ratio: 16 / 9; background: #000; overflow: hidden; }
+        .video .thumb img, .video .thumb iframe { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border: 0; }
+        .video .thumb button { position: absolute; inset: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; }
+        .video .thumb button span { width: 68px; height: 68px; border-radius: 50%; background: var(--red); display: grid; place-items: center; }
+        .video .info { padding: 12px 14px; }
+        .video .info b { display: block; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 17px; }
+        .video .info small { color: var(--muted); font-size: 13px; }
+        .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .photos figure { margin: 0; position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--panel); }
+        .photos img { width: 100%; height: 100%; object-fit: cover; }
+        .photos figcaption { position: absolute; left: 0; bottom: 0; padding: 8px 12px; background: rgba(8,17,61,.85); font-size: 13px; font-weight: 700; }
+        footer { margin: 56px 0 0; padding: 24px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; text-align: center; }
+
+        @media (max-width: 1000px) {
+            .stage { grid-template-columns: 1fr; }
+            .chat { contain: none; min-height: 0; }
+            .feed { max-height: 360px; }
+            .nums { margin-left: 0; }
+            .status { margin-left: 0; }
+            .player { box-shadow: 6px 6px 0 var(--yellow); }
+        }
+    </style>
+</head>
+<body>
+    <div class="stripe"><i style="background:var(--red)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--cyan)"></i></div>
+
+    <div class="wrap">
+        <header class="top">
+            <div class="brand">
+                <img src="{{ url_for('static', filename='img/spskills-logo.png') }}" alt="São Paulo Skills">
+                <b><span>#53</span> Computação em Nuvem</b>
+            </div>
+            <span class="status{% if live.on %} is-live{% endif %}" id="status">{% if live.on %}Ao vivo{% else %}Em breve{% endif %}</span>
+            <div class="share">
+                <a class="btn btn-wa" id="share-wa" href="#" target="_blank" rel="noopener">Compartilhar no WhatsApp</a>
+                <button class="btn" id="copy" type="button">Copiar link</button>
+            </div>
+        </header>
+
+        <div class="stage">
+            <div>
+                <div class="player" id="player">
+                    {% if live.on %}
+                    <iframe src="{{ live.embed.embed }}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Transmissão ao vivo"></iframe>
+                    {% else %}
+                    {% if moments.video %}<video src="{{ moments.video.url }}" {% if moments.video.poster %}poster="{{ moments.video.poster }}"{% endif %} autoplay muted loop playsinline></video>{% endif %}
+                    <div class="offline">
+                        <div class="k">Transmissão ao vivo</div>
+                        <div class="big display" id="offline-count">Começa em <span>--</span></div>
+                        <p>23 a 27 de novembro, direto da Escola SENAI de Iracemápolis. Volte aqui no dia, ou compartilhe com quem vai torcer junto.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <h1 class="live-title display" id="live-title">{{ live.title }}</h1>
+
+                <div class="athlete">
+                    {% if competitor and competitor.photo_url %}
+                    <img alt="" src="{{ competitor.photo_url if (competitor.profile_image_type == 'url' or competitor.photo_url.startswith('http')) else url_for('static', filename='uploads/profiles/' + competitor.photo_url) }}">
+                    {% elif moments.photos %}
+                    <img alt="" src="{{ moments.photos[0].url }}">
+                    {% endif %}
+                    <div class="who">
+                        <b>{{ full_name }}</b>
+                        <span>{{ spskills.school }} · {{ spskills.school_place }}</span>
+                    </div>
+                    <div class="nums">
+                        <div style="--c:var(--yellow)"><b id="n-days">--</b><small id="n-days-l">dias para a prova</small></div>
+                        <div style="--c:var(--cyan)"><b>23–27</b><small>novembro</small></div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="chat">
+                <div class="chat-head">
+                    <b><span class="jp" lang="ja">頑張れ!</span>Torcida ao vivo</b>
+                    <small><span id="total">0</span> mensagens</small>
+                </div>
+                <div class="feed" id="feed"><div class="empty">Seja a primeira pessoa a mandar força!</div></div>
+                <form class="form" id="form" novalidate>
+                    <textarea id="content" rows="2" maxlength="280" placeholder="Mande sua mensagem de força para o {{ first_name }}…"></textarea>
+                    <div class="form-row">
+                        <input type="text" id="author" maxlength="60" placeholder="Seu nome e cidade (opcional)">
+                        <label class="anon"><input type="checkbox" id="anon"> Anônimo</label>
+                    </div>
+                    <button class="send" id="send" type="submit">Enviar força</button>
+                    <div class="form-msg" id="form-msg"></div>
+                </form>
+            </aside>
+        </div>
+
+        <section class="block" style="--c:var(--red)">
+            <h2 class="sec-title display">Diário da competição</h2>
+            <div class="timeline" id="timeline"><div class="empty">As atualizações da competição aparecem aqui em tempo real.</div></div>
+        </section>
+
+        <section class="block" style="--c:var(--green)">
+            <h2 class="sec-title display">Vídeos</h2>
+            <div class="videos" id="videos"><div class="empty">Os vídeos da competição aparecem aqui.</div></div>
+        </section>
+
+        {% if moments.photos %}
+        <section class="block" style="--c:var(--cyan)">
+            <h2 class="sec-title display">Momentos do preparatório</h2>
+            <div class="photos">
+                {% for p in moments.photos %}
+                <figure><img src="{{ p.url }}" alt="{{ p.caption }}" loading="lazy"><figcaption>{{ p.caption }}</figcaption></figure>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <footer>{{ spskills.school }} · {{ spskills.school_place }} · Seletiva {{ spskills.title }}</footer>
+    </div>
+
+<script>
+(function () {
+    const $ = (id) => document.getElementById(id);
+    const START = new Date("{{ spskills.start }}");
+    const END = new Date("{{ spskills.end }}");
+    const FIRST = {{ first_name|tojson }};
+    const COLORS = ['#F8B84E', '#19C653', '#22CFF5', '#FF4F2A'];
+    let liveOn = {{ live.on|tojson }};
+    let liveEmbed = {{ (live.embed.embed if live.embed else None)|tojson }};
+
+    /* Compartilhar */
+    const shareText = `Assista ao vivo o ${FIRST} representando a Morvan Figueiredo na Seletiva SP Skills #53 e mande sua força: ${location.href}`;
+    $('share-wa').href = 'https://wa.me/?text=' + encodeURIComponent(shareText);
+    $('copy').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(location.href); $('copy').textContent = 'Link copiado ✓'; }
+        catch (e) { prompt('Copie o link:', location.href); }
+        setTimeout(() => $('copy').textContent = 'Copiar link', 2500);
+    });
+
+    /* Contagem */
+    function count() {
+        const now = new Date();
+        let label, value;
+        if (now >= END) { value = '✓'; label = 'seletiva encerrada'; }
+        else if (now >= START) { value = 'HOJE'; label = 'em competição'; }
+        else { const d = Math.floor((START - now) / 864e5); value = d; label = d === 1 ? 'dia para a prova' : 'dias para a prova'; }
+        $('n-days').textContent = value; $('n-days-l').textContent = label;
+        const oc = $('offline-count');
+        if (oc) {
+            const span = oc.querySelector('span');
+            if (now >= START && now < END) { oc.firstChild.textContent = 'A transmissão '; span.textContent = 'já vai começar'; }
+            else if (now >= END) { oc.firstChild.textContent = 'Seletiva '; span.textContent = 'encerrada'; }
+            else {
+                const ms = START - now, d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+                span.textContent = d > 0 ? `${d}d ${h}h ${String(m).padStart(2, '0')}min` : `${h}h ${String(m).padStart(2, '0')}min`;
+            }
+        }
+    }
+    count(); setInterval(count, 30000);
+
+    /* Torcida (chat) */
+    const feed = $('feed');
+    let lastId = 0, colorIdx = 0;
+    function addMsg(m) {
+        const empty = feed.querySelector('.empty'); if (empty) empty.remove();
+        const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
+        const el = document.createElement('div'); el.className = 'msg';
+        el.style.setProperty('--c', COLORS[colorIdx++ % COLORS.length]);
+        const p = document.createElement('p'); p.textContent = m.content;
+        const who = document.createElement('span'); who.textContent = m.author || 'Anônimo';
+        const t = document.createElement('em'); t.textContent = m.created_at; who.append(t);
+        el.append(p, who); feed.append(el);
+        while (feed.children.length > 150) feed.firstElementChild.remove();
+        if (nearBottom) feed.scrollTop = feed.scrollHeight;
+    }
+    async function pollChat() {
+        try {
+            const r = await fetch(`/api/torcida?after=${lastId}`, { cache: 'no-store' });
+            const d = await r.json();
+            $('total').textContent = d.total;
+            if (d.total < feed.querySelectorAll('.msg').length) { feed.replaceChildren(); lastId = 0; return pollChat(); } // mural zerado
+            if (!d.messages.length) return;
+            lastId = Math.max(lastId, ...d.messages.map(m => m.id));
+            d.messages.slice().reverse().forEach(addMsg);   // API traz as mais novas primeiro
+            feed.scrollTop = feed.scrollHeight;
+        } catch (e) {}
+    }
+    pollChat(); setInterval(pollChat, 4000);
+
+    $('anon').addEventListener('change', e => { $('author').disabled = e.target.checked; });
+    $('form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const msg = $('form-msg'); msg.className = 'form-msg'; msg.textContent = '';
+        const text = $('content').value.trim();
+        if (text.length < 2) { msg.className = 'form-msg err'; msg.textContent = 'Escreva sua mensagem.'; return; }
+        $('send').disabled = true;
+        try {
+            const r = await fetch('/api/torcida', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: text, author: $('anon').checked ? '' : $('author').value.trim() }) });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(d.error || 'Não foi possível enviar agora.');
+            $('content').value = '';
+            msg.textContent = 'Enviada! Ela também aparece no telão da Mooca.';
+            pollChat();
+        } catch (err) { msg.className = 'form-msg err'; msg.textContent = err.message; }
+        finally { $('send').disabled = false; }
+    });
+
+    /* Transmissão, diário e vídeos (atualizam sozinhos) */
+    function renderPlayer() {
+        const player = $('player');
+        $('status').textContent = liveOn ? 'Ao vivo' : 'Em breve';
+        $('status').classList.toggle('is-live', liveOn);
+        if (liveOn && liveEmbed) {
+            const cur = player.querySelector('iframe');
+            if (cur && cur.src === liveEmbed) return;
+            const f = document.createElement('iframe');
+            f.src = liveEmbed; f.title = 'Transmissão ao vivo'; f.allowFullscreen = true;
+            f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+            player.replaceChildren(f);
+        } else if (player.querySelector('iframe')) {
+            location.reload();   // transmissão encerrada: volta para a tela de espera
+        }
+    }
+
+    let postsSig = '';
+    function renderPosts(posts) {
+        const sig = posts.map(p => p.id).join(',');
+        if (sig === postsSig) return;
+        postsSig = sig;
+        const tl = $('timeline'), vids = $('videos');
+        const updates = posts.filter(p => p.kind === 'update'), videos = posts.filter(p => p.kind === 'video' && p.video);
+        tl.replaceChildren(); vids.replaceChildren();
+        if (!updates.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'As atualizações da competição aparecem aqui em tempo real.'; tl.append(e); }
+        updates.forEach((p, i) => {
+            const el = document.createElement('article'); el.className = 'post'; el.style.setProperty('--c', COLORS[i % COLORS.length]);
+            const t = document.createElement('time'); t.textContent = p.created_at;
+            el.append(t);
+            if (p.title) { const h = document.createElement('h3'); h.textContent = p.title; el.append(h); }
+            const b = document.createElement('p'); b.textContent = p.body; el.append(b);
+            tl.append(el);
+        });
+        if (!videos.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Os vídeos da competição aparecem aqui.'; vids.append(e); }
+        videos.forEach(p => {
+            const card = document.createElement('article'); card.className = 'video';
+            const th = document.createElement('div'); th.className = 'thumb';
+            const play = () => {
+                const f = document.createElement('iframe');
+                f.src = p.video.embed + (p.video.embed.includes('?') ? '&' : '?') + 'autoplay=1';
+                f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true; f.title = p.title;
+                th.replaceChildren(f);
+            };
+            if (p.video.thumb) {
+                const img = document.createElement('img'); img.src = p.video.thumb; img.alt = ''; img.loading = 'lazy';
+                const btn = document.createElement('button'); btn.type = 'button'; btn.setAttribute('aria-label', 'Assistir ' + p.title);
+                btn.innerHTML = '<span><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></span>';
+                btn.onclick = play;
+                th.append(img, btn);
+            } else { play(); }
+            const info = document.createElement('div'); info.className = 'info';
+            const b = document.createElement('b'); b.textContent = p.title;
+            const s = document.createElement('small'); s.textContent = (p.body ? p.body + ' · ' : '') + p.created_at;
+            info.append(b, s);
+            card.append(th, info);
+            vids.append(card);
+        });
+    }
+
+    async function pollLive() {
+        try {
+            const r = await fetch('/api/ao-vivo', { cache: 'no-store' });
+            const d = await r.json();
+            liveOn = d.live.on; liveEmbed = d.live.embed;
+            $('live-title').textContent = d.live.title;
+            renderPlayer();
+            renderPosts(d.posts);
+        } catch (e) {}
+    }
+    pollLive(); setInterval(pollLive, 15000);
+})();
+</script>
+</body>
+</html>

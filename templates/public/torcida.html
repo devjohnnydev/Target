@@ -86,6 +86,11 @@
         .school-card figcaption { padding: 18px 20px; display: flex; flex-direction: column; gap: 2px; }
         .school-card strong { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 20px; }
         .school-card figcaption span:last-child { font-size: 13px; color: #B9C6EE; }
+        .watch { display: flex; align-items: center; gap: 10px; margin: 0 0 28px; padding: 14px 16px; background: var(--red); color: #fff;
+            font: 800 15px 'Archivo', sans-serif; letter-spacing: .04em; text-transform: uppercase; text-decoration: none; }
+        .watch b { margin-left: auto; }
+        .watch .dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: blink 1.2s infinite; }
+        @keyframes blink { 50% { opacity: .3; } }
         .wall { margin-top: 40px; }
         .wall-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 10px; border-bottom: 1px solid var(--line);
             font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
@@ -133,6 +138,8 @@
 
     <main>
         <div class="wrap">
+            <a class="watch" href="{{ url_for('ao_vivo') }}"><span class="dot"></span> Assistir à competição ao vivo <b>→</b></a>
+
             <section id="form-area">
                 <div class="jp" lang="ja">頑張れ!</div>
                 <h2>Grite da arquibancada para o {{ first_name }}</h2>

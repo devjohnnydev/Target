@@ -44,6 +44,14 @@
         <div class="tv-viewport">
             <div class="tv-track" id="tv-track">
 
+                <!-- 0. Transmissão ao vivo (só quando o admin coloca no ar) -->
+                {% if live and live.on %}
+                <article class="tv-slide s-live" data-title="Ao vivo" data-ms="90000">
+                    <iframe src="{{ live.embed.embed }}" allow="autoplay; encrypted-media; picture-in-picture" title="Transmissão ao vivo"></iframe>
+                    <div class="live-badge"><i></i>Ao vivo · Iracemápolis</div>
+                </article>
+                {% endif %}
+
                 <!-- 1. Contagem -->
                 <article class="tv-slide s-count" data-title="Contagem">
                     <div class="brushes" aria-hidden="true">
@@ -326,6 +334,13 @@
     .school-place { margin-top: 10px; font-weight: 800; font-size: 20px; letter-spacing: .1em; text-transform: uppercase; color: var(--yellow); }
     .school-line { margin: 16px 0 0; font-size: 20px; line-height: 1.4; color: var(--muted); }
 
+    /* Slide ao vivo */
+    .s-live { background: #000; }
+    .s-live iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .live-badge { position: absolute; left: 24px; top: 20px; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px;
+        background: var(--red); color: #fff; font-weight: 900; font-stretch: 112%; font-size: 18px; letter-spacing: .1em; text-transform: uppercase; pointer-events: none; }
+    .live-badge i { width: 12px; height: 12px; border-radius: 50%; background: #fff; animation: live 1.2s ease-in-out infinite; }
+
     .kenburns { animation: kb 16s ease-out both; }
     @keyframes kb { from { transform: scale(1.12); } to { transform: scale(1); } }
 
@@ -438,7 +453,7 @@
         slideStart = performance.now();
     }
     function frame(now) {
-        const p = Math.min(1, (now - slideStart) / SLIDE_MS);
+        const p = Math.min(1, (now - slideStart) / (parseInt(slides[current].dataset.ms, 10) || SLIDE_MS));
         $('tv-progress').style.width = (p * 100) + '%';
         if (p >= 1) go(current + 1);
         requestAnimationFrame(frame);
